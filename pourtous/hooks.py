@@ -116,13 +116,21 @@ app_license = "MIT"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
+doc_events = {
+    "Sales Invoice": {
+        "on_submit": "pourtous.api.payment_entry_for_return" # creates 'Payment Entry' for item returns
+	},
+# commented the hook below until I check the pricing rules in order to set the correct markups for the Item Prices
+#	"Purchase Receipt": {
+#		"on_submit": "pourtous.api.update_selling_price_list", # creates an 'Item Price' in the 'Selling Price List'
+#		"before_cancel": "pourtous.api.delete_item_price" # deletes the linked 'Item Price' before cancelling the Purchase Receipt
+#	},
 # 	"*": {
 # 		"on_update": "method",
 # 		"on_cancel": "method",
 # 		"on_trash": "method"
 # 	}
-# }
+}
 
 # Scheduled Tasks
 # ---------------
@@ -213,3 +221,23 @@ app_license = "MIT"
 # auth_hooks = [
 # 	"pourtous.auth.validate"
 # ]
+
+fixtures = [
+    {
+        "doctype": "Custom Field",
+        "filters": [
+            [
+                "name",
+                "in",
+                (
+					"Item-custom_select_add_on_item", # Select the Add-On Item for configuring Item-add-ons bundling
+					"Item-custom_item_add_on", # Automatically pulls the item_code from the above selection
+                    "Item-custom_uom_int", #'UOM INT' for fetching stock_uom.must_be_whole_number setting from Item doctype
+                    				#-used in code to prevent decimal entries in Integer values
+                    "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
+                    "Customer-custom_fs_account_number" # for FS Transactions
+				)
+			]
+		]
+	}
+]
