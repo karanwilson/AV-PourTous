@@ -1,6 +1,6 @@
 ## pourtous
 
-Pour Tous
+Pour Tous App for ERPNext
 
 #### License
 

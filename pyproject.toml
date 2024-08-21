@@ -1,9 +1,9 @@
 [project]
 name = "pourtous"
 authors = [
-    { name = "Pour Tous", email = "karan.wilson@auroville.community"}
+    { name = "Karan", email = "karan.wilson@auroville.org.in"}
 ]
-description = "Pour Tous"
+description = "Pour Tous App for ERPNext"
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
