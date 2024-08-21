@@ -12,6 +12,11 @@ app_license = "MIT"
 # app_include_css = "/assets/pourtous/css/pourtous.css"
 # app_include_js = "/assets/pourtous/js/pourtous.js"
 
+app_include_js = [
+    "/assets/pourtous/node_modules/vuetify/dist/vuetify.js",
+    "pourtous.bundle.js",
+]
+
 # include js, css files in header of web template
 # web_include_css = "/assets/pourtous/css/pourtous.css"
 # web_include_js = "/assets/pourtous/js/pourtous.js"

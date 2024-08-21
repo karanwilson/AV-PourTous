@@ -1,0 +1,35 @@
+{
+ "content": null,
+ "creation": "2024-08-15 12:56:06.783385",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2024-08-19 17:23:06.272184",
+ "modified_by": "Administrator",
+ "module": "pourtous",
+ "name": "pourtous",
+ "owner": "Administrator",
+ "page_name": "pourtous",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Sales User"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Pour Tous"
+}
