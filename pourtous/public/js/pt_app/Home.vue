@@ -9,7 +9,7 @@
 
 <script>
 import Navbar from './components/Navbar.vue';
-import PourTous from './components/PourTous.vue';
+import PourTous from './components/pourtous/PourTous.vue';
 
 export default {
     data: () => {
@@ -33,7 +33,7 @@ export default {
             });
         }
     },
-
+    /*
     mounted() {
         this.remove_frappe_nav();
     },
@@ -43,6 +43,7 @@ export default {
             this.remove_frappe_nav();
         }, 1000);
     }
+    */
 };
 </script>
 

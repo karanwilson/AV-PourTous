@@ -1,1 +1,1 @@
-import './pourtous/pourtous.js'
+import './pt_app/pourtous.js'
