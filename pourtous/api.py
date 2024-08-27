@@ -3,6 +3,22 @@ from frappe import _
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 
 
+# called from the Purchase-Order Client-Script called 'PO Supplier Item fetch'
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def supplier_items(supplier):
+	# using 'distinct' in the sql statement below because sometimes the testing instance has 4 rows for each supplier-item combination in `tabItem Supplier`
+	# this could be because the masters were reuploaded more than once (after deleting company/accounting data) during the testing..
+	return frappe.db.sql(
+		"""
+		select distinct parent, tabItem.item_name, tabItem.item_group
+		from `tabItem Supplier`, tabItem
+		where `tabItem Supplier`.parent = tabItem.name and supplier = %s
+		""",
+		supplier
+	)
+
+
 # called from hooks.py when "Sales Invoice" documents are submitted
 def payment_entry_for_return(doc, method):
 	if doc.status == "Return":

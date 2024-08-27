@@ -1,0 +1,93 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-08-27 12:33:32.305819",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "item_name",
+  "item_group",
+  "buying_price",
+  "selling_price",
+  "sold_last_month",
+  "ordered_qty",
+  "sold_this_month",
+  "current_qty",
+  "to_buy"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Data",
+   "label": "Item Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Data",
+   "label": "Item Group",
+   "read_only": 1
+  },
+  {
+   "fieldname": "current_qty",
+   "fieldtype": "Float",
+   "label": "Current Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sold_last_month",
+   "fieldtype": "Float",
+   "label": "Sold Last Month",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sold_this_month",
+   "fieldtype": "Float",
+   "label": "Sold this Month",
+   "read_only": 1
+  },
+  {
+   "fieldname": "buying_price",
+   "fieldtype": "Currency",
+   "label": "Buying Price",
+   "read_only": 1
+  },
+  {
+   "fieldname": "selling_price",
+   "fieldtype": "Currency",
+   "label": "Selling Price",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ordered_qty",
+   "fieldtype": "Float",
+   "label": "Ordered Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_buy",
+   "fieldtype": "Float",
+   "label": "To Buy"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-08-27 18:07:33.825791",
+ "modified_by": "Administrator",
+ "module": "pourtous",
+ "name": "PO Supplier Items",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

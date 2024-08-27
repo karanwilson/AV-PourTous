@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"dfXMDVBByV\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Pour Tous</span>\",\"col\":12}},{\"id\":\"hD-LESfNVo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous App\",\"col\":3}}]",
+ "content": "[{\"id\":\"dfXMDVBByV\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Pour Tous</span>\",\"col\":12}},{\"id\":\"hD-LESfNVo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous App\",\"col\":3}},{\"id\":\"Zz_yXF5bjz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous Settings\",\"col\":3}},{\"id\":\"pFUtqaR8mD\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Order\",\"col\":3}},{\"id\":\"p8Mf4_3JgR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Receipt\",\"col\":3}},{\"id\":\"A7k2suxNbg\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"pRCB9ixN0d\",\"type\":\"card\",\"data\":{\"card_name\":\"Records\",\"col\":4}}]",
  "creation": "2024-08-15 20:57:18.765870",
  "custom_blocks": [],
  "docstatus": 0,
@@ -11,8 +11,48 @@
  "idx": 0,
  "is_hidden": 0,
  "label": "Pour Tous",
- "links": [],
- "modified": "2024-08-15 22:01:49.319822",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Records",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Orders",
+   "link_count": 0,
+   "link_to": "Purchase Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Receipts",
+   "link_count": 0,
+   "link_to": "Purchase Receipt",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Invoice",
+   "link_count": 0,
+   "link_to": "Sales Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2024-08-27 15:09:59.133414",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Pour Tous",
@@ -30,6 +70,29 @@
    "label": "Pour Tous App",
    "link_to": "pourtous",
    "type": "Page"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "New",
+   "label": "Purchase Order",
+   "link_to": "Purchase Order",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Pour Tous Settings",
+   "link_to": "Pour Tous Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "New",
+   "label": "Purchase Receipt",
+   "link_to": "Purchase Receipt",
+   "stats_filter": "[]",
+   "type": "DocType"
   }
  ],
  "title": "Pour Tous"
