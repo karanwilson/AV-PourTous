@@ -125,11 +125,11 @@ doc_events = {
     "Sales Invoice": {
         "on_submit": "pourtous.api.payment_entry_for_return" # creates 'Payment Entry' for item returns
 	},
-# commented the hook below until I check the pricing rules in order to set the correct markups for the Item Prices
-#	"Purchase Receipt": {
-#		"on_submit": "pourtous.api.update_selling_price_list", # creates an 'Item Price' in the 'Selling Price List'
-#		"before_cancel": "pourtous.api.delete_item_price" # deletes the linked 'Item Price' before cancelling the Purchase Receipt
-#	},
+# comment the hook below until the pricing rule/method is defined
+	"Purchase Receipt": {
+		"on_submit": "pourtous.api.update_selling_price_list", # creates an 'Item Price' in the 'Selling Price List'
+		"before_cancel": "pourtous.api.delete_item_price" # deletes the linked 'Item Price' before cancelling the Purchase Receipt
+	},
 # 	"*": {
 # 		"on_update": "method",
 # 		"on_cancel": "method",

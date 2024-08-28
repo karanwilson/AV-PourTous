@@ -57,7 +57,7 @@ def payment_entry_for_return(doc, method):
 		advance_payment_entry.submit()
 
 
-""" Commenting the below code as I first need to explore Pricing Rules in order to set the correct markups for the Item Prices
+""" Commenting the below code until the pricing rule/method is defined"""
 
 # called from hooks.py when a 'Purchase Receipt' document is submitted
 # below we access the 'Purchase Receipt Item' document (via items[0]), which is a child doctype of the 'Purchase Receipt' document
@@ -75,4 +75,3 @@ def update_selling_price_list(doc, method):
 def delete_item_price(doc, method):
 	item_price_name = frappe.get_list('Item Price', filters = {"batch_no": doc.items[0].batch_no})	# returns a list of dicts (key value pairs)
 	frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name'
-"""
