@@ -5,12 +5,13 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_a
 
 # called from the Purchase-Order Client-Script called 'PO Supplier Item fetch'
 @frappe.whitelist()
-@frappe.validate_and_sanitize_search_inputs
+#@frappe.validate_and_sanitize_search_inputs
 def supplier_items(supplier):
 	return frappe.db.sql(
 		"""
-		SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, tabItem.last_purchase_rate AS buying_price,
+		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
 		`tabItem Price`.price_list_rate AS selling_price,
+		`tabPurchase Receipt Item`.qty AS ordered_qty, MAX(`tabPurchase Receipt Item`.creation),
 		SUM(tabBatch.batch_qty) AS batch_qty,
 		(
 			SELECT SUM(`tabSales Invoice Item`.qty)
@@ -22,10 +23,11 @@ def supplier_items(supplier):
 			FROM `tabSales Invoice Item`
 			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate()))
 		) AS sold_this_month
-		FROM tabItem, tabBatch, `tabItem Price`
+		FROM tabItem, `tabItem Price`, `tabPurchase Receipt Item`, tabBatch
 		WHERE tabBatch.supplier = %s
-		AND tabItem.item_code = tabBatch.item AND tabBatch.batch_qty > 0
 		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
+		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
+		AND tabItem.item_code = tabBatch.item AND tabBatch.batch_qty > 0
 		GROUP BY tabItem.item_code
 		""",
 		supplier
