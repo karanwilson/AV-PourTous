@@ -11,10 +11,10 @@
   "item_group",
   "buying_price",
   "selling_price",
-  "sold_last_month",
   "ordered_qty",
-  "sold_this_month",
   "current_qty",
+  "sold_last_month",
+  "sold_this_month",
   "to_buy"
  ],
  "fields": [
@@ -81,7 +81,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-08-27 18:07:33.825791",
+ "modified": "2024-08-28 23:47:24.004116",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "PO Supplier Items",

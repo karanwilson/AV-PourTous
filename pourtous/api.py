@@ -7,13 +7,26 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_a
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def supplier_items(supplier):
-	# using 'distinct' in the sql statement below because sometimes the testing instance has 4 rows for each supplier-item combination in `tabItem Supplier`
-	# this could be because the masters were reuploaded more than once (after deleting company/accounting data) during the testing..
 	return frappe.db.sql(
 		"""
-		select distinct parent, tabItem.item_name, tabItem.item_group
-		from `tabItem Supplier`, tabItem
-		where `tabItem Supplier`.parent = tabItem.name and supplier = %s
+		SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, tabItem.last_purchase_rate AS buying_price,
+		`tabItem Price`.price_list_rate AS selling_price,
+		SUM(tabBatch.batch_qty) AS batch_qty,
+		(
+			SELECT SUM(`tabSales Invoice Item`.qty)
+			FROM `tabSales Invoice Item`
+			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate())-1)
+		) AS sold_last_month,
+		(
+			SELECT SUM(`tabSales Invoice Item`.qty)
+			FROM `tabSales Invoice Item`
+			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate()))
+		) AS sold_this_month
+		FROM tabItem, tabBatch, `tabItem Price`
+		WHERE tabBatch.supplier = %s
+		AND tabItem.item_code = tabBatch.item AND tabBatch.batch_qty > 0
+		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
+		GROUP BY tabItem.item_code
 		""",
 		supplier
 	)

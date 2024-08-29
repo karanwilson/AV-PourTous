@@ -13,10 +13,10 @@ frappe.ui.form.on('Purchase Order', {
 		            item_group: '',
 		            buying_price: '',
 		            selling_price: '',
-		            sold_last_month: '',
 		            ordered_qty: '',
-		            sold_this_month: '',
-		            current_qty: ''
+		            current_qty: '',
+		            sold_last_month: '',
+		            sold_this_month: ''
 		        });
 		    });
 		});
