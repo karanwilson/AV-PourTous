@@ -30,9 +30,9 @@ frappe.ui.form.on('Purchase Order', {
 	    let selected = frm.get_selected();
 	    selected.custom_supplier_items_data.forEach((row) => {
 			const item = locals["PO Supplier Items"][row];
-			//console.log(item.item_code);
 	        let item_row = frm.add_child('items');
-	        item_row.item_code = item.item_code;
+	        //frappe.model.set_value triggers a form event that loads other Item data fields like rate, etc.
+	        frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', item.item_code);
 	        item_row.qty = item.to_buy;
 	    });
 		frm.refresh_field('items');
