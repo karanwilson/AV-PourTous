@@ -4,7 +4,7 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_a
 
 
 # called from the Purchase-Order Client-Script called 'PO Supplier Item fetch'
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 #@frappe.validate_and_sanitize_search_inputs
 def supplier_items(supplier):
 	return frappe.db.sql(
