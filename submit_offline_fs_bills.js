@@ -1,10 +1,7 @@
-frappe.ui.form.on('Sales Invoice', {
-	refresh(frm) {
-		// your code here
-		frm.add_custom_button('Submit Offline FS Bills', () => {
-		    frappe.call({
-		        
-		    })
-		})
-	}
-})
+frappe.listview_settings['Sales Invoice'] = {
+    refresh(listview) {
+        listview.page.add_inner_button("Submit Offline FS Bills", () => {
+            frappe.call('payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_draft_fs_bills');
+        });
+    },
+};

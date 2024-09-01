@@ -125,6 +125,10 @@ doc_events = {
     "Sales Invoice": {
         "on_submit": "pourtous.api.payment_entry_for_return" # creates 'Payment Entry' for item returns
 	},
+    #"Payment Entry": {
+        # initiates an FS transfer for Participant Contributions (Monthly and Extra)
+    #    "before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
+	#},
 # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
 		"on_submit": "pourtous.api.update_selling_price_list", # creates an 'Item Price' in the 'Selling Price List'
