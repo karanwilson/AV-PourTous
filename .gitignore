@@ -4,5 +4,5 @@
 *.swp
 tags
 pourtous/docs/current
-node_modules/
+node_modules
 pourtous/public/dist
