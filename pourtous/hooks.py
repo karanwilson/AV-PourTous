@@ -239,12 +239,15 @@ fixtures = [
                 "name",
                 "in",
                 (
-					"Item-custom_select_add_on_item", # Select the Add-On Item for configuring Item-add-ons bundling
+					"Item-custom_select_add_on_item", # To select the Add-On Item for configuring Item-add-ons bundling
 					"Item-custom_item_add_on", # Automatically pulls the item_code from the above selection
                     "Item-custom_uom_int", #'UOM INT' for fetching stock_uom.must_be_whole_number setting from Item doctype
                     				#-used in code to prevent decimal entries in Integer values
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
                     "Customer-custom_fs_account_number" # for FS Transactions
+                    "Purchase Order-custom_supplier_items_fetch", # Creates a Tab Break for custom_supplier_items_data and custom_add_to_items
+                    "Purchase Order-custom_supplier_items_data", # To fetch the Items from the Selected Supplier, along with the required data
+                    "Purchase Order-custom_add_to_items", # pushes the Selected Items (and their Qty) to the PO Items
 				)
 			]
 		]
