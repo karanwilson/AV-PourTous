@@ -125,10 +125,10 @@ doc_events = {
     "Sales Invoice": {
         "on_submit": "pourtous.api.payment_entry_for_return" # creates 'Payment Entry' for item returns
 	},
-    #"Payment Entry": {
+    "Payment Entry": {
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)
-    #    "before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
-	#},
+        "before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
+	},
 # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
 		"on_submit": "pourtous.api.update_selling_price_list", # creates an 'Item Price' in the 'Selling Price List'
@@ -243,8 +243,10 @@ fixtures = [
 					"Item-custom_item_add_on", # Automatically pulls the item_code from the above selection
                     "Item-custom_uom_int", #'UOM INT' for fetching stock_uom.must_be_whole_number setting from Item doctype
                     				#-used in code to prevent decimal entries in Integer values
+                    "Payment Entry-custom_contribution_type", # for PTDC Contributions FS Transactions
                     "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
+                    "Sales Invoice-custom_aurocard_number", # for Aurocard Payments
                     "Customer-custom_fs_account_number" # for FS Transactions
                     "Purchase Order-custom_supplier_items_fetch", # Creates a Tab Break for custom_supplier_items_data and custom_add_to_items
                     "Purchase Order-custom_supplier_items_data", # To fetch the Items from the Selected Supplier, along with the required data
