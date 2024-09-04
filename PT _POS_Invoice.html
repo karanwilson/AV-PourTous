@@ -152,8 +152,17 @@
 	</tbody>
 </table>
 <hr>
+{%- if doc.custom_fs_transfer_status -%}
 <p>
 	<b>{{ _("FS Transfer Status") }}: {{ doc.custom_fs_transfer_status }}</b><br>
+</p>
+{%- endif -%}
+{%- if doc.custom_aurocard_number -%}
+<p>
+	<b>{{ _("Aurocard Number") }}: {{ doc.custom_aurocard_number }}</b><br>
+</p>
+{%- endif -%}
+<p>
 	<b>{{ _("Remarks") }}:</b> {{ doc.remarks }}
 </p>
 <p class="text-center">{{ _("Thank you, please visit again.") }}</p>
