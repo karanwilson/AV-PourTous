@@ -248,6 +248,7 @@ fixtures = [
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
                     "Sales Invoice-custom_aurocard_number", # for Aurocard Payments
                     "Customer-custom_fs_account_number" # for FS Transactions
+                    "Customer-custom_fs_account_type" # for FS Transactions
                     "Purchase Order-custom_supplier_items_fetch", # Creates a Tab Break for custom_supplier_items_data and custom_add_to_items
                     "Purchase Order-custom_supplier_items_data", # To fetch the Items from the Selected Supplier, along with the required data
                     "Purchase Order-custom_add_to_items", # pushes the Selected Items (and their Qty) to the PO Items
