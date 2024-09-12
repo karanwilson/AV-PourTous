@@ -3,7 +3,53 @@ from frappe import _
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 
 
-# called from the Purchase-Order Client-Script called 'PO Supplier Item fetch'
+# called from Customer Client-Script 'Sync FS Accounts'
+@frappe.whitelist(allow_guest=True)
+def sync_fs_accounts():
+	#with open('customer_import.txt', 'w') as file:
+	#	file.write(str("inside validate_customer_imports"))
+	#frappe.throw("inside validate_customer_imports")
+
+	fs_account_records = frappe.get_all("FS Account Details", pluck='name')
+
+	for record in fs_account_records:
+		fs_account_doc = frappe.get_doc("FS Account Details", record)
+		existing_customer_id = frappe.get_value("Customer", {"custom_fs_account_number": fs_account_doc.account_number}, "name")
+
+		if existing_customer_id:
+			if fs_account_doc.account_type == 3:
+				frappe.db.set_value("Customer", existing_customer_id, "custom_fs_kind_account_3", 1)
+			elif fs_account_doc.account_type == 4:
+				frappe.db.set_value("Customer", existing_customer_id, "custom_fs_cash_account_4", 1)
+
+		elif fs_account_doc.account_type == 3:
+			new_customer_doc = frappe.get_doc({
+				"doctype": "Customer",
+				"customer_name": fs_account_doc.account_name,
+				"custom_fs_account_number": fs_account_doc.account_number,
+				"custom_fs_kind_account_3": 1,
+				"disabled": fs_account_doc.disabled,
+				"territory": "India",
+				"customer_type": "Individual",
+				"customer_group": "Individual"
+			})
+			new_customer_doc.save()
+
+		elif fs_account_doc.account_type == 4:
+			new_customer_doc = frappe.get_doc({
+				"doctype": "Customer",
+				"customer_name": fs_account_doc.account_name,
+				"custom_fs_account_number": fs_account_doc.account_number,
+				"custom_fs_cash_account_4": 1,
+				"disabled": fs_account_doc.disabled,
+				"territory": "India",
+				"customer_type": "Individual",
+				"customer_group": "Individual"
+			})
+			new_customer_doc.save()
+
+
+# called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
 @frappe.whitelist(allow_guest=True)
 #@frappe.validate_and_sanitize_search_inputs
 def supplier_items(supplier):
