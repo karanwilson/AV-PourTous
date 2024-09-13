@@ -118,20 +118,20 @@ def payment_entry_for_return(doc, method):
 		advance_payment_entry.submit()
 
 
-""" Commenting the below code until the pricing rule/method is defined"""
-
+""" Comment the below code until the pricing rule/method is defined"""
 # called from hooks.py when a 'Purchase Receipt' document is submitted
 # below we access the 'Purchase Receipt Item' document (via items[0]), which is a child doctype of the 'Purchase Receipt' document
 def update_selling_price_list(doc, method):
-	item_price = frappe.get_doc({
-		"doctype": "Item Price",
-		"item_code": doc.items[0].item_code,
-		"uom": doc.items[0].uom,
-		"price_list": "Standard Selling",
-		"price_list_rate": doc.items[0].rate,
-		"batch_no": doc.items[0].batch_no
-	})
-	item_price.insert()
+	for item in doc.items:
+		item_price = frappe.get_doc({
+			"doctype": "Item Price",
+			"item_code": item.item_code,
+			"uom": item.uom,
+			"price_list": "Standard Selling",
+			"price_list_rate": item.rate,
+			"batch_no": item.batch_no
+		})
+		item_price.insert()
 
 def delete_item_price(doc, method):
 	item_price_name = frappe.get_list('Item Price', filters = {"batch_no": doc.items[0].batch_no})	# returns a list of dicts (key value pairs)
