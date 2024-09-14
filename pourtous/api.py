@@ -120,15 +120,17 @@ def payment_entry_for_return(doc, method):
 
 """ Comment the below code until the pricing rule/method is defined"""
 # called from hooks.py when a 'Purchase Receipt' document is submitted
-# below we access the 'Purchase Receipt Item' document (via items[0]), which is a child doctype of the 'Purchase Receipt' document
+# below we access the 'Purchase Receipt Item' document (via items[]), which is a child doctype of the 'Purchase Receipt' document
 def update_selling_price_list(doc, method):
 	for item in doc.items:
+		# creating a tax inclusive item-price for POSA
+		item_tax = (item.igst_amount + item.cgst_amount + item.sgst_amount + item.cess_amount)/item.qty
 		item_price = frappe.get_doc({
 			"doctype": "Item Price",
 			"item_code": item.item_code,
 			"uom": item.uom,
 			"price_list": "Standard Selling",
-			"price_list_rate": item.rate,
+			"price_list_rate": item.rate + item_tax,
 			"batch_no": item.batch_no
 		})
 		item_price.insert()

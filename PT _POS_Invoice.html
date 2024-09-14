@@ -51,7 +51,10 @@
 					{{ item.serial_no | replace("\n", ", ") }}
 				{%- endif -%}
 			</td>
-			<td class="text-right">{{ item.qty }}<br>@ {{ item.get_formatted("rate") }}</td>
+			<td class="text-right">{{ item.qty }}<br>
+				@ {{ item.get_formatted("net_rate") }}<br>
+				{{ item.item_tax_template }}
+			</td>
 			<td class="text-right">{{ item.get_formatted("amount") }}</td>
 		</tr>
 		{%- endfor -%}
@@ -80,11 +83,7 @@
 		  {%- if not row.included_in_print_rate or doc.flags.show_inclusive_tax_in_print -%}
 			<tr>
 				<td class="text-right" style="width: 70%">
-				    {% if '%' in row.description %}
 					    {{ row.description }}
-					{% else %}
-					    {{ row.description }}@{{ row.rate }}%
-					{% endif %}
 				</td>
 				<td class="text-right">
 					{{ row.get_formatted("tax_amount", doc) }}
@@ -122,6 +121,7 @@
 		</tr>
 		{%- endif -%}
 		{%- for row in doc.payments -%}
+			{%- if row.amount > 0 -%}
 			<tr>
 				<td class="text-right" style="width: 70%">
 				    {{ row.mode_of_payment }}
@@ -130,6 +130,7 @@
 					{{ row.get_formatted("amount", doc) }}
 				</td>
 			<tr>
+			{%- endif -%}
 		{%- endfor -%}
 		<tr>
 			<td class="text-right" style="width: 75%">
