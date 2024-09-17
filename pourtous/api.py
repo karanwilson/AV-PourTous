@@ -79,6 +79,18 @@ def supplier_items(supplier):
 		supplier
 	)
 
+@frappe.whitelist(allow_guest=True)
+@frappe.validate_and_sanitize_search_inputs
+def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
+	return frappe.db.sql(
+		"""
+		select parent, tabItem.item_name, tabItem.item_group
+		from `tabItem Supplier`, tabItem
+		where `tabItem Supplier`.parent = tabItem.name and supplier = %s
+		""",
+		txt
+	)
+
 
 # called from hooks.py when "Sales Invoice" documents are submitted
 def payment_entry_for_return(doc, method):

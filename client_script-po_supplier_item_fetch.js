@@ -25,6 +25,12 @@ frappe.ui.form.on('Purchase Order', {
 				frm.refresh_field('custom_supplier_items_data');
 			}
 		});
+		frm.set_query('item_code', 'items', () => {
+			return {
+				query: 'pourtous.api.supplier_items_filter',
+				txt: frm.doc.supplier
+			}
+		})
 	},
 	custom_add_to_items(frm) {
 		//frm.clear_table('items');
