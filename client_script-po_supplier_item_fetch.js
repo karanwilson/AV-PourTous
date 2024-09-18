@@ -3,6 +3,7 @@ frappe.ui.form.on('Purchase Order', {
 		// your code here
 	//}
 	supplier(frm) {
+		frm.clear_table('items');
 		frappe.call({
 			method: 'pourtous.api.supplier_items',
 			args: {
@@ -24,9 +25,15 @@ frappe.ui.form.on('Purchase Order', {
 				frm.refresh_field('custom_supplier_items_data');
 			}
 		});
+		frm.set_query('item_code', 'items', () => {
+			return {
+				query: 'pourtous.api.supplier_items_filter',
+				txt: frm.doc.supplier
+			}
+		})
 	},
 	custom_add_to_items(frm) {
-		frm.clear_table('items');
+		//frm.clear_table('items');
 	    let selected = frm.get_selected();
 	    selected.custom_supplier_items_data.forEach((row) => {
 			const item = locals["PO Supplier Items"][row];
@@ -36,7 +43,10 @@ frappe.ui.form.on('Purchase Order', {
 	        item_row.qty = item.to_buy;
 	    });
 		frm.refresh_field('items');
-		frm.clear_table('custom_supplier_items_data');
+		//frm.clear_table('custom_supplier_items_data');
 		frm.refresh_field('custom_supplier_items_data');
+	},
+	before_submit(frm) {
+		frm.clear_table('custom_supplier_items_data');
 	}
 });
