@@ -4,7 +4,7 @@ frappe.listview_settings['Sales Invoice'] = {
             frappe.call({
                 method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_draft_fs_bills',
                 freeze: true,
-                freeze_message: "Processing Offline Bills",
+                freeze_message: "Processing Offline FS Bills",
                 callback: (r) => {
                     //this.refresh();
                     location.reload();
