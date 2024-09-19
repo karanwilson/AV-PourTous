@@ -246,7 +246,7 @@ fixtures = [
                     "Payment Entry-custom_contribution_type", # for PTDC Contributions FS Transactions
                     "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
-                    "Sales Invoice-custom_aurocard_number", # for Aurocard Payments
+                    #"Sales Invoice-custom_aurocard_number", # for Aurocard Payments
                     "Customer-custom_fs_account_number" # for FS Transactions
                     "Customer-custom_fs_kind_account_3" # for FS Transactions
                     "Customer-custom_fs_cash_account_4" # for FS Transactions
