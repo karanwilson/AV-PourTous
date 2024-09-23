@@ -253,6 +253,7 @@ fixtures = [
                     "Purchase Order-custom_supplier_items_fetch", # Creates a Tab Break for custom_supplier_items_data and custom_add_to_items
                     "Purchase Order-custom_supplier_items_data", # To fetch the Items from the Selected Supplier, along with the required data
                     "Purchase Order-custom_add_to_items", # pushes the Selected Items (and their Qty) to the PO Items
+                    "Purchase Receipt Item-custom_rate_with_tax"
 				)
 			]
 		]
