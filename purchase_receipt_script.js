@@ -8,7 +8,6 @@ frappe.ui.form.on('Purchase Receipt', {
 
     supplier(frm) {
         frm.set_query('item_code', 'items', () => {
-            console.log('set_query trigerred');
             return {
                 query: 'pourtous.api.supplier_items_filter',
                 txt: frm.doc.supplier
