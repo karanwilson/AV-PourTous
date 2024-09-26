@@ -136,19 +136,31 @@ def payment_entry_for_return(doc, method):
 def apply_tax_template(doc, method):
 	if not doc.taxes_and_charges:
 		doc.taxes_and_charges = 'Input GST In-state - PTPS'
-		doc.taxes.append({'account_head': 'Input Tax CGST - PTPS'})
-		doc.taxes.append({'account_head': 'Input Tax SGST - PTPS'})
 
-	for item in doc.items:
-		item.custom_rate_with_tax = (item.amount + item.cgst_amount + item.sgst_amount)/item.qty
-	#doc.save()
+	if doc.taxes_and_charges == 'Input GST In-state - PTPS' and not doc.taxes:
+		taxes_row1 = frappe.get_doc({
+			'doctype': 'Purchase Taxes and Charges',
+			'category': 'Total',
+			'charge_type': 'On Net Total',
+			'account_head': 'Input Tax CGST - PTPS',
+			'add_deduct_tax': 'Add',
+			'description': 'CGST',
+			'parent': doc.name,
+			'parenttype': 'Purchase Receipt'
+		})
+		taxes_row2 = frappe.get_doc({
+			'doctype': 'Purchase Taxes and Charges',
+			'category': 'Total',
+			'charge_type': 'On Net Total',
+			'account_head': 'Input Tax SGST - PTPS',
+			'add_deduct_tax': 'Add',
+			'description': 'SGST',
+			'parent': doc.name,
+			'parenttype': 'Purchase Receipt'
+		})
+		doc.taxes.append(taxes_row1)
+		doc.taxes.append(taxes_row2)
 
-""" def set_rate_with_tax(doc, method):
-	if doc.custom_margin_percent:
-		doc.rate = doc.price_list_rate * (doc.custom_margin_percent/100+1)
-	for item in doc.items:
-		item.custom_rate_with_tax = (item.amount + item.cgst_amount + item.sgst_amount)/item.qty
-	doc.save() """
 
 def update_selling_price_list(doc, method):
 	for item in doc.items:
