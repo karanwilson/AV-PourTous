@@ -1,5 +1,6 @@
 import frappe
 from frappe import _
+from frappe.utils import flt
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 
 
@@ -165,7 +166,8 @@ def apply_tax_template(doc, method):
 def update_selling_price_list(doc, method):
 	for item in doc.items:
 		# creating a tax inclusive item-price for POSA
-		item_tax = (item.igst_amount + item.cgst_amount + item.sgst_amount + item.cess_amount)/item.qty
+		# using flt for setting precision
+		item_tax = flt((item.igst_amount + item.cgst_amount + item.sgst_amount + item.cess_amount)/item.qty)
 		item_price = frappe.get_doc({
 			"doctype": "Item Price",
 			"item_code": item.item_code,
