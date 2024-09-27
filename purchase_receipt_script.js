@@ -3,7 +3,7 @@ frappe.ui.form.on('Purchase Receipt', {
         frm.set_value('taxes_and_charges', 'Input GST In-state - PTPS')
             .then(() => {
                 frm.refresh_field('taxes_and_charges');
-            })
+            });
 	},
 
 /*     supplier(frm) {
@@ -13,7 +13,7 @@ frappe.ui.form.on('Purchase Receipt', {
                 txt: frm.doc.supplier
             };
         });
-    },
+    }, */
 
     after_save(frm) {
         let custom_rate_with_tax = 0;
@@ -22,5 +22,5 @@ frappe.ui.form.on('Purchase Receipt', {
             item.custom_rate_with_tax = custom_rate_with_tax;
             frm.refresh_field(frm.doc.items);
         });
-    } */
+    }
 });
