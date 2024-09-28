@@ -166,14 +166,18 @@ def apply_tax_template(doc, method):
 def update_selling_price_list(doc, method):
 	for item in doc.items:
 		# creating a tax inclusive item-price for POSA
-		# using flt for setting precision
-		item_tax = flt((item.igst_amount + item.cgst_amount + item.sgst_amount + item.cess_amount)/item.qty)
+		if item.custom_rate_with_tax:
+			rate_tax_incl = item.custom_rate_with_tax
+		else:
+			# using flt for setting precision
+			rate_tax_incl = item.rate + flt((item.igst_amount + item.cgst_amount + item.sgst_amount + item.cess_amount)/item.qty)
+
 		item_price = frappe.get_doc({
 			"doctype": "Item Price",
 			"item_code": item.item_code,
 			"uom": item.uom,
 			"price_list": "Standard Selling",
-			"price_list_rate": item.rate + item_tax,
+			"price_list_rate": rate_tax_incl,
 			"batch_no": item.batch_no
 		})
 		item_price.insert()
