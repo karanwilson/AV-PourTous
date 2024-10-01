@@ -53,9 +53,9 @@
 			</td>
 			<td class="text-right">{{ item.qty }}<br>
 				@ {{ item.get_formatted("net_rate") }}<br>
-				<!-- {%- if item.item_tax_template -%}
+				{%- if item.item_tax_template -%}
 					{{ item.item_tax_template }}
-				{%- endif -%} -->
+				{%- endif -%}
 			</td>
 			<td class="text-right">{{ item.get_formatted("amount") }}</td>
 		</tr>
