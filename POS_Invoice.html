@@ -7,8 +7,8 @@
 	@media screen {
 		.print-format {
 			width: 4in;
-			padding: 0.10in;
-			/* min-height: 8in; */
+			padding: 0.25in;
+			min-height: 8in;
 		}
 	}
 </style>
@@ -51,12 +51,7 @@
 					{{ item.serial_no | replace("\n", ", ") }}
 				{%- endif -%}
 			</td>
-			<td class="text-right">{{ item.qty }}<br>
-				@ {{ item.get_formatted("net_rate") }}<br>
-				<!-- {%- if item.item_tax_template -%}
-					{{ item.item_tax_template }}
-				{%- endif -%} -->
-			</td>
+			<td class="text-right">{{ item.qty }}<br>@ {{ item.get_formatted("rate") }}</td>
 			<td class="text-right">{{ item.get_formatted("amount") }}</td>
 		</tr>
 		{%- endfor -%}
@@ -85,7 +80,11 @@
 		  {%- if not row.included_in_print_rate or doc.flags.show_inclusive_tax_in_print -%}
 			<tr>
 				<td class="text-right" style="width: 70%">
+				    {% if '%' in row.description %}
 					    {{ row.description }}
+					{% else %}
+					    {{ row.description }}@{{ row.rate }}%
+					{% endif %}
 				</td>
 				<td class="text-right">
 					{{ row.get_formatted("tax_amount", doc) }}
@@ -123,7 +122,6 @@
 		</tr>
 		{%- endif -%}
 		{%- for row in doc.payments -%}
-			{%- if row.amount > 0 -%}
 			<tr>
 				<td class="text-right" style="width: 70%">
 				    {{ row.mode_of_payment }}
@@ -132,7 +130,6 @@
 					{{ row.get_formatted("amount", doc) }}
 				</td>
 			<tr>
-			{%- endif -%}
 		{%- endfor -%}
 		<tr>
 			<td class="text-right" style="width: 75%">
@@ -155,17 +152,5 @@
 	</tbody>
 </table>
 <hr>
-{%- if doc.custom_fs_transfer_status -%}
-<p>
-	<b>{{ _("FS Transfer Status") }}: {{ doc.custom_fs_transfer_status }}</b><br>
-</p>
-{%- endif -%}
-{%- if doc.custom_aurocard_number -%}
-<p>
-	<b>{{ _("Aurocard Number") }}: {{ doc.custom_aurocard_number }}</b><br>
-</p>
-{%- endif -%}
-<p>
-	<b>{{ _("Remarks") }}:</b> {{ doc.remarks }}
-</p>
+<p>{{ doc.terms or "" }}</p>
 <p class="text-center">{{ _("Thank you, please visit again.") }}</p>
