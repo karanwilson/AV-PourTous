@@ -93,9 +93,10 @@ def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
 	)
 
 
+# creates credit vouchers for returns at PTDC (for pre-paid member accounts)
 # called from hooks.py when "Sales Invoice" documents are submitted
 def payment_entry_for_return(doc, method):
-	if doc.status == "Return":
+	if doc.company == "Pour Tous Distribution Center" and doc.status == "Return":
 		mop_cash_list = [
         	i.mode_of_payment
         	for i in doc.payments
