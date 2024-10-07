@@ -5,7 +5,7 @@ frappe.ui.form.on('Purchase Order', {
 	supplier(frm) {
 		frm.clear_table('items');
 		frappe.call({
-			method: 'pourtous.api.supplier_items',
+			method: 'pourtous.api.supplier_batch_items',
 			args: {
 				supplier: frm.doc.supplier
 			},

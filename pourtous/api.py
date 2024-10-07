@@ -53,7 +53,7 @@ def sync_fs_accounts():
 # called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
 @frappe.whitelist(allow_guest=True)
 #@frappe.validate_and_sanitize_search_inputs
-def supplier_items(supplier):
+def supplier_batch_items(supplier):
 	return frappe.db.sql(
 		"""
 		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
@@ -75,6 +75,34 @@ def supplier_items(supplier):
 		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
 		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
 		AND tabItem.item_code = tabBatch.item AND tabBatch.batch_qty > 0
+		GROUP BY tabItem.item_code
+		""",
+		supplier
+	)
+
+# called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
+@frappe.whitelist(allow_guest=True)
+def supplier_items(supplier):
+	return frappe.db.sql(
+		"""
+		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
+		`tabItem Price`.price_list_rate AS selling_price,
+		`tabPurchase Receipt Item`.qty AS ordered_qty, MAX(`tabPurchase Receipt Item`.creation),
+		(
+			SELECT SUM(`tabSales Invoice Item`.qty)
+			FROM `tabSales Invoice Item`
+			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate())-1)
+		) AS sold_last_month,
+		(
+			SELECT SUM(`tabSales Invoice Item`.qty)
+			FROM `tabSales Invoice Item`
+			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate()))
+		) AS sold_this_month
+		FROM tabItem, `tabItem Price`, `tabPurchase Receipt Item`, `tabItem Supplier`
+		WHERE `tabItem Supplier`.supplier = %s
+		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
+		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
+		AND tabItem.item_code = `tabItem Supplier`.parent
 		GROUP BY tabItem.item_code
 		""",
 		supplier
