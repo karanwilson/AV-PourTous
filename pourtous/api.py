@@ -54,7 +54,7 @@ def sync_fs_accounts():
 @frappe.whitelist(allow_guest=True)
 #@frappe.validate_and_sanitize_search_inputs
 def supplier_batch_items(supplier):
-	return frappe.db.sql(
+	query = frappe.db.sql(
 		"""
 		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
 		`tabItem Price`.price_list_rate AS selling_price,
@@ -79,11 +79,12 @@ def supplier_batch_items(supplier):
 		""",
 		supplier
 	)
+	return query
 
 # called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
 @frappe.whitelist(allow_guest=True)
 def supplier_items(supplier):
-	return frappe.db.sql(
+	query = frappe.db.sql(
 		"""
 		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
 		`tabItem Price`.price_list_rate AS selling_price,
@@ -107,6 +108,7 @@ def supplier_items(supplier):
 		""",
 		supplier
 	)
+	return query
 
 @frappe.whitelist(allow_guest=True)
 @frappe.validate_and_sanitize_search_inputs

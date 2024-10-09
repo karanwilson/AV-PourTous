@@ -10,17 +10,42 @@ frappe.ui.form.on('Purchase Order', {
 				supplier: frm.doc.supplier
 			},
 			callback: (r) => {
-				frm.clear_table('custom_supplier_items_data');
-				for (const row of r.message) {
-					let item_row = frm.add_child('custom_supplier_items_data');
-					item_row.item_code = row[0];
-					item_row.item_name = row[1];
-					item_row.buying_price = row[2];
-					item_row.selling_price = row[3];
-					item_row.ordered_qty = row[4];
-					item_row.current_qty = row[6];
-					item_row.sold_last_month = row[7];
-					item_row.sold_this_month = row[8];
+				if (r.message > 0) {
+					frm.clear_table('custom_supplier_items_data');
+					for (const row of r.message) {
+						let item_row = frm.add_child('custom_supplier_items_data');
+						item_row.item_code = row[0];
+						item_row.item_name = row[1];
+						item_row.buying_price = row[2];
+						item_row.selling_price = row[3];
+						item_row.ordered_qty = row[4];
+						item_row.current_qty = row[6];
+						item_row.sold_last_month = row[7];
+						item_row.sold_this_month = row[8];
+					}
+				}
+				else {
+					console.log("No Data received");
+					frappe.call({
+						method: 'pourtous.api.supplier_items',
+						args: {
+							supplier: frm.doc.supplier
+						},
+						callback: (r) => {
+							frm.clear_table('custom_supplier_items_data');
+							for (const row of r.message) {
+								let item_row = frm.add_child('custom_supplier_items_data');
+								item_row.item_code = row[0];
+								item_row.item_name = row[1];
+								item_row.buying_price = row[2];
+								item_row.selling_price = row[3];
+								item_row.ordered_qty = row[4];
+								item_row.current_qty = row[6];
+								item_row.sold_last_month = row[7];
+								item_row.sold_this_month = row[8];
+							}
+						}
+					})
 				}
 				frm.refresh_field('custom_supplier_items_data');
 			}
