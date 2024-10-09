@@ -77,7 +77,8 @@ def supplier_batch_items(supplier):
 		AND tabItem.item_code = tabBatch.item AND tabBatch.batch_qty > 0
 		GROUP BY tabItem.item_code
 		""",
-		supplier
+		supplier,
+		as_dict=True
 	)
 	return query
 
@@ -106,7 +107,8 @@ def supplier_items(supplier):
 		AND tabItem.item_code = `tabItem Supplier`.parent
 		GROUP BY tabItem.item_code
 		""",
-		supplier
+		supplier,
+		as_dict=True
 	)
 	return query
 
