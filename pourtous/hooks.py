@@ -250,7 +250,7 @@ fixtures = [
                     "Customer-custom_fs_account_number", # for FS Transactions
                     "Customer-custom_fs_kind_account_3", # for FS Transactions
                     "Customer-custom_fs_cash_account_4", # for FS Transactions
-                    "Purchase Order-custom_supplier_batch_items_fetch", # Creates a Tab Break for custom_supplier_items_data and custom_add_to_items
+                    #"Purchase Order-custom_supplier_batch_items_fetch", # Creates a Tab Break for custom_supplier_items_data and custom_add_to_items
                     "Purchase Order-custom_supplier_items_data", # To fetch the Items from the Selected Supplier, along with the required data
                     "Purchase Order-custom_add_to_items", # pushes the Selected Items (and their Qty) to the PO Items
                     "Purchase Receipt Item-custom_rate_with_tax"
