@@ -11,5 +11,17 @@ frappe.listview_settings['Sales Invoice'] = {
                 }
             });
         });
+
+        listview.page.add_inner_button("Process FS Credit Bills", () => {
+            frappe.call({
+                method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_fs_credit_bills',
+                freeze: true,
+                freeze_message: "Processing FS Credit Bills",
+                callback: (r) => {
+                    //this.refresh();
+                    location.reload();
+                }
+            });
+        });
     },
 };

@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-10-12 20:17:31.631012",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "customer_name",
+  "fs_account",
+  "invoice_id",
+  "transfer_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "fs_account",
+   "fieldtype": "Data",
+   "label": "FS Account"
+  },
+  {
+   "fieldname": "transfer_status",
+   "fieldtype": "Data",
+   "label": "Transfer Status"
+  },
+  {
+   "fieldname": "invoice_id",
+   "fieldtype": "Data",
+   "label": "Invoice ID"
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-10-12 22:13:37.626791",
+ "modified_by": "Administrator",
+ "module": "pourtous",
+ "name": "Process FS Bill Logs",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
