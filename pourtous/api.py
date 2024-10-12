@@ -160,7 +160,7 @@ def payment_entry_for_return(doc, method):
 
 		advance_payment_entry.flags.ignore_permissions = True
 		frappe.flags.ignore_account_permission = True
-		advance_payment_entry.save()
+		advance_payment_entry.insert()
 		advance_payment_entry.submit()
 
 
