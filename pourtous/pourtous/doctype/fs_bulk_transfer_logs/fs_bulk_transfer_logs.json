@@ -39,7 +39,7 @@
  "modified": "2024-10-12 22:13:37.626791",
  "modified_by": "Administrator",
  "module": "pourtous",
- "name": "Process FS Bill Logs",
+ "name": "FS Bulk Transfer Logs",
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",

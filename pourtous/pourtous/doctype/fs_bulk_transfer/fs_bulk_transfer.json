@@ -8,8 +8,7 @@
  "engine": "InnoDB",
  "field_order": [
   "export_transfers",
-  "from_date",
-  "to_date",
+  "year",
   "initiate",
   "transaction_logs"
  ],
@@ -31,26 +30,20 @@
    "fieldname": "transaction_logs",
    "fieldtype": "Table",
    "label": "Transaction Logs",
-   "options": "Process FS Bill Logs",
-   "read_only": 1
+   "options": "FS Bulk Transfer Logs"
   },
   {
-   "fieldname": "from_date",
-   "fieldtype": "Date",
+   "fieldname": "year",
+   "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "From Date",
-   "reqd": 1
-  },
-  {
-   "fieldname": "to_date",
-   "fieldtype": "Date",
-   "label": "To Date",
+   "label": "Year",
+   "options": "\nCurrent\nPrevious\nPrevious-1",
    "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-10-12 22:09:13.406777",
+ "modified": "2024-10-13 14:11:14.666579",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "FS Bulk Transfer",
