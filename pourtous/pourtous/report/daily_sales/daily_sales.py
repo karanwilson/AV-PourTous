@@ -5,5 +5,10 @@
 
 
 def execute(filters=None):
+	if not filters:
+		return [], []
+	# validate_filters(filters)
+
+
 	columns, data = [], []
 	return columns, data
