@@ -164,38 +164,43 @@ def payment_entry_for_return(doc, method):
 		advance_payment_entry.submit()
 
 
-""" Comment the below code until the pricing rule/method is defined"""
 # called from hooks.py when a 'Purchase Receipt' document is submitted
 # below we access the 'Purchase Receipt Item' document (via items[]), which is a child doctype of the 'Purchase Receipt' document
 def apply_tax_template(doc, method):
-	if not doc.taxes_and_charges:
-		doc.taxes_and_charges = 'Input GST In-state - PTPS'
 
-	if doc.taxes_and_charges == 'Input GST In-state - PTPS' and not doc.taxes:
-		taxes_row1 = frappe.get_doc({
-			'doctype': 'Purchase Taxes and Charges',
-			'category': 'Total',
-			'charge_type': 'On Net Total',
-			'account_head': 'Input Tax CGST - PTPS',
-			'add_deduct_tax': 'Add',
-			'description': 'CGST',
-			'parent': doc.name,
-			'parenttype': 'Purchase Receipt'
-		})
-		taxes_row2 = frappe.get_doc({
-			'doctype': 'Purchase Taxes and Charges',
-			'category': 'Total',
-			'charge_type': 'On Net Total',
-			'account_head': 'Input Tax SGST - PTPS',
-			'add_deduct_tax': 'Add',
-			'description': 'SGST',
-			'parent': doc.name,
-			'parenttype': 'Purchase Receipt'
-		})
-		doc.taxes.append(taxes_row1)
-		doc.taxes.append(taxes_row2)
+	if doc.doctype == "Sales Invoice":
+		doc.tax_category = "In-State"
 
+	else:
+		# need to dynamically evaluate the taxes_and_charges name (as per company account)
+		if not doc.taxes_and_charges:
+			doc.taxes_and_charges = 'Input GST In-state - PTPS'
 
+		if doc.taxes_and_charges == 'Input GST In-state - PTPS' and not doc.taxes:
+			taxes_row1 = frappe.get_doc({
+				'doctype': 'Purchase Taxes and Charges',
+				'category': 'Total',
+				'charge_type': 'On Net Total',
+				'account_head': 'Input Tax CGST - PTPS',
+				'add_deduct_tax': 'Add',
+				'description': 'CGST',
+				'parent': doc.name,
+				'parenttype': 'Purchase Receipt'
+			})
+			taxes_row2 = frappe.get_doc({
+				'doctype': 'Purchase Taxes and Charges',
+				'category': 'Total',
+				'charge_type': 'On Net Total',
+				'account_head': 'Input Tax SGST - PTPS',
+				'add_deduct_tax': 'Add',
+				'description': 'SGST',
+				'parent': doc.name,
+				'parenttype': 'Purchase Receipt'
+			})
+			doc.taxes.append(taxes_row1)
+			doc.taxes.append(taxes_row2)
+
+""" Comment the below code until the pricing rule/method is defined"""
 def update_selling_price_list(doc, method):
 	for item in doc.items:
 		# creating a tax inclusive item-price for POSA
