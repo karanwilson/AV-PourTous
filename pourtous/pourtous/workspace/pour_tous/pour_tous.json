@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"dfXMDVBByV\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Pour Tous</span>\",\"col\":12}},{\"id\":\"pFUtqaR8mD\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Order\",\"col\":3}},{\"id\":\"p8Mf4_3JgR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Receipt\",\"col\":3}},{\"id\":\"jKMsDPwDnF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Pricing Rule\",\"col\":3}},{\"id\":\"KMCglCDk6h\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Invoice\",\"col\":3}},{\"id\":\"zSHpJvPE4p\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Bulk Imports\",\"col\":3}},{\"id\":\"L8J8kPhaWF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Contribution Entry\",\"col\":3}},{\"id\":\"Zz_yXF5bjz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous Settings\",\"col\":3}},{\"id\":\"hD-LESfNVo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous App\",\"col\":3}},{\"id\":\"A7k2suxNbg\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"pRCB9ixN0d\",\"type\":\"card\",\"data\":{\"card_name\":\"Records\",\"col\":4}},{\"id\":\"-XmEnPPJt-\",\"type\":\"card\",\"data\":{\"card_name\":\"Pour Tous Records\",\"col\":4}}]",
+ "content": "[{\"id\":\"dfXMDVBByV\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h3\\\">Forms</span>\",\"col\":12}},{\"id\":\"pFUtqaR8mD\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Order\",\"col\":3}},{\"id\":\"p8Mf4_3JgR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Receipt\",\"col\":3}},{\"id\":\"jKMsDPwDnF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Pricing Rule\",\"col\":3}},{\"id\":\"KMCglCDk6h\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Invoice\",\"col\":3}},{\"id\":\"zSHpJvPE4p\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Bulk Imports\",\"col\":3}},{\"id\":\"L8J8kPhaWF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Contribution Entry\",\"col\":3}},{\"id\":\"Zz_yXF5bjz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous Settings\",\"col\":3}},{\"id\":\"hD-LESfNVo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous App\",\"col\":3}},{\"id\":\"9bHSP0H_ad\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\">Reports</span>\",\"col\":12}},{\"id\":\"X98E6ppKRN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Custom Sales Report\",\"col\":3}},{\"id\":\"A7k2suxNbg\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"pRCB9ixN0d\",\"type\":\"card\",\"data\":{\"card_name\":\"Records\",\"col\":4}},{\"id\":\"-XmEnPPJt-\",\"type\":\"card\",\"data\":{\"card_name\":\"Pour Tous Records\",\"col\":4}}]",
  "creation": "2024-08-15 20:57:18.765870",
  "custom_blocks": [],
  "docstatus": 0,
@@ -111,7 +111,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-09-25 09:48:32.794941",
+ "modified": "2024-10-24 19:55:56.762994",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Pour Tous",
@@ -130,6 +130,13 @@
    "link_to": "Pricing Rule",
    "stats_filter": "[]",
    "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Custom Sales Report",
+   "link_to": "Custom Sales Report",
+   "type": "Report"
   },
   {
    "color": "Grey",
