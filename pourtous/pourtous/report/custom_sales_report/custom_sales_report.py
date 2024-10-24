@@ -16,11 +16,15 @@ def execute(filters=None):
 	columns = get_columns()
 	data = get_data(filters)
 
+	skip_total_row = 0
+
 	if not data:
 		msgprint(_('No records found'))
-		return columns, data
+		return columns, data, None, None, None, skip_total_row
 
-	return columns, data
+	row["total"] = ""
+
+	return columns, data, None, None, None, skip_total_row
 
 
 def get_columns():
