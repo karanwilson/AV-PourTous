@@ -3,26 +3,19 @@
 
 import frappe
 from frappe import _, msgprint
-#from frappe.utils import getdate
 
 
 def execute(filters=None):
-	#if not filters:
-	#	return [], []
-	# validate_filters(filters)
-
 	columns, data = [], []
 
 	columns = get_columns()
 	data = get_data(filters)
 
-	skip_total_row = 0
-
 	if not data:
 		msgprint(_('No records found'))
-		return columns, data, None, None, None, skip_total_row
+		return columns, data
 
-	return columns, data, None, None, None, skip_total_row
+	return columns, data
 
 
 def get_columns():
@@ -72,10 +65,8 @@ def get_columns():
 
 
 def get_data(filters):
-	#if filters.current_date:
-		#curr_date = getdate()
 
-	sales_query = frappe.db.sql(
+	query = frappe.db.sql(
 		"""
 		SELECT name, customer_name, posting_date, status, custom_fs_transfer_status, grand_total
 		FROM `tabSales Invoice`
@@ -86,7 +77,4 @@ def get_data(filters):
 		as_dict=True
 	)
 
-	#sales_query["Total"] = "total"
-	#frappe.throw(str(sales_query))
-
-	return sales_query
+	return query

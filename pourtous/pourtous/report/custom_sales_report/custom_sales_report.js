@@ -4,7 +4,7 @@
 
 frappe.query_reports["Custom Sales Report"] = {
 	"filters": [
-		{
+		/* {
 			"fieldname": "from_date",
 			"fieldtype": "Date",
 			"label": "From Date",
@@ -26,6 +26,6 @@ frappe.query_reports["Custom Sales Report"] = {
 			"label": "Current Date",
 			"mandatory": 0,
 			"wildcard_filter": 0
-		}
+		} */
 	]
 };
