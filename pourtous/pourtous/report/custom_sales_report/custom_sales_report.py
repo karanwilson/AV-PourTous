@@ -22,8 +22,6 @@ def execute(filters=None):
 		msgprint(_('No records found'))
 		return columns, data, None, None, None, skip_total_row
 
-	row["total"] = ""
-
 	return columns, data, None, None, None, skip_total_row
 
 
@@ -49,6 +47,13 @@ def get_columns():
 			"fieldtype": "Date",
 			"width": "150"
 		},
+
+		{
+			"fieldname": "total",
+			"label": "Total",
+			"fieldtype": "Currency",
+			"width": "150"
+		},
 	]
 
 
@@ -62,5 +67,8 @@ def get_data(filters):
 			""",
 			as_dict=True
 		)
+
+		#sales_query["Total"] = "total"
+		#frappe.throw(str(sales_query))
 
 		return sales_query
