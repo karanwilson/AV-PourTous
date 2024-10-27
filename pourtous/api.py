@@ -166,7 +166,7 @@ def payment_entry_for_return(doc, method):
 
 # called from hooks.py when a 'Purchase Receipt' document is submitted
 # below we access the 'Purchase Receipt Item' document (via items[]), which is a child doctype of the 'Purchase Receipt' document
-def apply_tax_template(doc, method):
+""" def apply_tax_template(doc, method):
 
 	if doc.doctype == "Sales Invoice":
 		doc.tax_category = "In-State"
@@ -198,7 +198,7 @@ def apply_tax_template(doc, method):
 				'parenttype': 'Purchase Receipt'
 			})
 			doc.taxes.append(taxes_row1)
-			doc.taxes.append(taxes_row2)
+			doc.taxes.append(taxes_row2) """
 
 """ Comment the below code until the pricing rule/method is defined"""
 def update_selling_price_list(doc, method):

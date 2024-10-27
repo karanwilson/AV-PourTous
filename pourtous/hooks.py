@@ -123,7 +123,6 @@ app_include_js = [
 
 doc_events = {
     "Sales Invoice": {
-        #"before_submit": "pourtous.api.apply_tax_template",
         "on_submit": "pourtous.api.payment_entry_for_return" # creates 'Payment Entry' for item returns
 	},
     "Payment Entry": {
@@ -132,7 +131,6 @@ doc_events = {
 	},
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
-        #"before_save": "pourtous.api.apply_tax_template",
 		"on_submit": "pourtous.api.update_selling_price_list", # creates an 'Item Price' in the 'Selling Price List'
 		"before_cancel": "pourtous.api.delete_item_price" # deletes the linked 'Item Price' before cancelling the Purchase Receipt
 	},
