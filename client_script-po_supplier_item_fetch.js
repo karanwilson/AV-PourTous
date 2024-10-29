@@ -11,9 +11,9 @@ frappe.ui.form.on('Purchase Order', {
 			},
 			callback: (r) => {
 				if (r.message.length > 0) {
-					frm.clear_table('custom_supplier_items_data');
+					frm.clear_table('custom_batch_items_data');
 					for (const row of r.message) {
-						let item_row = frm.add_child('custom_supplier_items_data');
+						let item_row = frm.add_child('custom_batch_items_data');
 						item_row.item_code = row["item_code"];
 						item_row.item_name = row["item_name"];
 						item_row.buying_price = row["buying_price"];
@@ -33,9 +33,9 @@ frappe.ui.form.on('Purchase Order', {
 							supplier: frm.doc.supplier
 						},
 						callback: (r) => {
-							frm.clear_table('custom_supplier_items_data');
+							frm.clear_table('custom_non_batch_items_data');
 							for (const row of r.message) {
-								let item_row = frm.add_child('custom_supplier_items_data');
+								let item_row = frm.add_child('custom_non_batch_items_data');
 								item_row.item_code = row["item_code"];
 								item_row.item_name = row["item_name"];
 								item_row.buying_price = row["buying_price"];
@@ -49,7 +49,7 @@ frappe.ui.form.on('Purchase Order', {
 						}
 					})
 				}
-				frm.refresh_field('custom_supplier_items_data');
+				frm.refresh_field('custom_batch_items_data');
 			}
 		});
 		/* frm.set_query('item_code', 'items', () => {
@@ -59,10 +59,10 @@ frappe.ui.form.on('Purchase Order', {
 			}
 		}) */
 	},
-	custom_add_to_items(frm) {
+	custom_add_batch_items(frm) {
 		//frm.clear_table('items');
 	    let selected = frm.get_selected();
-	    selected.custom_supplier_items_data.forEach((row) => {
+	    selected.custom_batch_items_data.forEach((row) => {
 			const item = locals["PO Supplier Items"][row];
 	        let item_row = frm.add_child('items');
 	        //frappe.model.set_value triggers a form event that loads other Item data fields like rate, etc.
@@ -70,10 +70,10 @@ frappe.ui.form.on('Purchase Order', {
 	        item_row.qty = item.to_buy;
 	    });
 		frm.refresh_field('items');
-		//frm.clear_table('custom_supplier_items_data');
-		frm.refresh_field('custom_supplier_items_data');
+		//frm.clear_table('custom_batch_items_data');
+		frm.refresh_field('custom_batch_items_data');
 	},
 	before_submit(frm) {
-		frm.clear_table('custom_supplier_items_data');
+		frm.clear_table('custom_batch_items_data');
 	}
 });
