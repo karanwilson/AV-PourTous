@@ -254,14 +254,14 @@ fixtures = [
                     "Customer-custom_fs_cash_account_4", # for FS Transactions
 
                     "Purchase Order-custom_batch_items", # Creates a Tab Break for custom_batch_items_data and custom_add_batch_items
-                    "Purchase Order-custom_batch_items_fetch",
+                    "Purchase Order-custom_batch_items_fetch", # Button
                     "Purchase Order-custom_batch_items_data", # To fetch the Items from the Selected Supplier, along with the required data
-                    "Purchase Order-custom_add_batch_items", # pushes the Selected Items (and their Qty) to the PO Items
+                    "Purchase Order-custom_add_batch_items", # Button: pushes the Selected Items (and their Qty) to the PO Items
 
                     "Purchase Order-custom_non_batch_items", # Creates a Tab Break for custom_non_batch_items_data and custom_add_non_batch_items
-                    "Purchase Order-custom_non_batch_items_fetch",
+                    "Purchase Order-custom_non_batch_items_fetch", # Button
                     "Purchase Order-custom_non_batch_items_data", # To fetch the Items from the Selected Supplier, along with the required data
-                    "Purchase Order-custom_add_non_batch_items", # pushes the Selected Items (and their Qty) to the PO Items
+                    "Purchase Order-custom_add_non_batch_items", # Button: pushes the Selected Items (and their Qty) to the PO Items
 
                     "Purchase Receipt Item-custom_rate_with_tax"
 				)
