@@ -59,7 +59,7 @@ def supplier_batch_items(supplier):
 		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
 		`tabItem Price`.price_list_rate AS selling_price,
 		`tabPurchase Receipt Item`.qty AS ordered_qty, MAX(`tabPurchase Receipt Item`.creation),
-		SUM(tabBatch.batch_qty) AS batch_qty,
+		SUM(tabBatch.batch_qty) AS current_qty,
 		(
 			SELECT SUM(`tabSales Invoice Item`.qty)
 			FROM `tabSales Invoice Item`
@@ -91,6 +91,12 @@ def supplier_non_batch_items(supplier):
 		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
 		`tabItem Price`.price_list_rate AS selling_price,
 		`tabPurchase Receipt Item`.qty AS ordered_qty, MAX(`tabPurchase Receipt Item`.creation),
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) AS current_qty,
 		(
 			SELECT SUM(`tabSales Invoice Item`.qty)
 			FROM `tabSales Invoice Item`

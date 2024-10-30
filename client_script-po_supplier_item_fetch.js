@@ -9,6 +9,7 @@ frappe.ui.form.on('Purchase Order', {
 
 
 	custom_batch_items_fetch(frm) {
+		frm.clear_table('custom_batch_items_data');
 		frappe.call({
 			method: 'pourtous.api.supplier_batch_items',
 			args: {
@@ -16,7 +17,6 @@ frappe.ui.form.on('Purchase Order', {
 			},
 			callback: (r) => {
 				if (r.message.length > 0) {
-					frm.clear_table('custom_batch_items_data');
 					for (const row of r.message) {
 						let item_row = frm.add_child('custom_batch_items_data');
 						item_row.item_code = row["item_code"];
@@ -27,9 +27,15 @@ frappe.ui.form.on('Purchase Order', {
 						item_row.current_qty = row["current_qty"];
 						item_row.sold_last_month = row["sold_last_month"];
 						item_row.sold_this_month = row["sold_this_month"];
-						console.log("row: ", row);
+						item_row.to_buy = 0;
+						//console.log("row: ", row);
 					}
 				}
+				else frappe.msgprint({
+					title: __('Notification'),
+					indicator: 'red',
+					message: __('No Data')
+				});
 				frm.refresh_field('custom_batch_items_data');
 			}
 		});
@@ -44,11 +50,22 @@ frappe.ui.form.on('Purchase Order', {
 	custom_add_batch_items(frm) {
 	    let selected = frm.get_selected();
 	    selected.custom_batch_items_data.forEach((row) => {
-			const item = locals["PO Supplier Batch Items"][row];
-	        let item_row = frm.add_child('items');
-	        //frappe.model.set_value triggers a form event that loads other Item data fields like rate, etc.
-	        frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', item.item_code);
-	        item_row.qty = item.to_buy;
+			const itemToAdd = locals["PO Supplier Batch Items"][row];
+			let added = false;
+			for (let item in frm.doc.items) {
+				//console.log("item in frm.doc.items : ", frm.doc.items[item].item_code);
+				if (frm.doc.items[item].item_code == itemToAdd.item_code) {
+					frm.doc.items[item].qty += itemToAdd.to_buy;
+					added = true;
+					break;
+				}
+			}
+			if (!added) {
+				let item_row = frm.add_child('items');
+				//frappe.model.set_value triggers a form event that loads other Item data fields like rate, etc.
+				frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', itemToAdd.item_code);
+				item_row.qty = itemToAdd.to_buy;
+			}
 	    });
 		frm.refresh_field('items');
 		//frm.refresh_field('custom_batch_items_data');
@@ -56,6 +73,7 @@ frappe.ui.form.on('Purchase Order', {
 
 
 	custom_non_batch_items_fetch(frm) {
+		frm.clear_table('custom_non_batch_items_data');
 		frappe.call({
 			method: 'pourtous.api.supplier_non_batch_items',
 			args: {
@@ -63,7 +81,6 @@ frappe.ui.form.on('Purchase Order', {
 			},
 			callback: (r) => {
 				if (r.message.length > 0) {
-					frm.clear_table('custom_non_batch_items_data');
 					for (const row of r.message) {
 						let item_row = frm.add_child('custom_non_batch_items_data');
 						item_row.item_code = row["item_code"];
@@ -74,22 +91,39 @@ frappe.ui.form.on('Purchase Order', {
 						item_row.current_qty = row["current_qty"];
 						item_row.sold_last_month = row["sold_last_month"];
 						item_row.sold_this_month = row["sold_this_month"];
-						console.log("row: ", row);
+						item_row.to_buy = 0;
+						//console.log("row: ", row);
 					}
 				}
+				else frappe.msgprint({
+					title: __('Notification'),
+					indicator: 'red',
+					message: __('No Data')
+				});
 				frm.refresh_field('custom_non_batch_items_data');
 			}
-		})
+		});
 	},
 
 	custom_add_non_batch_items(frm) {
 	    let selected = frm.get_selected();
-	    selected.custom_batch_items_data.forEach((row) => {
-			const item = locals["PO Supplier Non Batch Items"][row];
-	        let item_row = frm.add_child('items');
-	        //frappe.model.set_value triggers a form event that loads other Item data fields like rate, etc.
-	        frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', item.item_code);
-	        item_row.qty = item.to_buy;
+	    selected.custom_non_batch_items_data.forEach((row) => {
+			const itemToAdd = locals["PO Supplier Non Batch Items"][row];
+			let added = false;
+			for (let item in frm.doc.items) {
+				//console.log("item in frm.doc.items : ", frm.doc.items[item].item_code);
+				if (frm.doc.items[item].item_code == itemToAdd.item_code) {
+					frm.doc.items[item].qty += itemToAdd.to_buy;
+					added = true;
+					break;
+				}
+			}
+			if (!added) {
+				let item_row = frm.add_child('items');
+				//frappe.model.set_value triggers a form event that loads other Item data fields like rate, etc.
+				frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', itemToAdd.item_code);
+				item_row.qty = itemToAdd.to_buy;
+			}
 	    });
 		frm.refresh_field('items');
 		//frm.refresh_field('custom_non_batch_items_data');
