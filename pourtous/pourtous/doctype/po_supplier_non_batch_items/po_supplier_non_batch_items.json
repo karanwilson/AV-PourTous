@@ -1,7 +1,8 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2024-08-27 12:33:32.305819",
+ "creation": "2024-10-30 12:07:41.603326",
+ "default_view": "List",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -30,24 +31,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "current_qty",
-   "fieldtype": "Float",
-   "label": "Current Qty",
-   "read_only": 1
-  },
-  {
-   "fieldname": "sold_last_month",
-   "fieldtype": "Float",
-   "label": "Sold Last Month",
-   "read_only": 1
-  },
-  {
-   "fieldname": "sold_this_month",
-   "fieldtype": "Float",
-   "label": "Sold this Month",
-   "read_only": 1
-  },
-  {
    "fieldname": "buying_price",
    "fieldtype": "Currency",
    "label": "Buying Price",
@@ -66,6 +49,24 @@
    "read_only": 1
   },
   {
+   "fieldname": "current_qty",
+   "fieldtype": "Float",
+   "label": "Current Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sold_last_month",
+   "fieldtype": "Float",
+   "label": "Sold Last Month",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sold_this_month",
+   "fieldtype": "Float",
+   "label": "Sold this Month",
+   "read_only": 1
+  },
+  {
    "fieldname": "to_buy",
    "fieldtype": "Float",
    "label": "To Buy"
@@ -74,10 +75,10 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-08-30 20:57:26.944417",
+ "modified": "2024-10-30 12:07:41.603326",
  "modified_by": "Administrator",
  "module": "pourtous",
- "name": "PO Supplier Items",
+ "name": "PO Supplier Non Batch Items",
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",

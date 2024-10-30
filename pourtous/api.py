@@ -71,7 +71,8 @@ def supplier_batch_items(supplier):
 			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate()))
 		) AS sold_this_month
 		FROM tabItem, `tabItem Price`, `tabPurchase Receipt Item`, tabBatch
-		WHERE tabBatch.supplier = %s
+		WHERE tabItem.has_batch_no = 1
+		AND tabBatch.supplier = %s
 		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
 		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
 		AND tabItem.item_code = tabBatch.item AND tabBatch.batch_qty > 0
@@ -84,7 +85,7 @@ def supplier_batch_items(supplier):
 
 # called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
 @frappe.whitelist(allow_guest=True)
-def supplier_items(supplier):
+def supplier_non_batch_items(supplier):
 	query = frappe.db.sql(
 		"""
 		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
@@ -101,7 +102,8 @@ def supplier_items(supplier):
 			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate()))
 		) AS sold_this_month
 		FROM tabItem, `tabItem Price`, `tabPurchase Receipt Item`, `tabItem Supplier`
-		WHERE `tabItem Supplier`.supplier = %s
+		WHERE tabItem.has_batch_no = 0
+		AND `tabItem Supplier`.supplier = %s
 		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
 		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
 		AND tabItem.item_code = `tabItem Supplier`.parent
