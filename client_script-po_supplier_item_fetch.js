@@ -52,10 +52,9 @@ frappe.ui.form.on('Purchase Order', {
 	    selected.custom_batch_items_data.forEach((row) => {
 			const itemToAdd = locals["PO Supplier Batch Items"][row];
 			let added = false;
-			for (let item in frm.doc.items) {
-				//console.log("item in frm.doc.items : ", frm.doc.items[item].item_code);
-				if (frm.doc.items[item].item_code == itemToAdd.item_code) {
-					frm.doc.items[item].qty += itemToAdd.to_buy;
+			for (const item of frm.doc.items) {
+				if (item.item_code == itemToAdd.item_code) {
+					item.qty += itemToAdd.to_buy;
 					added = true;
 					break;
 				}
@@ -110,10 +109,9 @@ frappe.ui.form.on('Purchase Order', {
 	    selected.custom_non_batch_items_data.forEach((row) => {
 			const itemToAdd = locals["PO Supplier Non Batch Items"][row];
 			let added = false;
-			for (let item in frm.doc.items) {
-				//console.log("item in frm.doc.items : ", frm.doc.items[item].item_code);
-				if (frm.doc.items[item].item_code == itemToAdd.item_code) {
-					frm.doc.items[item].qty += itemToAdd.to_buy;
+			for (const item of frm.doc.items) {
+				if (item.item_code == itemToAdd.item_code) {
+					item.qty += itemToAdd.to_buy;
 					added = true;
 					break;
 				}
