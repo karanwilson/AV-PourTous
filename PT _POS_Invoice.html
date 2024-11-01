@@ -33,8 +33,8 @@
 <table class="table table-condensed">
 	<thead>
 		<tr>
-			<th width="50%"><b>{{ _("Item") }}</b>></th>
-			<th width="25%" class="text-right"><b>{{ _("Qty") }}</b></th>
+			<th width="45%"><b>{{ _("Item") }}</b>></th>
+			<th width="30%" class="text-right"><b>{{ _("Qty") }}</b></th>
 			<th width="25%" class="text-right"><b>{{ _("Amount") }}</b></th>
 		</tr>
 	</thead>
@@ -42,19 +42,19 @@
 		{%- for item in doc.items -%}
 		<tr>
 			<td>
-				{{ item.item_code }}
+				{{ item.item_code }} :&nbsp;
 				{%- if item.item_name != item.item_code -%}
-					<br>{{ item.item_name }}
+					{{ item.item_name }}
 				{%- endif -%}
 				{%- if item.serial_no -%}
 					<br><b>{{ _("SR.No") }}:</b><br>
 					{{ item.serial_no | replace("\n", ", ") }}
 				{%- endif -%}
 			</td>
-			<td class="text-right">{{ item.qty }}<br>
-				@ {{ item.get_formatted("net_rate") }}<br>
+			<td class="text-right">{{ item.qty }} @
+				<br><small>{{ item.get_formatted("net_rate") }}</small>
 				{%- if item.item_tax_template -%}
-					{{ item.item_tax_template }}
+					<br><small>{{ frappe.db.get_value("Item Tax Template", item.item_tax_template, "title") }}</small>
 				{%- endif -%}
 			</td>
 			<td class="text-right">{{ item.get_formatted("amount") }}</td>
@@ -66,14 +66,14 @@
 	<tbody>
 		<tr>
 			{% if doc.flags.show_inclusive_tax_in_print %}
-				<td class="text-right" style="width: 70%">
+				<td class="text-right" style="width: 60%">
 					{{ _("Total Excl. Tax") }}
 				</td>
 				<td class="text-right">
 					{{ doc.get_formatted("net_total", doc) }}
 				</td>
 			{% else %}
-				<td class="text-right" style="width: 70%">
+				<td class="text-right" style="width: 60%">
 					{{ _("Total") }}
 				</td>
 				<td class="text-right">
@@ -84,7 +84,7 @@
 		{%- for row in doc.taxes -%}
 		  {%- if not row.included_in_print_rate or doc.flags.show_inclusive_tax_in_print -%}
 			<tr>
-				<td class="text-right" style="width: 70%">
+				<td class="text-right" style="width: 60%">
 					    {{ row.description }}
 				</td>
 				<td class="text-right">
@@ -96,7 +96,7 @@
 
 		{%- if doc.discount_amount -%}
 		<tr>
-			<td class="text-right" style="width: 75%">
+			<td class="text-right" style="width: 60%">
 				{{ _("Discount") }}
 			</td>
 			<td class="text-right">
@@ -105,7 +105,7 @@
 		</tr>
 		{%- endif -%}
 		<tr>
-			<td class="text-right" style="width: 75%">
+			<td class="text-right" style="width: 60%">
 				<b>{{ _("Grand Total") }}</b>
 			</td>
 			<td class="text-right">
@@ -114,7 +114,7 @@
 		</tr>
 		{%- if doc.rounded_total -%}
 		<tr>
-			<td class="text-right" style="width: 75%">
+			<td class="text-right" style="width: 60%">
 				<b>{{ _("Rounded Total") }}</b>
 			</td>
 			<td class="text-right">
@@ -125,7 +125,7 @@
 		{%- for row in doc.payments -%}
 			{%- if row.amount > 0 -%}
 			<tr>
-				<td class="text-right" style="width: 70%">
+				<td class="text-right" style="width: 60%">
 				    {{ row.mode_of_payment }}
 				</td>
 				<td class="text-right">
@@ -135,7 +135,7 @@
 			{%- endif -%}
 		{%- endfor -%}
 		<tr>
-			<td class="text-right" style="width: 75%">
+			<td class="text-right" style="width: 60%">
 				<b>{{ _("Paid Amount") }}</b>
 			</td>
 			<td class="text-right">
@@ -144,7 +144,7 @@
 		</tr>
 		{%- if doc.change_amount -%}
 			<tr>
-				<td class="text-right" style="width: 75%">
+				<td class="text-right" style="width: 60%">
 					<b>{{ _("Change Amount") }}</b>
 				</td>
 				<td class="text-right">
@@ -158,11 +158,6 @@
 {%- if doc.custom_fs_transfer_status -%}
 <p>
 	<b>{{ _("FS Transfer Status") }}: {{ doc.custom_fs_transfer_status }}</b><br>
-</p>
-{%- endif -%}
-{%- if doc.custom_aurocard_number -%}
-<p>
-	<b>{{ _("Aurocard Number") }}: {{ doc.custom_aurocard_number }}</b><br>
 </p>
 {%- endif -%}
 <p>
