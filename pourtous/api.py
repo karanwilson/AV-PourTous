@@ -172,63 +172,40 @@ def payment_entry_for_return(doc, method):
 		advance_payment_entry.submit()
 
 
-# called from hooks.py when a 'Purchase Receipt' document is submitted
-# below we access the 'Purchase Receipt Item' document (via items[]), which is a child doctype of the 'Purchase Receipt' document
-""" def apply_tax_template(doc, method):
-
-	if doc.doctype == "Sales Invoice":
-		doc.tax_category = "In-State"
-
-	else:
-		# need to dynamically evaluate the taxes_and_charges name (as per company account)
-		if not doc.taxes_and_charges:
-			doc.taxes_and_charges = 'Input GST In-state - PTPS'
-
-		if doc.taxes_and_charges == 'Input GST In-state - PTPS' and not doc.taxes:
-			taxes_row1 = frappe.get_doc({
-				'doctype': 'Purchase Taxes and Charges',
-				'category': 'Total',
-				'charge_type': 'On Net Total',
-				'account_head': 'Input Tax CGST - PTPS',
-				'add_deduct_tax': 'Add',
-				'description': 'CGST',
-				'parent': doc.name,
-				'parenttype': 'Purchase Receipt'
-			})
-			taxes_row2 = frappe.get_doc({
-				'doctype': 'Purchase Taxes and Charges',
-				'category': 'Total',
-				'charge_type': 'On Net Total',
-				'account_head': 'Input Tax SGST - PTPS',
-				'add_deduct_tax': 'Add',
-				'description': 'SGST',
-				'parent': doc.name,
-				'parenttype': 'Purchase Receipt'
-			})
-			doc.taxes.append(taxes_row1)
-			doc.taxes.append(taxes_row2) """
-
-""" Comment the below code until the pricing rule/method is defined"""
 def update_selling_price_list(doc, method):
 	for item in doc.items:
-		# creating a tax inclusive item-price for POSA
-		""" if item.custom_rate_with_tax:
-			rate_tax_incl = item.custom_rate_with_tax
-		else:
-			# using flt for setting precision
-			rate_tax_incl = item.rate + flt((item.igst_amount + item.cgst_amount + item.sgst_amount + item.cess_amount)/item.qty) """
 
-		item_price = frappe.get_doc({
-			"doctype": "Item Price",
-			"item_code": item.item_code,
-			"uom": item.uom,
-			"price_list": "Standard Selling",
-			"price_list_rate": item.rate,
-			"batch_no": item.batch_no
-		})
-		item_price.insert()
+		if not item.batch_no:
+			existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
+			if existing_item_price_entry:
+				#frappe.throw("existing_item_price_entry")
+				frappe.db.set_value("Item Price", existing_item_price_entry,
+						{ "price_list": "Standard Selling" },
+						 "price_list_rate", item.rate)
+			else:
+				item_price = frappe.get_doc({
+					"doctype": "Item Price",
+					"item_code": item.item_code,
+					"uom": item.uom,
+					"price_list": "Standard Selling",
+					"price_list_rate": item.rate,
+					#"batch_no": item.batch_no
+				})
+				item_price.insert()
+
+		else:
+			item_price = frappe.get_doc({
+				"doctype": "Item Price",
+				"item_code": item.item_code,
+				"uom": item.uom,
+				"price_list": "Standard Selling",
+				"price_list_rate": item.rate,
+				"batch_no": item.batch_no
+			})
+			item_price.insert()
 
 def delete_item_price(doc, method):
 	for item in doc.items:
-		item_price_name = frappe.get_list('Item Price', filters = {"batch_no": item.batch_no})	# returns a list of dicts (key value pairs)
-		frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name'
+		if item.batch_no:
+			item_price_name = frappe.get_list('Item Price', filters = {"batch_no": item.batch_no})	# returns a list of dicts (key value pairs)
+			frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name'
