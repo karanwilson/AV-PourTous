@@ -178,10 +178,9 @@ def update_selling_price_list(doc, method):
 		if not item.batch_no:
 			existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
 			if existing_item_price_entry:
-				#frappe.throw("existing_item_price_entry")
-				frappe.db.set_value("Item Price", existing_item_price_entry,
-						{ "price_list": "Standard Selling" },
-						 "price_list_rate", item.rate)
+				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.rate)
+				frappe.db.commit()
+
 			else:
 				item_price = frappe.get_doc({
 					"doctype": "Item Price",
