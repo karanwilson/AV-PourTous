@@ -84,19 +84,19 @@
 	<b>{{ _("Grand Total") }}:</b> {{ doc.get_formatted("grand_total") }}<br>
 
 	{%- if doc.rounded_total -%}
-		<b>{{ _("Rounded Total") }}:</b> {{ doc.get_formatted("rounded_total") }}
+		<b>{{ _("Rounded Total") }}:</b> {{ doc.get_formatted("rounded_total") }}<br>
 	{%- endif -%}
 
 	{%- for row in doc.payments -%}
 		{%- if row.amount != 0 -%}
-			{{ row.mode_of_payment }}: {{ row.get_formatted("amount", doc) }}
+			{{ row.mode_of_payment }}: {{ row.get_formatted("amount", doc) }}<br>
 		{%- endif -%}
 	{%- endfor -%}
 
-	<b>{{ _("Paid Amount") }}:</b> {{ doc.get_formatted("paid_amount") }}
+	<b>{{ _("Paid Amount") }}:</b> {{ doc.get_formatted("paid_amount") }}<br>
 
 	{%- if doc.change_amount -%}
-		<b>{{ _("Change Amount") }}:</b> {{ doc.get_formatted("change_amount") }}
+		<b>{{ _("Change Amount") }}:</b> {{ doc.get_formatted("change_amount") }}<br>
 	{%- endif -%}
 </p>
 

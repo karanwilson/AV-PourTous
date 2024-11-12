@@ -19,6 +19,7 @@
 
 <p class="text-center" style="margin-bottom: 1rem">
 	{{ doc.company }}<br>
+	<small>{{ _("GSTIN/UIN: 33AAATA0037BPZ3") }}</small><br>
 	<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
 </p>
 <p>
@@ -29,7 +30,7 @@
 	<b>{{ _("Time") }}:</b> {{  doc.get_formatted("posting_time") }}<br>
 </p>
 
-<hr>
+<!-- <hr> -->
 <table class="table table-condensed">
 	<thead>
 		<tr>
@@ -62,7 +63,44 @@
 		{%- endfor -%}
 	</tbody>
 </table>
-<table class="table table-condensed no-border">
+
+<p class="text-right">
+	{% if doc.flags.show_inclusive_tax_in_print %}
+		{{ _("Total Excl. Tax") }}: {{ doc.get_formatted("net_total", doc) }}<br>
+	{% else %}
+		{{ _("Total") }}: {{ doc.get_formatted("total", doc) }}<br>
+	{% endif %}
+
+	{%- for row in doc.taxes -%}
+		{%- if not row.included_in_print_rate or doc.flags.show_inclusive_tax_in_print -%}
+			{{ row.description }}: {{ row.get_formatted("tax_amount", doc) }}<br>
+		{%- endif -%}
+	{%- endfor -%}
+
+	{%- if doc.discount_amount -%}
+		{{ _("Discount") }}: {{ doc.get_formatted("discount_amount") }}<br>
+	{%- endif -%}
+
+	<b>{{ _("Grand Total") }}:</b> {{ doc.get_formatted("grand_total") }}<br>
+
+	{%- if doc.rounded_total -%}
+		<b>{{ _("Rounded Total") }}:</b> {{ doc.get_formatted("rounded_total") }}<br>
+	{%- endif -%}
+
+	{%- for row in doc.payments -%}
+		{%- if row.amount != 0 -%}
+			{{ row.mode_of_payment }}: {{ row.get_formatted("amount", doc) }}<br>
+		{%- endif -%}
+	{%- endfor -%}
+
+	<b>{{ _("Paid Amount") }}:</b> {{ doc.get_formatted("paid_amount") }}<br>
+
+	{%- if doc.change_amount -%}
+		<b>{{ _("Change Amount") }}:</b> {{ doc.get_formatted("change_amount") }}<br>
+	{%- endif -%}
+</p>
+
+<!-- <table class="table table-condensed no-border">
 	<tbody>
 		<tr>
 			{% if doc.flags.show_inclusive_tax_in_print %}
@@ -123,7 +161,7 @@
 		</tr>
 		{%- endif -%}
 		{%- for row in doc.payments -%}
-			{%- if row.amount > 0 -%}
+			{%- if row.amount != 0 -%}
 			<tr>
 				<td class="text-right" style="width: 60%">
 				    {{ row.mode_of_payment }}
@@ -153,8 +191,9 @@
 			</tr>
 		{%- endif -%}
 	</tbody>
-</table>
-<hr>
+</table> -->
+<!-- <hr> -->
+<br>
 {%- if doc.custom_fs_transfer_status -%}
 <p>
 	<b>{{ _("FS Transfer Status") }}: {{ doc.custom_fs_transfer_status }}</b><br>
