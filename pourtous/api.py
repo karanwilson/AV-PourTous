@@ -70,9 +70,10 @@ def supplier_batch_items(supplier):
 			FROM `tabSales Invoice Item`
 			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate()))
 		) AS sold_this_month
-		FROM tabItem, `tabItem Price`, `tabPurchase Receipt Item`, tabBatch
+		FROM tabItem, `tabItem Price`, `tabPurchase Receipt Item`, tabBatch, `tabItem Supplier`
 		WHERE tabItem.has_batch_no = 1
-		AND tabBatch.supplier = %s
+		AND `tabItem Supplier`.supplier = %s
+		AND tabItem.item_code = `tabItem Supplier`.parent
 		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
 		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
 		AND tabItem.item_code = tabBatch.item AND tabBatch.batch_qty > 0
