@@ -17,54 +17,55 @@
     {{ letter_head }}
 {% endif %}
 
-<p class="text-center" style="margin-bottom: 1rem">
+<p class="text-center" style="margin-bottom: 1rem; font-size: smaller;">
 	{{ doc.company }}<br>
-	<small>{{ _("GSTIN/UIN: 33AAATA0037BPZ3") }}</small><br>
+	{{ _("GSTIN/UIN: 33AAATA0037BPZ3") }}<br>
 	<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
 </p>
-<p>
+<p style="font-size: smaller;">
 	<b>{{ _("Receipt No") }}:</b> {{ doc.name }}<br>
 	<b>{{ _("Cashier") }}:</b> {{ doc.owner }}<br>
 	<b>{{ _("Customer") }}:</b> {{ doc.customer_name }}<br>
-	<b>{{ _("Date") }}:</b> {{ doc.get_formatted("posting_date") }}<br>
-	<b>{{ _("Time") }}:</b> {{  doc.get_formatted("posting_time") }}<br>
+	{%- if frappe.db.get_value("Customer", doc.customer, "custom_fs_account_number") -%}
+		<b>{{ _("FS Account") }}:</b>
+		{{ frappe.db.get_value("Customer", doc.customer, "custom_fs_account_number") }}<br>
+	{%- endif -%}
+	<b>{{ _("Date") }}:</b> {{ doc.get_formatted("posting_date") }},&nbsp;
+	<b>{{ _("Time") }}:</b> {{  doc.get_formatted("posting_time") }}
 </p>
 
 <!-- <hr> -->
 <table class="table table-condensed">
 	<thead>
-		<tr>
-			<th width="45%"><b>{{ _("Item") }}</b>></th>
-			<th width="30%" class="text-right"><b>{{ _("Qty") }}</b></th>
+		<tr style="font-size: smaller;">
+			<th width="50%"><b>{{ _("Item") }}</b>></th>
+			<th width="25%" class="text-right"><b>{{ _("Qty") }}</b></th>
 			<th width="25%" class="text-right"><b>{{ _("Amount") }}</b></th>
 		</tr>
 	</thead>
 	<tbody>
 		{%- for item in doc.items -%}
 		<tr>
-			<td>
-				{{ item.item_code }} :&nbsp;
+			<td style="font-size: x-small;">
+				<b>{{ item.item_code }}</b>:&nbsp;
 				{%- if item.item_name != item.item_code -%}
-					{{ item.item_name }}
+					<b>{{ item.item_name }}</b>
 				{%- endif -%}
 				{%- if item.serial_no -%}
 					<br><b>{{ _("SR.No") }}:</b><br>
 					{{ item.serial_no | replace("\n", ", ") }}
 				{%- endif -%}
 			</td>
-			<td class="text-right">{{ item.qty }} @
-				<br><small>{{ item.get_formatted("net_rate") }}</small>
-				{%- if item.item_tax_template -%}
-					<br><small>{{ frappe.db.get_value("Item Tax Template", item.item_tax_template, "title") }}</small>
-				{%- endif -%}
+			<td class="text-right" style="font-size: x-small;">{{ item.qty }} @
+				<br>{{ item.get_formatted("net_rate") }}
 			</td>
-			<td class="text-right">{{ item.get_formatted("amount") }}</td>
+			<td class="text-right" style="font-size: smaller;">{{ item.get_formatted("amount") }}</td>
 		</tr>
 		{%- endfor -%}
 	</tbody>
 </table>
 
-<p class="text-right">
+<p class="text-right" style="font-size: smaller;">
 	{% if doc.flags.show_inclusive_tax_in_print %}
 		{{ _("Total Excl. Tax") }}: {{ doc.get_formatted("net_total", doc) }}<br>
 	{% else %}
@@ -100,106 +101,13 @@
 	{%- endif -%}
 </p>
 
-<!-- <table class="table table-condensed no-border">
-	<tbody>
-		<tr>
-			{% if doc.flags.show_inclusive_tax_in_print %}
-				<td class="text-right" style="width: 60%">
-					{{ _("Total Excl. Tax") }}
-				</td>
-				<td class="text-right">
-					{{ doc.get_formatted("net_total", doc) }}
-				</td>
-			{% else %}
-				<td class="text-right" style="width: 60%">
-					{{ _("Total") }}
-				</td>
-				<td class="text-right">
-					{{ doc.get_formatted("total", doc) }}
-				</td>
-			{% endif %}
-		</tr>
-		{%- for row in doc.taxes -%}
-		  {%- if not row.included_in_print_rate or doc.flags.show_inclusive_tax_in_print -%}
-			<tr>
-				<td class="text-right" style="width: 60%">
-					    {{ row.description }}
-				</td>
-				<td class="text-right">
-					{{ row.get_formatted("tax_amount", doc) }}
-				</td>
-			<tr>
-		  {%- endif -%}
-		{%- endfor -%}
-
-		{%- if doc.discount_amount -%}
-		<tr>
-			<td class="text-right" style="width: 60%">
-				{{ _("Discount") }}
-			</td>
-			<td class="text-right">
-				{{ doc.get_formatted("discount_amount") }}
-			</td>
-		</tr>
-		{%- endif -%}
-		<tr>
-			<td class="text-right" style="width: 60%">
-				<b>{{ _("Grand Total") }}</b>
-			</td>
-			<td class="text-right">
-				{{ doc.get_formatted("grand_total") }}
-			</td>
-		</tr>
-		{%- if doc.rounded_total -%}
-		<tr>
-			<td class="text-right" style="width: 60%">
-				<b>{{ _("Rounded Total") }}</b>
-			</td>
-			<td class="text-right">
-				{{ doc.get_formatted("rounded_total") }}
-			</td>
-		</tr>
-		{%- endif -%}
-		{%- for row in doc.payments -%}
-			{%- if row.amount != 0 -%}
-			<tr>
-				<td class="text-right" style="width: 60%">
-				    {{ row.mode_of_payment }}
-				</td>
-				<td class="text-right">
-					{{ row.get_formatted("amount", doc) }}
-				</td>
-			<tr>
-			{%- endif -%}
-		{%- endfor -%}
-		<tr>
-			<td class="text-right" style="width: 60%">
-				<b>{{ _("Paid Amount") }}</b>
-			</td>
-			<td class="text-right">
-				{{ doc.get_formatted("paid_amount") }}
-			</td>
-		</tr>
-		{%- if doc.change_amount -%}
-			<tr>
-				<td class="text-right" style="width: 60%">
-					<b>{{ _("Change Amount") }}</b>
-				</td>
-				<td class="text-right">
-					{{ doc.get_formatted("change_amount") }}
-				</td>
-			</tr>
-		{%- endif -%}
-	</tbody>
-</table> -->
-<!-- <hr> -->
 <br>
 {%- if doc.custom_fs_transfer_status -%}
-<p>
+<p style="font-size: smaller;">
 	<b>{{ _("FS Transfer Status") }}: {{ doc.custom_fs_transfer_status }}</b><br>
 </p>
 {%- endif -%}
-<p>
+<!-- <p style="font-size: smaller;">
 	<b>{{ _("Remarks") }}:</b> {{ doc.remarks }}
-</p>
-<p class="text-center">{{ _("Thank you, please visit again.") }}</p>
+</p> -->
+<p class="text-center" style="font-size: smaller;">{{ _("Thank you, please visit again.") }}</p>
