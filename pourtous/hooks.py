@@ -247,6 +247,7 @@ fixtures = [
                     "Payment Entry-custom_contribution_type", # for PTDC Contributions FS Transactions
                     "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
+                    "Sales Invoice-custom_fs_account_number", # to Identify Invoice based on FS Account number
                     "Sales Invoice-custom_transaction_date", # in case transaction date is earlier than the posting date
                     "Sales Invoice-custom_staff_member", # in case of accounts shared by a group
                     "Customer-custom_fs_account_number", # for FS Transactions
