@@ -6,8 +6,9 @@ from frappe import _, msgprint
 
 
 def execute(filters=None):
-	if not filters:
+	if not (filters.item_group and filters.price_list): # don't execute until both filters are set
 		return [], []
+
 	columns, data = [], []
 
 	columns = get_columns()
