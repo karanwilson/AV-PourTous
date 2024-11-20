@@ -26,9 +26,9 @@
 	<b>{{ _("Receipt No") }}:</b> {{ doc.name }}<br>
 	<b>{{ _("Cashier") }}:</b> {{ doc.owner }}<br>
 	<b>{{ _("Customer") }}:</b> {{ doc.customer_name }}<br>
-	{%- if frappe.db.get_value("Customer", doc.customer, "custom_fs_account_number") -%}
+	{%- if doc.custom_fs_account_number -%}
 		<b>{{ _("FS Account") }}:</b>
-		{{ frappe.db.get_value("Customer", doc.customer, "custom_fs_account_number") }}<br>
+		{{ doc.custom_fs_account_number }}<br>
 	{%- endif -%}
 	<b>{{ _("Date") }}:</b> {{ doc.get_formatted("posting_date") }},&nbsp;
 	<b>{{ _("Time") }}:</b> {{  doc.get_formatted("posting_time") }}

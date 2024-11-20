@@ -62,6 +62,7 @@ def supplier_batch_items(supplier):
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like "Stores%"
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
 		) AS current_qty,
@@ -100,6 +101,7 @@ def supplier_non_batch_items(supplier):
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like "Stores%"
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
 		) AS current_qty,
