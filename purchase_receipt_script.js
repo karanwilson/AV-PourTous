@@ -1,11 +1,11 @@
 frappe.ui.form.on('Purchase Receipt', {
 	refresh(frm) {
-        if (!frm.doc.taxes_and_charges) {
-            frm.set_value('taxes_and_charges', 'Input GST In-state - PTPS')
-                .then(() => {
-                    frm.refresh_field('taxes_and_charges');
-                });
-        }
+        /* if (!frm.doc.taxes_and_charges) {
+        } */
+        frm.set_value('taxes_and_charges', 'Input GST In-state - PTPS')
+            .then(() => {
+                frm.refresh_field('taxes_and_charges');
+            });
 	},
 
     /* supplier(frm) {
