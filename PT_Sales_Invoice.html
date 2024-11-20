@@ -30,8 +30,11 @@
 		<b>{{ _("FS Account") }}:</b>
 		{{ doc.custom_fs_account_number }}<br>
 	{%- endif -%}
-	<b>{{ _("Date") }}:</b> {{ doc.get_formatted("posting_date") }},&nbsp;
-	<b>{{ _("Time") }}:</b> {{  doc.get_formatted("posting_time") }}
+	<b>{{ _("Posting Date") }}:</b> {{ doc.get_formatted("posting_date") }},&nbsp;
+	<b>{{ _("Time") }}:</b> {{  doc.get_formatted("posting_time") }}<br>
+	{%- if doc.custom_transaction_date -%}
+		<b>{{ _("Transaction Date") }}:</b> {{ doc.get_formatted("custom_transaction_date") }}
+	{%- endif -%}
 </p>
 
 <!-- <hr> -->
