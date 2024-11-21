@@ -65,7 +65,14 @@ def supplier_batch_items(supplier):
 			and warehouse like '{0}'
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
-		) AS current_qty,
+		) AS store_qty,
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{1}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) AS stall_qty,
 		(
 			SELECT SUM(`tabSales Invoice Item`.qty)
 			FROM `tabSales Invoice Item`
@@ -78,13 +85,13 @@ def supplier_batch_items(supplier):
 		) AS sold_this_month
 		FROM tabItem, `tabItem Price`, `tabPurchase Receipt Item`, tabBatch, `tabItem Supplier`
 		WHERE tabItem.has_batch_no = 1
-		AND `tabItem Supplier`.supplier = '{1}'
+		AND `tabItem Supplier`.supplier = '{2}'
 		AND tabItem.item_code = `tabItem Supplier`.parent
 		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
 		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
 		AND tabItem.item_code = tabBatch.item AND tabBatch.batch_qty > 0
 		GROUP BY tabItem.item_code
-		""".format("Stores%", supplier),
+		""".format("Stores%", "Stall%", supplier),
 		as_dict=True
 	)
 	return query
@@ -103,7 +110,14 @@ def supplier_non_batch_items(supplier):
 			and warehouse like '{0}'
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
-		) AS current_qty,
+		) AS current_store_qty,
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{1}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) AS current_stall_qty,
 		(
 			SELECT SUM(`tabSales Invoice Item`.qty)
 			FROM `tabSales Invoice Item`
@@ -116,12 +130,12 @@ def supplier_non_batch_items(supplier):
 		) AS sold_this_month
 		FROM tabItem, `tabItem Price`, `tabPurchase Receipt Item`, `tabItem Supplier`
 		WHERE tabItem.has_batch_no = 0
-		AND `tabItem Supplier`.supplier = '{1}'
+		AND `tabItem Supplier`.supplier = '{2}'
 		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
 		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
 		AND tabItem.item_code = `tabItem Supplier`.parent
 		GROUP BY tabItem.item_code
-		""".format("Stores%", supplier),
+		""".format("Stores%", "Stall%", supplier),
 		as_dict=True
 	)
 	return query

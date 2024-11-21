@@ -7,7 +7,6 @@ frappe.ui.form.on('Purchase Order', {
 		frm.clear_table('items');
 	},
 
-
 	custom_batch_items_fetch(frm) {
 		frm.clear_table('custom_batch_items_data');
 		frappe.call({
@@ -24,7 +23,8 @@ frappe.ui.form.on('Purchase Order', {
 						item_row.buying_price = row["buying_price"];
 						item_row.selling_price = row["selling_price"];
 						item_row.ordered_qty = row["ordered_qty"];
-						item_row.current_qty = row["current_qty"];
+						item_row.store_qty = row["store_qty"];
+						item_row.stall_qty = row["stall_qty"];
 						item_row.sold_last_month = row["sold_last_month"];
 						item_row.sold_this_month = row["sold_this_month"];
 						item_row.to_buy = 0;
@@ -70,7 +70,6 @@ frappe.ui.form.on('Purchase Order', {
 		//frm.refresh_field('custom_batch_items_data');
 	},
 
-
 	custom_non_batch_items_fetch(frm) {
 		frm.clear_table('custom_non_batch_items_data');
 		frappe.call({
@@ -87,7 +86,8 @@ frappe.ui.form.on('Purchase Order', {
 						item_row.buying_price = row["buying_price"];
 						item_row.selling_price = row["selling_price"];
 						item_row.ordered_qty = row["ordered_qty"];
-						item_row.current_qty = row["current_qty"];
+						item_row.store_qty = row["store_qty"];
+						item_row.stall_qty = row["stall_qty"];
 						item_row.sold_last_month = row["sold_last_month"];
 						item_row.sold_this_month = row["sold_this_month"];
 						item_row.to_buy = 0;
@@ -126,7 +126,6 @@ frappe.ui.form.on('Purchase Order', {
 		frm.refresh_field('items');
 		//frm.refresh_field('custom_non_batch_items_data');
 	},
-
 
 	before_submit(frm) {
 		frm.clear_table('custom_batch_items_data');
