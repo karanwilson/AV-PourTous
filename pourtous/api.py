@@ -110,14 +110,14 @@ def supplier_non_batch_items(supplier):
 			and warehouse like '{0}'
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
-		) AS current_store_qty,
+		) AS store_qty,
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
 			and warehouse like '{1}'
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
-		) AS current_stall_qty,
+		) AS stall_qty,
 		(
 			SELECT SUM(`tabSales Invoice Item`.qty)
 			FROM `tabSales Invoice Item`
