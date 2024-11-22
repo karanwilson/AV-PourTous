@@ -38,34 +38,33 @@
 </p>
 
 <!-- <hr> -->
-<table class="table table-condensed">
-	<thead>
-		<tr style="font-size: smaller;">
-			<th width="50%"><b>{{ _("Item") }}</b>></th>
-			<th width="25%" class="text-right"><b>{{ _("Qty") }}</b></th>
-			<th width="25%" class="text-right"><b>{{ _("Amount") }}</b></th>
-		</tr>
-	</thead>
-	<tbody>
-		{%- for item in doc.items -%}
-		<tr>
-			<td style="font-size: x-small;">
-				<b>{{ item.item_code }}</b>:&nbsp;
-				{%- if item.item_name != item.item_code -%}
-					<b>{{ item.item_name }}</b>
-				{%- endif -%}
-				{%- if item.serial_no -%}
-					<br><b>{{ _("SR.No") }}:</b><br>
-					{{ item.serial_no | replace("\n", ", ") }}
-				{%- endif -%}
-			</td>
-			<td class="text-right" style="font-size: x-small;">{{ item.qty }} @
-				<br>{{ item.get_formatted("net_rate") }}
-			</td>
-			<td class="text-right" style="font-size: smaller;">{{ item.get_formatted("amount") }}</td>
-		</tr>
-		{%- endfor -%}
-	</tbody>
+<table style="width: 100%">
+	<tr style="font-size: smaller;">
+		<th width="50%"><b>{{ _("Item") }}</b></th>
+		<th width="10%" class="text-right"><b>{{ _("Qty") }}</b></th>
+		<th width="20%" class="text-right"><b>{{ _("Rate") }}</b></th>
+		<th width="20%" class="text-right"><b>{{ _("Amount") }}</b></th>
+	</tr>
+	{%- for item in doc.items -%}
+	<tr>
+		<td style="font-size: x-small;">
+			<b>{{ item.item_code }}</b>:&nbsp;
+			{%- if item.item_name != item.item_code -%}
+				<b>{{ item.item_name }}</b>
+			{%- endif -%}
+			{%- if item.serial_no -%}
+				<br><b>{{ _("SR.No") }}:</b><br>
+				{{ item.serial_no | replace("\n", ", ") }}
+			{%- endif -%}
+		</td>
+		<td class="text-right" style="font-size: x-small;">{{ item.qty }}</td>
+		<td class="text-right" style="font-size: x-small;">
+			{{ item.get_formatted("net_rate") }}
+		</td>
+		<td class="text-right" style="font-size: x-small;">
+			<b>{{ item.get_formatted("amount") }}</b></td>
+	</tr>
+	{%- endfor -%}
 </table>
 
 <p class="text-right" style="font-size: smaller;">
