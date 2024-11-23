@@ -21,7 +21,6 @@ frappe.ui.form.on('Purchase Order', {
 						item_row.item_code = row["item_code"];
 						item_row.item_name = row["item_name"];
 						item_row.buying_price = row["buying_price"];
-						item_row.selling_price = row["selling_price"];
 						item_row.ordered_qty = row["ordered_qty"];
 						item_row.store_qty = row["store_qty"];
 						item_row.stall_qty = row["stall_qty"];

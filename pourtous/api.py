@@ -57,7 +57,6 @@ def supplier_batch_items(supplier):
 	query = frappe.db.sql(
 		"""
 		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
-		`tabItem Price`.price_list_rate AS selling_price,
 		`tabPurchase Receipt Item`.qty AS ordered_qty, MAX(`tabPurchase Receipt Item`.creation),
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`

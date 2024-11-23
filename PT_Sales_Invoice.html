@@ -57,9 +57,9 @@
 				{{ item.serial_no | replace("\n", ", ") }}
 			{%- endif -%}
 		</td>
-		<td class="text-right" style="font-size: x-small;">{{ item.qty }}</td>
+		<td class="text-right" style="font-size: x-small;"><b>{{ item.qty }}</b></td>
 		<td class="text-right" style="font-size: x-small;">
-			{{ item.get_formatted("net_rate") }}
+			<b>{{ item.get_formatted("net_rate") }}</b>
 		</td>
 		<td class="text-right" style="font-size: x-small;">
 			<b>{{ item.get_formatted("amount") }}</b></td>

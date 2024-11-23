@@ -9,7 +9,6 @@
   "item_code",
   "item_name",
   "buying_price",
-  "selling_price",
   "ordered_qty",
   "store_qty",
   "stall_qty",
@@ -49,12 +48,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "selling_price",
-   "fieldtype": "Currency",
-   "label": "Selling Price",
-   "read_only": 1
-  },
-  {
    "fieldname": "ordered_qty",
    "fieldtype": "Float",
    "label": "Ordered Qty",
@@ -80,7 +73,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-11-21 12:34:59.657025",
+ "modified": "2024-11-23 16:10:34.339574",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "PO Supplier Batch Items",
