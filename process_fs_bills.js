@@ -38,19 +38,42 @@ frappe.listview_settings['Sales Invoice'] = {
                         }
                     }
                 }
-            });
+            }).then(r => {
+                final_message = "Received transfers for " + transfers + " of " + length + " Invoices";
+                frappe.msgprint(__(final_message));
+            })
         });
 
-        /* listview.page.add_inner_button("Exception Process FS Credit Bills", () => {
+        listview.page.add_inner_button("Exception Process FS Credit Bills", () => {
             frappe.call({
-                method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.exception_add_transfer_fs_credit_bills',
-                freeze: true,
-                freeze_message: "Processing Exception FS Credit Bills",
+                method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.fetch_exception_fs_credit_bills',
                 callback: (r) => {
-                    //this.refresh();
-                    location.reload();
+                    if (r.message) {
+                        const length = r.message.length;
+                        console.log("Number of Exception Credit Bills to process: ", length);
+                        let transfers = 0;
+                        for (let i = 0; i < length; i++) {
+                            setTimeout(() => {
+                                frappe.call({
+                                    method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_exception_fs_credit_bill',
+                                    args: { bill: r.message[i][0] },
+                                    async: false,
+                                    callback: (r) => {
+                                        if (r.message == "OK")
+                                            transfers++;
+                                    }
+                                });
+                                const count = i+1;
+                                const message = "Loading "+count+" of "+length;
+                                frappe.show_progress("Processing Exception FS Credit Bills", count, length, message);
+                            }, 0);
+                        }
+                    }
                 }
-            });
-        }); */
+            }).then(r => {
+                final_message = "Received transfers for " + transfers + " of " + length + " Invoices";
+                frappe.msgprint(__(final_message));
+            })
+        });
     },
 };
