@@ -1,6 +1,6 @@
 frappe.listview_settings['Sales Invoice'] = {
     refresh(listview) {
-        listview.page.add_inner_button("Submit Offline FS Bills", () => {
+        /* listview.page.add_inner_button("Submit Offline FS Bills", () => {
             frappe.call({
                 method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_fs_draft_bills',
                 freeze: true,
@@ -10,7 +10,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     location.reload();
                 }
             });
-        });
+        }); */
 
         listview.page.add_inner_button("Process FS Credit Bills", () => {
             frappe.call({
@@ -41,7 +41,7 @@ frappe.listview_settings['Sales Invoice'] = {
             }).then(r => {
                 final_message = "Received transfers for " + transfers + " of " + length + " Invoices";
                 frappe.msgprint(__(final_message));
-            })
+            });
         });
 
         listview.page.add_inner_button("Exception Process FS Credit Bills", () => {
@@ -52,7 +52,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         const length = r.message.length;
                         console.log("Number of Exception Credit Bills to process: ", length);
                         let transfers = 0;
-                        for (let i = 0; i < length; i++) {
+                        for (let i = 0; i < 10; i++) {
                             setTimeout(() => {
                                 frappe.call({
                                     method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_exception_fs_credit_bill',
@@ -73,7 +73,7 @@ frappe.listview_settings['Sales Invoice'] = {
             }).then(r => {
                 final_message = "Received transfers for " + transfers + " of " + length + " Invoices";
                 frappe.msgprint(__(final_message));
-            })
+            });
         });
     },
 };
