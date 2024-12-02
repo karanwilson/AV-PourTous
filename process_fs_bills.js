@@ -38,13 +38,10 @@ frappe.listview_settings['Sales Invoice'] = {
                         }
                     }
                 }
-            }).then(r => {
-                final_message = "Received transfers for " + transfers + " of " + length + " Invoices";
-                frappe.msgprint(__(final_message));
-            });
+            })
         });
 
-        listview.page.add_inner_button("Exception Process FS Credit Bills", () => {
+        /* listview.page.add_inner_button("Exception Process FS Credit Bills", () => {
             frappe.call({
                 method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.fetch_exception_fs_credit_bills',
                 callback: (r) => {
@@ -70,10 +67,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         }
                     }
                 }
-            }).then(r => {
-                final_message = "Received transfers for " + transfers + " of " + length + " Invoices";
-                frappe.msgprint(__(final_message));
-            });
-        });
+            })
+        }); */
     },
 };
