@@ -52,7 +52,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         const length = r.message.length;
                         console.log("Number of Exception Credit Bills to process: ", length);
                         let transfers = 0;
-                        for (let i = 0; i < 10; i++) {
+                        for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
                                     method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_exception_fs_credit_bill',
