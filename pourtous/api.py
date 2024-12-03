@@ -224,6 +224,11 @@ def update_selling_price_list(doc, method):
 			})
 			item_price.insert() """
 
+def delete_item_batch(doc, method):
+	for item in doc.items:
+		if item.batch_no:
+			frappe.delete_doc('Batch', item.batch_no)
+
 """ def delete_item_price(doc, method):
 	for item in doc.items:
 		if item.batch_no:
