@@ -133,7 +133,7 @@ doc_events = {
 	"Purchase Receipt": {
 		"on_submit": "pourtous.api.update_selling_price_list", # creates an 'Item Price' in the 'Selling Price List'
 		"before_cancel": "pourtous.api.delete_item_price", # deletes the linked 'Item Price' before cancelling the Purchase Receipt
-        "after_delete": "pourtous.api.delete_item_price" # deletes the linked 'Item Price' before cancelling the Purchase Receipt
+        #"after_delete": "pourtous.api.delete_item_price" # deletes the linked 'Item Price' before cancelling the Purchase Receipt
 	},
 # 	"*": {
 # 		"on_update": "method",

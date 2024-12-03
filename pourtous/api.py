@@ -212,7 +212,9 @@ def update_selling_price_list(doc, method):
 				item_price.insert()
 
 		else:
-			item_price = frappe.get_doc({
+			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.rate)
+			frappe.db.commit()
+			""" item_price = frappe.get_doc({
 				"doctype": "Item Price",
 				"item_code": item.item_code,
 				"uom": item.uom,
@@ -220,10 +222,10 @@ def update_selling_price_list(doc, method):
 				"price_list_rate": item.rate,
 				"batch_no": item.batch_no
 			})
-			item_price.insert()
+			item_price.insert() """
 
-def delete_item_price(doc, method):
+""" def delete_item_price(doc, method):
 	for item in doc.items:
 		if item.batch_no:
 			item_price_name = frappe.get_list('Item Price', filters = {"batch_no": item.batch_no})	# returns a list of dicts (key value pairs)
-			frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name'
+			frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name' """
