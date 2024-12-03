@@ -26,10 +26,11 @@ frappe.listview_settings['Sales Invoice'] = {
                                     method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_fs_credit_bill',
                                     args: { bill: r.message[i][0] },
                                     async: false,
-                                    callback: (r) => {
-                                        if (r.message == "OK")
-                                            transfers++;
-                                    }
+                                }).then(r => {
+                                    if (r.message == "OK")
+                                        transfers++;
+                                }).then(r => {
+                                    console.log("Received transfers for ", transfers, " of ", length, " Invoices");
                                 });
                                 const count = i+1;
                                 const message = "Loading "+count+" of "+length;
@@ -38,7 +39,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         }
                     }
                 }
-            })
+            });
         });
 
         /* listview.page.add_inner_button("Exception Process FS Credit Bills", () => {
