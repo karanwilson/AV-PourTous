@@ -27,28 +27,28 @@ def get_columns():
 			"fieldname": "item_code",
 			"label": "Item Code",
 			"fieldtype": "Data",
-			"width": "150"
+			"width": "100"
 		},
 
 		{
 			"fieldname": "item_name",
 			"label": "Item Name",
 			"fieldtype": "Data",
-			"width": "300"
+			"width": "450"
 		},
 
 		{
 			"fieldname": "qty",
 			"label": "Quantity",
 			"fieldtype": "Float",
-			"width": "150"
+			"width": "100"
 		},
 
 		{
 			"fieldname": "rate",
 			"label": "Price",
 			"fieldtype": "Currency",
-			"width": "150"
+			"width": "100"
 		},
 	]
 
@@ -60,6 +60,7 @@ def get_data(filters):
 			SELECT item_code, item_name, qty, rate
 			FROM `tabPurchase Receipt Item`, `tabPurchase Receipt`
 			WHERE `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
+			AND `tabPurchase Receipt`.docstatus = 1
 			AND `tabPurchase Receipt`.posting_date = '{0}'
 		""".format(filters.posting_date),
 		as_dict=True
