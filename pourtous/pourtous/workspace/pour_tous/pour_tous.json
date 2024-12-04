@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"dfXMDVBByV\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Pour Tous</span>\",\"col\":12}},{\"id\":\"pFUtqaR8mD\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Order\",\"col\":3}},{\"id\":\"p8Mf4_3JgR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Direct Receive\",\"col\":3}},{\"id\":\"xcnXx4QTZx\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Direct Transfer\",\"col\":3}},{\"id\":\"LuCutZlcdc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item Price\",\"col\":3}},{\"id\":\"zSHpJvPE4p\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Reconciliation\",\"col\":3}},{\"id\":\"L8J8kPhaWF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payment Entry\",\"col\":3}},{\"id\":\"KMCglCDk6h\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Invoice\",\"col\":3}},{\"id\":\"Zz_yXF5bjz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous Settings\",\"col\":3}},{\"id\":\"hD-LESfNVo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous App\",\"col\":3}},{\"id\":\"aPLIoPDTbh\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports <br></b></span>\",\"col\":12}},{\"id\":\"U4rARYRYXX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Unpaid Invoices\",\"col\":3}},{\"id\":\"yATZltas3X\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Veg Fruit Prices\",\"col\":3}},{\"id\":\"0h2vs_b7AS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock-In List\",\"col\":3}},{\"id\":\"8PjwR1zJs1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Balance\",\"col\":3}},{\"id\":\"i-DEVi_w66\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Analytics\",\"col\":3}},{\"id\":\"A7k2suxNbg\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"pRCB9ixN0d\",\"type\":\"card\",\"data\":{\"card_name\":\"Records\",\"col\":4}},{\"id\":\"-XmEnPPJt-\",\"type\":\"card\",\"data\":{\"card_name\":\"Pour Tous Records\",\"col\":4}}]",
+ "content": "[{\"id\":\"dfXMDVBByV\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Pour Tous</span>\",\"col\":12}},{\"id\":\"pFUtqaR8mD\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Order\",\"col\":3}},{\"id\":\"p8Mf4_3JgR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Direct Receive\",\"col\":3}},{\"id\":\"xcnXx4QTZx\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Direct Transfer\",\"col\":3}},{\"id\":\"LuCutZlcdc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item Price\",\"col\":3}},{\"id\":\"zSHpJvPE4p\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Reconciliation\",\"col\":3}},{\"id\":\"L8J8kPhaWF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payment Entry\",\"col\":3}},{\"id\":\"KMCglCDk6h\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Invoice\",\"col\":3}},{\"id\":\"Zz_yXF5bjz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous Settings\",\"col\":3}},{\"id\":\"hD-LESfNVo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous App\",\"col\":3}},{\"id\":\"aPLIoPDTbh\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports <br></b></span>\",\"col\":12}},{\"id\":\"U4rARYRYXX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Unpaid Invoices\",\"col\":3}},{\"id\":\"yATZltas3X\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Veg Fruit Prices\",\"col\":3}},{\"id\":\"0h2vs_b7AS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock-In List\",\"col\":3}},{\"id\":\"8PjwR1zJs1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Balance\",\"col\":3}},{\"id\":\"i-DEVi_w66\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Analytics\",\"col\":3}},{\"id\":\"awh8Gv1JOk\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Daily GST-Sales\",\"col\":3}},{\"id\":\"A7k2suxNbg\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"pRCB9ixN0d\",\"type\":\"card\",\"data\":{\"card_name\":\"Records\",\"col\":4}},{\"id\":\"-XmEnPPJt-\",\"type\":\"card\",\"data\":{\"card_name\":\"Pour Tous Records\",\"col\":4}}]",
  "creation": "2024-08-15 20:57:18.765870",
  "custom_blocks": [],
  "docstatus": 0,
@@ -131,7 +131,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-12-04 21:36:55.609063",
+ "modified": "2024-12-04 23:18:07.288167",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Pour Tous",
@@ -173,6 +173,13 @@
    "doc_view": "List",
    "label": "Veg Fruit Prices",
    "link_to": "Veg Fruit Prices",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Daily GST-Sales",
+   "link_to": "GST Sales Report",
    "type": "Report"
   },
   {
