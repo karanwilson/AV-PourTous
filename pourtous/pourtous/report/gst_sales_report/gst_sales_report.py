@@ -124,35 +124,36 @@ def get_data(filters):
 			SELECT name, return_against, customer_name, posting_date,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name and item_tax_template like "Nil-Rated%")
+			WHERE parent = `tabSales Invoice`.name
+			AND (item_tax_template like "Nil-Rated%" OR item_tax_template like "Non-GST%" OR item_tax_template like "Exempted%"))
 			AS sales_exempted,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name and item_tax_template like "GST 5%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 5%")
 			AS sales_5,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name and item_tax_template like "GST 12%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 12%")
 			AS sales_12,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name and item_tax_template like "GST 18%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 18%")
 			AS sales_18,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name and item_tax_template like "GST 28%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28%")
 			AS sales_28,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
-			WHERE parent = `tabSales Invoice`.name and description = "CGST")
+			WHERE parent = `tabSales Invoice`.name AND description = "CGST")
 			AS cgst_amount,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
-			WHERE parent = `tabSales Invoice`.name and description = "SGST")
+			WHERE parent = `tabSales Invoice`.name AND description = "SGST")
 			AS sgst_amount,
 
-			((SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name and description = "CGST")
-			+(SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name and description = "SGST"))
+			((SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name AND description = "CGST")
+			+(SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name AND description = "SGST"))
 			AS total_tax,
 
 			grand_total
@@ -171,35 +172,36 @@ def get_data(filters):
 			SELECT name, return_against, customer_name, posting_date,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name and item_tax_template like "Nil-Rated%")
+			WHERE parent = `tabSales Invoice`.name
+			AND (item_tax_template like "Nil-Rated%" OR item_tax_template like "Non-GST%" OR item_tax_template like "Exempted%"))
 			AS sales_exempted,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name and item_tax_template like "GST 5%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 5%")
 			AS sales_5,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name and item_tax_template like "GST 12%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 12%")
 			AS sales_12,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name and item_tax_template like "GST 18%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 18%")
 			AS sales_18,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name and item_tax_template like "GST 28%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28%")
 			AS sales_28,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
-			WHERE parent = `tabSales Invoice`.name and description = "CGST")
+			WHERE parent = `tabSales Invoice`.name AND description = "CGST")
 			AS cgst_amount,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
-			WHERE parent = `tabSales Invoice`.name and description = "SGST")
+			WHERE parent = `tabSales Invoice`.name AND description = "SGST")
 			AS sgst_amount,
 
-			((SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name and description = "CGST")
-			+(SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name and description = "SGST"))
+			((SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name AND description = "CGST")
+			+(SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name AND description = "SGST"))
 			AS total_tax,
 
 			grand_total
