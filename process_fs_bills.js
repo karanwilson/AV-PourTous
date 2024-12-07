@@ -12,7 +12,7 @@ frappe.listview_settings['Sales Invoice'] = {
             });
         }); */
 
-        listview.page.add_inner_button("Process FS Credit Bills", () => {
+        /* listview.page.add_inner_button("Process FS Credit Bills", () => {
             frappe.call({
                 method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.fetch_fs_credit_bills',
                 callback: (r) => {
@@ -40,7 +40,39 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
+        }); */
+
+
+        listview.page.add_inner_button("Process FS Credit Bills", () => {
+            frappe.call({
+                method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.fetch_fs_credit_bills',
+            }).then(r => {
+                if (r.message) {
+                    const length = r.message.length;
+                    console.log("Number of Credit Bills to process: ", length);
+                    let transfers = 0;
+                    for (let i = 0; i < length; i++) {
+                        setTimeout(() => {
+                            frappe.call({
+                                method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_fs_credit_bill',
+                                args: { bill: r.message[i][0] },
+                                async: false,
+                            }).then(r => {
+                                if (r.message == "OK") {
+                                    transfers++;
+                                    const count = i+1;
+                                    const message = "Loading "+count+" of "+length;
+                                    frappe.show_progress("Processing FS Credit Bills", count, length, message);
+                                }
+                            })
+                        }, 0);
+                    }
+                }
+            }).then(r => {
+                console.log("Received transfers for ", transfers, " of ", length, " Invoices");
+            });
         });
+
 
         /* listview.page.add_inner_button("Exception Process FS Credit Bills", () => {
             frappe.call({
@@ -68,7 +100,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         }
                     }
                 }
-            })
+            });
         }); */
     },
 };
