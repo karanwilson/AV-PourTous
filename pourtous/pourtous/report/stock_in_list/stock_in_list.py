@@ -6,7 +6,7 @@ from frappe import _, msgprint
 
 
 def execute(filters=None):
-	if not (filters.posting_date): # don't execute until filters are set
+	if not (filters.voucher_type and filters.posting_date): # don't execute until filters are set
 		return [], []
 
 	columns, data = [], []
@@ -23,6 +23,13 @@ def execute(filters=None):
 
 def get_columns():
 	return [
+		{
+			"fieldname": "voucher_type",
+			"label": "Voucher Type",
+			"fieldtype": "Data",
+			"width": "150"
+		},
+
 		{
 			"fieldname": "item_code",
 			"label": "Item Code",
@@ -55,15 +62,28 @@ def get_columns():
 
 def get_data(filters):
 
-	query = frappe.db.sql(
-		"""
-			SELECT item_code, item_name, qty, rate
-			FROM `tabPurchase Receipt Item`, `tabPurchase Receipt`
-			WHERE `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
-			AND `tabPurchase Receipt`.docstatus = 1
-			AND `tabPurchase Receipt`.posting_date = '{0}'
-		""".format(filters.posting_date),
-		as_dict=True
-	)
+	if filters.voucher_type == "Purchase Receipt":
+		query = frappe.db.sql(
+			"""
+				SELECT parenttype AS voucher_type, item_code, item_name, qty, rate
+				FROM `tabPurchase Receipt Item`, `tabPurchase Receipt`
+				WHERE `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
+				AND `tabPurchase Receipt`.docstatus = 1
+				AND `tabPurchase Receipt`.posting_date = '{0}'
+			""".format(filters.posting_date),
+			as_dict=True
+		)
+
+	else:
+		query = frappe.db.sql(
+			"""
+				SELECT stock_entry_type AS voucher_type, item_code, item_name, qty, basic_rate AS rate
+				FROM `tabStock Entry Detail`, `tabStock Entry`
+				WHERE `tabStock Entry Detail`.parent = `tabStock Entry`.name
+				AND `tabStock Entry`.docstatus = 1
+				AND `tabStock Entry`.posting_date = '{0}'
+			""".format(filters.posting_date),
+			as_dict=True
+		)
 
 	return query
