@@ -38,7 +38,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-10-25 16:47:42.485184",
+ "modified": "2024-12-07 23:19:56.855595",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "FS Account Details",
@@ -117,7 +117,9 @@
    "write": 1
   }
  ],
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "account_number"
 }
