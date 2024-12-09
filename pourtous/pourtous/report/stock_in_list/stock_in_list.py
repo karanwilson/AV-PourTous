@@ -27,14 +27,14 @@ def get_columns():
 			"fieldname": "voucher_type",
 			"label": "Voucher Type",
 			"fieldtype": "Data",
-			"width": "150"
+			"width": "135"
 		},
 
 		{
 			"fieldname": "voucher_name",
 			"label": "Voucher ID",
 			"fieldtype": "Data",
-			"width": "150"
+			"width": "135"
 		},
 
 		{
@@ -47,6 +47,13 @@ def get_columns():
 		{
 			"fieldname": "item_code",
 			"label": "Item Code",
+			"fieldtype": "Data",
+			"width": "90"
+		},
+
+		{
+			"fieldname": "batch_no",
+			"label": "Batch",
 			"fieldtype": "Data",
 			"width": "100"
 		},
@@ -80,7 +87,7 @@ def get_data(filters):
 		query = frappe.db.sql(
 			"""
 				SELECT parenttype AS voucher_type, `tabPurchase Receipt`.name AS voucher_name,
-				title AS supplier, item_code, item_name, qty, rate
+				title AS supplier, item_code, batch_no, item_name, qty, rate
 				FROM `tabPurchase Receipt Item`, `tabPurchase Receipt`
 				WHERE `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
 				AND `tabPurchase Receipt`.docstatus = 1
@@ -93,7 +100,7 @@ def get_data(filters):
 		query = frappe.db.sql(
 			"""
 				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name,
-				item_code, item_name, qty, basic_rate AS rate
+				item_code, batch_no, item_name, qty, basic_rate AS rate
 				FROM `tabStock Entry Detail`, `tabStock Entry`
 				WHERE `tabStock Entry Detail`.parent = `tabStock Entry`.name
 				AND `tabStock Entry`.docstatus = 1
