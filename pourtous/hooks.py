@@ -131,7 +131,7 @@ doc_events = {
 	},
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
-		"on_submit": "pourtous.api.update_selling_price_list", # creates an 'Item Price' in the 'Selling Price List'
+		"on_submit": "pourtous.api.update_selling_price_list", # Add the 'Item Price'
 		#"before_cancel": "pourtous.api.delete_item_price", # deletes the linked 'Item Price' before cancelling the Purchase Receipt
         #"before_cancel": "pourtous.api.delete_item_batch" # deletes the linked Item Batch before cancelling the Purchase Receipt
 	},

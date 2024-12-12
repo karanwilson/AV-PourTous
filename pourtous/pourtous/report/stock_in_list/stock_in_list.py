@@ -34,7 +34,7 @@ def get_columns():
 			"fieldname": "voucher_name",
 			"label": "Voucher ID",
 			"fieldtype": "Data",
-			"width": "135"
+			"width": "200"
 		},
 
 		{
@@ -62,7 +62,7 @@ def get_columns():
 			"fieldname": "item_name",
 			"label": "Item Name",
 			"fieldtype": "Data",
-			"width": "300"
+			"width": "250"
 		},
 
 		{

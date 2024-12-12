@@ -2,19 +2,13 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Current Stock Balance"] = {
+frappe.query_reports["Item Batch Price"] = {
 	"filters": [
 		{
 			"fieldname": "name",
 			"label": __("Item"),
 			"fieldtype": "Link",
 			"options": "Item",
-			"width": "60px",
-		},
-		{
-			"fieldname": "item_code",
-			"label": __("Item Code"),
-			"fieldtype": "Data",
 			"width": "60px",
 		},
 	]

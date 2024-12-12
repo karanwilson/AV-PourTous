@@ -82,13 +82,11 @@ def supplier_batch_items(supplier):
 			FROM `tabSales Invoice Item`
 			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate()))
 		) AS sold_this_month
-		FROM tabItem, `tabItem Price`, `tabPurchase Receipt Item`, tabBatch, `tabItem Supplier`
+		FROM tabItem, `tabPurchase Receipt Item`, `tabItem Supplier`
 		WHERE tabItem.has_batch_no = 1
 		AND `tabItem Supplier`.supplier = '{2}'
 		AND tabItem.item_code = `tabItem Supplier`.parent
-		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
 		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
-		AND tabItem.item_code = tabBatch.item AND tabBatch.batch_qty > 0
 		GROUP BY tabItem.item_code
 		""".format("Stores%", "Stall%", supplier),
 		as_dict=True
@@ -101,7 +99,6 @@ def supplier_non_batch_items(supplier):
 	query = frappe.db.sql(
 		"""
 		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
-		`tabItem Price`.price_list_rate AS selling_price,
 		`tabPurchase Receipt Item`.qty AS ordered_qty, MAX(`tabPurchase Receipt Item`.creation),
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
@@ -127,10 +124,9 @@ def supplier_non_batch_items(supplier):
 			FROM `tabSales Invoice Item`
 			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate()))
 		) AS sold_this_month
-		FROM tabItem, `tabItem Price`, `tabPurchase Receipt Item`, `tabItem Supplier`
+		FROM tabItem, `tabPurchase Receipt Item`, `tabItem Supplier`
 		WHERE tabItem.has_batch_no = 0
 		AND `tabItem Supplier`.supplier = '{2}'
-		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.selling = 1
 		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
 		AND tabItem.item_code = `tabItem Supplier`.parent
 		GROUP BY tabItem.item_code
