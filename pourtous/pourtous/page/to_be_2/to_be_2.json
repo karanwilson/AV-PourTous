@@ -1,0 +1,23 @@
+{
+ "content": null,
+ "creation": "2024-12-16 12:10:32.650197",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2024-12-16 12:14:29.870154",
+ "modified_by": "Administrator",
+ "module": "pourtous",
+ "name": "to-be-2",
+ "owner": "Administrator",
+ "page_name": "to-be-2",
+ "roles": [
+  {
+   "role": "Supplier"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "To Be 2"
+}
