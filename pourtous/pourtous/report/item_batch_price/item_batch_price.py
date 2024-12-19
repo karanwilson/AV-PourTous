@@ -39,29 +39,17 @@ def get_columns():
 			"fieldname": "supplier",
 			"label": "Supplier",
 			"fieldtype": "Data",
+			"width": "300"	
+		},
+		{
+			"fieldname": "batch",
+			"label": "Batch No.",
+			"fieldtype": "Data",
 			"width": "150"
 		},
 		{
-			"fieldname": "batch_no",
-			"label": " Batch No.",
-			"fieldtype": "Data",
-			"width": "100"
-		},
-		{
-			"fieldname": "batch_qty",
-			"label": "Quantity",
-			"fieldtype": "Float",
-			"width": "100"
-		},
-		{
-			"fieldname": "posa_batch_price",
+			"fieldname": "price",
 			"label": "Batch Price",
-			"fieldtype": "Currency",
-			"width": "100"
-		},
-		{
-			"fieldname": "price_list_rate",
-			"label": "Item Price",
 			"fieldtype": "Currency",
 			"width": "100"
 		},
@@ -69,17 +57,33 @@ def get_columns():
 
 
 def get_data(filters):
-	query = frappe.db.sql(
-		"""
-		SELECT tabItem.item_code, tabItem.item_name, `tabItem Supplier`.supplier,
-		tabBatch.name AS Batch, tabBatch.batch_qty AS Qty,
-		IF(tabBatch.posa_batch_price > 0, tabBatch.posa_batch_price, `tabItem Price`.price_list_rate) AS Price
-		FROM tabItem, `tabItem Supplier`, tabBatch, `tabItem Price`
-		WHERE tabItem.item_code = `tabItem Supplier`.parent AND tabBatch.item = tabItem.item_code and tabBatch.batch_qty > 0
-		AND `tabItem Price`.item_code = tabItem.item_code AND `tabItem Price`.price_list = "Standard Selling"
-		AND tabItem.item_code = '{0}'
-		""".format(filters.name),
-		as_dict=True
-	)
+	if frappe.get_value("Item", filters.name, "has_batch_no"):
+		query = frappe.db.sql(
+			"""
+			SELECT item as item_code, item_name, supplier,
+			tabBatch.name AS batch, posa_batch_price AS price
+			FROM tabBatch, `tabStock Ledger Entry`
+			WHERE item = `tabStock Ledger Entry`.item_code
+			AND `tabStock Ledger Entry`.is_cancelled = 0
+			AND batch_qty != 0
+			AND item_code = '{0}'
+			GROUP BY tabBatch.name
+			""".format(filters.name),
+			as_dict=True
+		)
+
+	else:
+		query = frappe.db.sql(
+			"""
+			SELECT tabItem.item_code, tabItem.item_name, `tabItem Supplier`.supplier,
+			`tabItem Price`.price_list_rate AS price
+			FROM tabItem, `tabItem Supplier`, `tabItem Price`
+			WHERE tabItem.item_code = `tabItem Supplier`.parent
+			AND `tabItem Price`.item_code = tabItem.item_code
+			AND `tabItem Price`.price_list = "Standard Selling"
+			AND tabItem.item_code = '{0}'
+			""".format(filters.name),
+			as_dict=True
+		)
 
 	return query
