@@ -11,7 +11,7 @@ def execute(filters=None):
 
 	columns, data = [], []
 
-	columns = get_columns()
+	columns = get_columns(filters)
 	data = get_data(filters)
 
 	if not data:
@@ -21,53 +21,95 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns():
-	return [
-		{
-			"fieldname": "item_code",
-			"label": "Item Code",
-			"fieldtype": "Data",
-			"width": "90"
-		},
-		{
-			"fieldname": "item_name",
-			"label": "Item Name",
-			"fieldtype": "Data",
-			"width": "300"
-		},
-		{
-			"fieldname": "supplier",
-			"label": "Supplier",
-			"fieldtype": "Data",
-			"width": "300"	
-		},
-		{
-			"fieldname": "batch",
-			"label": "Batch No.",
-			"fieldtype": "Data",
-			"width": "150"
-		},
-		{
-			"fieldname": "price",
-			"label": "Batch Price",
-			"fieldtype": "Currency",
-			"width": "100"
-		},
-	]
+def get_columns(filters):
+	if frappe.get_value("Item", filters.name, "has_batch_no"):
+		return [
+			{
+				"fieldname": "item_code",
+				"label": "Code",
+				"fieldtype": "Data",
+				"width": "80"
+			},
+			{
+				"fieldname": "item_name",
+				"label": "Item Name",
+				"fieldtype": "Data",
+				"width": "300"
+			},
+			{
+				"fieldname": "supplier",
+				"label": "Supplier",
+				"fieldtype": "Data",
+				"width": "300"	
+			},
+			{
+				"fieldname": "batch_no",
+				"label": "Batch No.",
+				"fieldtype": "Data",
+				"width": "130"
+			},
+			{
+				"fieldname": "warehouse",
+				"label": "Warehouse",
+				"fieldtype": "Data",
+				"width": "120"
+			},
+			{
+				"fieldname": "qty",
+				"label": "Qty",
+				"fieldtype": "Float",
+				"width": "80"
+			},
+			{
+				"fieldname": "price",
+				"label": "Price",
+				"fieldtype": "Currency",
+				"width": "80"
+			},
+		]
+
+	else:
+		return [
+			{
+				"fieldname": "item_code",
+				"label": "Code",
+				"fieldtype": "Data",
+				"width": "80"
+			},
+			{
+				"fieldname": "item_name",
+				"label": "Item Name",
+				"fieldtype": "Data",
+				"width": "300"
+			},
+			{
+				"fieldname": "supplier",
+				"label": "Supplier",
+				"fieldtype": "Data",
+				"width": "300"	
+			},
+			{
+				"fieldname": "price",
+				"label": "Price",
+				"fieldtype": "Currency",
+				"width": "80"
+			},
+		]		
 
 
 def get_data(filters):
 	if frappe.get_value("Item", filters.name, "has_batch_no"):
 		query = frappe.db.sql(
 			"""
-			SELECT item as item_code, item_name, supplier,
-			tabBatch.name AS batch, posa_batch_price AS price
-			FROM tabBatch, `tabStock Ledger Entry`
-			WHERE item = `tabStock Ledger Entry`.item_code
-			AND `tabStock Ledger Entry`.is_cancelled = 0
-			AND batch_qty != 0
-			AND item_code = '{0}'
-			GROUP BY tabBatch.name
+			select `tabStock Ledger Entry`.item_code, tabBatch.item_name, tabBatch.supplier,
+			`tabStock Ledger Entry`.batch_no, `tabStock Ledger Entry`.warehouse,
+			SUM(`tabStock Ledger Entry`.actual_qty) as qty, tabBatch.posa_batch_price AS price
+			from `tabStock Ledger Entry`, tabBatch
+			where `tabStock Ledger Entry`.is_cancelled = 0
+			and `tabStock Ledger Entry`.batch_no = tabBatch.name
+			AND tabBatch.batch_qty != 0
+			and `tabStock Ledger Entry`.item_code = '{0}'
+			group by `tabStock Ledger Entry`.batch_no
 			""".format(filters.name),
 			as_dict=True
 		)

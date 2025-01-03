@@ -43,7 +43,7 @@ def get_columns():
 		},
 		{
 			"fieldname": "store_qty",
-			"label": " Store Qty",
+			"label": "Store Qty",
 			"fieldtype": "Float",
 			"width": "100"
 		},
