@@ -150,7 +150,7 @@ def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
 
 # creates credit vouchers for returns at PTDC (for pre-paid member accounts)
 # called from hooks.py when "Sales Invoice" documents are submitted
-def payment_entry_for_return(doc, method):
+""" def payment_entry_for_return(doc, method):
 	#if doc.company == "Pour Tous Distribution Center" and doc.status == "Return":
 	if doc.status == "Return" and frappe.get_value("Sales Invoice", doc.return_against, "custom_fs_transfer_status") != "Insufficient Funds":
 		# Check below whether all the MOP have amount == 0
@@ -168,15 +168,6 @@ def payment_entry_for_return(doc, method):
         	}
 		else:
 			return
-
-		""" if len(mop_cash_list) > 0:
-			cash_account = get_bank_cash_account(mop_cash_list[0], doc.company)
-		else:
-			cash_account = {
-            	"account": frappe.get_value(
-                	"Company", doc.company, "default_cash_account"
-            	)
-        	} """
 
     	# creating advance payment
 		advance_payment_entry = frappe.get_doc(
@@ -196,7 +187,7 @@ def payment_entry_for_return(doc, method):
 		advance_payment_entry.flags.ignore_permissions = True
 		frappe.flags.ignore_account_permission = True
 		advance_payment_entry.insert()
-		advance_payment_entry.submit()
+		advance_payment_entry.submit() """
 
 
 def update_selling_price_list(doc, method):
