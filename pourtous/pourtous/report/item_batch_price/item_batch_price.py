@@ -49,12 +49,6 @@ def get_columns(filters):
 				"width": "130"
 			},
 			{
-				"fieldname": "warehouse",
-				"label": "Warehouse",
-				"fieldtype": "Data",
-				"width": "120"
-			},
-			{
 				"fieldname": "qty",
 				"label": "Qty",
 				"fieldtype": "Float",
@@ -67,6 +61,12 @@ def get_columns(filters):
 				"width": "80"
 			},
 		]
+		""" {
+			"fieldname": "warehouse",
+			"label": "Warehouse",
+			"fieldtype": "Data",
+			"width": "120"
+		}, """
 
 	else:
 		return [
