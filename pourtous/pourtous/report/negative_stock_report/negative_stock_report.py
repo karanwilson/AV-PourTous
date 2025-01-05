@@ -30,13 +30,19 @@ def get_columns():
 			"fieldname": "item_name",
 			"label": "Item Name",
 			"fieldtype": "Data",
-			"width": "350"
+			"width": "300"
+		},
+		{
+			"fieldname": "item_group",
+			"label": "Item Group",
+			"fieldtype": "Data",
+			"width": "250"
 		},
 		{
 			"fieldname": "supplier",
 			"label": "Supplier",
 			"fieldtype": "Data",
-			"width": "300"
+			"width": "250"
 		},
 		{
 			"fieldname": "store_qty",
@@ -56,7 +62,7 @@ def get_columns():
 def get_data():
 	query = frappe.db.sql(
 		"""
-		SELECT tabItem.item_code, tabItem.item_name, `tabItem Supplier`.supplier,
+		SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier,
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
