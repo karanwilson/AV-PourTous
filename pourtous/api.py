@@ -4,6 +4,11 @@ from frappe.utils import flt
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 
 
+def verify_tax_template(doc, method):
+	if not doc.taxes:
+		frappe.throw("Please enter a Tax Template")
+
+
 # called from Customer Client-Script 'Sync FS Accounts'
 @frappe.whitelist(allow_guest=True)
 def sync_fs_accounts():

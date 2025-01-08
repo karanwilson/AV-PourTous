@@ -129,6 +129,11 @@ doc_events = {
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)
         "before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
 	},
+	"Item": {
+		"before_save": "pourtous.api.verify_tax_template", # verifies whether a tax template was added
+		#"before_cancel": "pourtous.api.delete_item_price", # deletes the linked 'Item Price' before cancelling the Purchase Receipt
+        #"before_cancel": "pourtous.api.delete_item_batch" # deletes the linked Item Batch before cancelling the Purchase Receipt
+	},
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
 		"on_submit": "pourtous.api.update_selling_price_list", # Add the 'Item Price'
