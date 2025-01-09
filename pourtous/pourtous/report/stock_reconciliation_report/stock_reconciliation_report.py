@@ -86,8 +86,8 @@ def get_data(filters):
 		WHERE parenttype = "Stock Reconciliation"
 		AND `tabStock Reconciliation Item`.parent = `tabStock Reconciliation`.name
 		AND `tabStock Reconciliation Item`.docstatus = 1
-		AND (`tabStock Reconciliation`.posting_date > '{0}')
-		AND (`tabStock Reconciliation`.posting_date < '{1}')
+		AND (`tabStock Reconciliation`.posting_date >= '{0}')
+		AND (`tabStock Reconciliation`.posting_date <= '{1}')
 		""".format(filters.from_date, filters.to_date),
 		as_dict=True
 	)
