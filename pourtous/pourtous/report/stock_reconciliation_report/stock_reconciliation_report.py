@@ -75,21 +75,41 @@ def get_columns():
 
 
 def get_data(filters):
-	query = frappe.db.sql(
-		"""
-		SELECT `tabStock Reconciliation Item`.parent AS voucher_id, `tabStock Reconciliation`.posting_date,
-		`tabStock Reconciliation Item`.item_code, `tabStock Reconciliation Item`.item_name,
-		`tabStock Reconciliation Item`.warehouse, `tabStock Reconciliation Item`.quantity_difference,
-		`tabStock Reconciliation Item`.amount_difference, `tabStock Reconciliation Item`.custom_comments
+	if filters.is_waste:
+		query = frappe.db.sql(
+			"""
+			SELECT `tabStock Reconciliation Item`.parent AS voucher_id, `tabStock Reconciliation`.posting_date,
+			`tabStock Reconciliation Item`.item_code, `tabStock Reconciliation Item`.item_name,
+			`tabStock Reconciliation Item`.warehouse, `tabStock Reconciliation Item`.quantity_difference,
+			`tabStock Reconciliation Item`.amount_difference, `tabStock Reconciliation Item`.custom_comments
 
-		FROM `tabStock Reconciliation`, `tabStock Reconciliation Item`
-		WHERE parenttype = "Stock Reconciliation"
-		AND `tabStock Reconciliation Item`.parent = `tabStock Reconciliation`.name
-		AND `tabStock Reconciliation Item`.docstatus = 1
-		AND (`tabStock Reconciliation`.posting_date >= '{0}')
-		AND (`tabStock Reconciliation`.posting_date <= '{1}')
-		""".format(filters.from_date, filters.to_date),
-		as_dict=True
-	)
+			FROM `tabStock Reconciliation`, `tabStock Reconciliation Item`
+			WHERE parenttype = "Stock Reconciliation"
+			AND `tabStock Reconciliation Item`.parent = `tabStock Reconciliation`.name
+			AND `tabStock Reconciliation Item`.docstatus = 1
+			AND (`tabStock Reconciliation`.posting_date >= '{0}')
+			AND (`tabStock Reconciliation`.posting_date <= '{1}')
+			AND `tabStock Reconciliation Item`.custom_comments LIKE "%WASTE%"
+			""".format(filters.from_date, filters.to_date),
+			as_dict=True
+		)
+
+	else:
+		query = frappe.db.sql(
+			"""
+			SELECT `tabStock Reconciliation Item`.parent AS voucher_id, `tabStock Reconciliation`.posting_date,
+			`tabStock Reconciliation Item`.item_code, `tabStock Reconciliation Item`.item_name,
+			`tabStock Reconciliation Item`.warehouse, `tabStock Reconciliation Item`.quantity_difference,
+			`tabStock Reconciliation Item`.amount_difference, `tabStock Reconciliation Item`.custom_comments
+
+			FROM `tabStock Reconciliation`, `tabStock Reconciliation Item`
+			WHERE parenttype = "Stock Reconciliation"
+			AND `tabStock Reconciliation Item`.parent = `tabStock Reconciliation`.name
+			AND `tabStock Reconciliation Item`.docstatus = 1
+			AND (`tabStock Reconciliation`.posting_date >= '{0}')
+			AND (`tabStock Reconciliation`.posting_date <= '{1}')
+			""".format(filters.from_date, filters.to_date),
+			as_dict=True
+		)
 
 	return query

@@ -16,5 +16,11 @@ frappe.query_reports["Stock Reconciliation Report"] = {
 			"fieldtype": "Date",
 			"width": "60px",
 		},
+		{
+			"fieldname": "is_waste",
+			"label": __("Is Waste"),
+			"fieldtype": "Check",
+			"width": "60px",
+		},
 	]
 };
