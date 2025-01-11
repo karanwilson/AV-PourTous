@@ -20,7 +20,11 @@
 <p class="text-center" style="margin-bottom: 1rem; font-size: smaller;">
 	{{ doc.company }}<br>
 	{{ _("GSTIN/UIN: 33AAATA0037BPZ3") }}<br>
-	<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
+	{% if doc.doctype == "Sales Invoice" %}
+		<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
+	{% else %}
+		<b>{{ doc.select_print_heading or _("Sales Order") }}</b><br>
+	{% endif %}
 </p>
 <p style="font-size: smaller;">
 	<b>{{ _("Receipt No") }}:</b> {{ doc.name }}<br>
