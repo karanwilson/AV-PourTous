@@ -1,8 +1,8 @@
-// Copyright (c) 2024, Karan and contributors
+// Copyright (c) 2025, Karan and contributors
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Item Batch Price"] = {
+frappe.query_reports["Item Batch Qty Price"] = {
 	"filters": [
 		{
 			"fieldname": "name",

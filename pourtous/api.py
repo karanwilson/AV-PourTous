@@ -9,6 +9,32 @@ def verify_tax_template(doc, method):
 		frappe.throw("Please enter a Tax Template")
 
 
+@frappe.whitelist(allow_guest=True)
+def fetch_batch_list():
+	return frappe.db.sql(
+    	"""
+		select `tabStock Ledger Entry`.item_code,
+		`tabStock Ledger Entry`.batch_no, `tabStock Ledger Entry`.warehouse,
+		SUM(`tabStock Ledger Entry`.actual_qty) as qty, tabBatch.posa_batch_price AS price
+		from `tabStock Ledger Entry`, tabBatch
+		where `tabStock Ledger Entry`.is_cancelled = 0
+		and `tabStock Ledger Entry`.batch_no = tabBatch.name
+		AND tabBatch.batch_qty != 0
+		AND tabBatch.posa_batch_price = 0
+		AND `tabStock Ledger Entry`.batch_no LIKE "PT-BATCH%"
+		group by `tabStock Ledger Entry`.batch_no
+	    """,
+        #as_dict=1,
+    )
+
+@frappe.whitelist(allow_guest=True)
+def sync_batch_prices(batch):
+	batch_price = frappe.db.get_value("Item Price", {"batch_no": batch}, "price_list_rate")
+	if batch_price:
+		frappe.db.set_value("Batch", batch, "posa_batch_price", batch_price)
+		return {"OK"}
+
+
 # called from Customer Client-Script 'Sync FS Accounts'
 @frappe.whitelist(allow_guest=True)
 def sync_fs_accounts():
