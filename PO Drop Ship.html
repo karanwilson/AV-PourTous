@@ -103,6 +103,7 @@
 				<th>Item Code</th>
 				<th>Description</th>
 				<th class="text-right">Qty</th>
+				<th class="text-right">Comments</th>
 				<!--<th class="text-right">Rate</th>-->
 				<!--<th class="text-right">Amount</th>-->
 			</tr>
@@ -119,6 +120,7 @@
 				<td style="width: 47%;">
 					<div style="border: 0px;">{{ row.description }}</div></td>
 				<td style="width: 10%; text-align: right;">{{ row.qty }} {{ row.uom or row.stock_uom }}</td>
+				<td style="width: 10%; text-align: right;">{{ row.custom_comments }}</td>
 				<!-- <td style="width: 15%; text-align: right;">{{
 					row.get_formatted("rate", doc) }}</td>
 				<td style="width: 15%; text-align: right;">{{

@@ -271,6 +271,8 @@ fixtures = [
                     "Purchase Order-custom_non_batch_items_data", # To fetch the Items from the Selected Supplier, along with the required data
                     "Purchase Order-custom_add_non_batch_items", # Button: pushes the Selected Items (and their Qty) to the PO Items
 
+                    "Purchase Order Item-custom_comments", # for putting custom UOM (like bag, etc.) in Purchase Orders
+
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
                     #"Purchase Receipt Item-custom_rate_with_tax"
 				)
