@@ -1,7 +1,18 @@
 frappe.ui.form.on('Purchase Order', {
-	//refresh(frm) {
+	refresh(frm) {
 		// your code here
-	//}
+		console.log("(Refresh) frappe.session.user_fullname: ", frappe.session.user_fullname);
+		if (frappe.session.user_fullname != 'Administrator' && frappe.session.user_fullname != 'Maroma')
+			{
+				frm.set_query('supplier', () => {
+					return {
+						filters: {
+							supplier_name: frappe.session.user_fullname
+						}	
+					};
+				});
+			}
+	},
 
 	supplier(frm) {
 		frm.clear_table('items');

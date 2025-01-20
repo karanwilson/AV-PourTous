@@ -1,8 +1,20 @@
 frappe.ui.form.on('Purchase Receipt', {
 	refresh(frm) {
+		console.log("(Refresh) frappe.session.user_fullname: ", frappe.session.user_fullname);
+		if (frappe.session.user_fullname != 'Administrator' && frappe.session.user_fullname != 'Maroma')
+			{
+				frm.set_query('supplier', () => {
+					return {
+						filters: {
+							supplier_name: frappe.session.user_fullname
+						}	
+					};
+				});
+			}
+
         /* if (!frm.doc.taxes_and_charges) {
         } */
-        frm.set_value('taxes_and_charges', 'Input GST In-state - PTPS')
+        frm.set_value('taxes_and_charges', 'Input GST In-state - M')
             .then(() => {
                 frm.refresh_field('taxes_and_charges');
             });
