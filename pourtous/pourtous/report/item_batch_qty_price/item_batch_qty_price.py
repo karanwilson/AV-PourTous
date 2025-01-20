@@ -40,7 +40,7 @@ def get_columns(filters):
 				"fieldname": "supplier",
 				"label": "Supplier",
 				"fieldtype": "Data",
-				"width": "300"	
+				"width": "250"
 			},
 			{
 				"fieldname": "batch",
@@ -61,8 +61,14 @@ def get_columns(filters):
 				"width": "100"
 			},
 			{
-				"fieldname": "price",
-				"label": "Price",
+				"fieldname": "buying_price",
+				"label": "B.Price",
+				"fieldtype": "Currency",
+				"width": "80"
+			},
+			{
+				"fieldname": "selling_price",
+				"label": "S.Price",
 				"fieldtype": "Currency",
 				"width": "80"
 			},
@@ -86,7 +92,7 @@ def get_columns(filters):
 				"fieldname": "supplier",
 				"label": "Supplier",
 				"fieldtype": "Data",
-				"width": "300"	
+				"width": "250"	
 			},
 			{
 				"fieldname": "store_qty",
@@ -101,12 +107,18 @@ def get_columns(filters):
 				"width": "100"
 			},
 			{
-				"fieldname": "price",
-				"label": "Price",
+				"fieldname": "buying_price",
+				"label": "B.Price",
 				"fieldtype": "Currency",
 				"width": "80"
 			},
-		]		
+			{
+				"fieldname": "selling_price",
+				"label": "S.Price",
+				"fieldtype": "Currency",
+				"width": "80"
+			},
+		]
 
 
 def get_data(filters):
@@ -124,7 +136,12 @@ def get_data(filters):
 				WHERE is_cancelled = 0 AND warehouse LIKE '{1}'
 				AND batch_no = tabBatch.name
 			) AS stall_qty,
-			tabBatch.posa_batch_price AS price
+			(
+				SELECT price_list_rate FROM `tabItem Price`
+				WHERE `tabItem Price`.item_code = `tabStock Ledger Entry`.item_code
+				AND price_list = "Standard Buying"
+			) AS buying_price,
+			tabBatch.posa_batch_price AS selling_price
 			FROM `tabStock Ledger Entry`, tabBatch
 			WHERE `tabStock Ledger Entry`.is_cancelled = 0
 			AND `tabStock Ledger Entry`.batch_no = tabBatch.name
@@ -153,11 +170,18 @@ def get_data(filters):
 				order by posting_date desc, posting_time desc, creation desc
 				limit 1
 			) AS stall_qty,
-			`tabItem Price`.price_list_rate AS price
-			FROM tabItem, `tabItem Supplier`, `tabItem Price`
+			(
+				SELECT price_list_rate FROM `tabItem Price`
+				WHERE `tabItem Price`.item_code = tabItem.item_code
+				AND price_list = "Standard Buying"
+			) AS buying_price,
+			(
+				SELECT price_list_rate FROM `tabItem Price`
+				WHERE `tabItem Price`.item_code = tabItem.item_code
+				AND price_list = "Standard Selling"
+			) AS selling_price
+			FROM tabItem, `tabItem Supplier`
 			WHERE tabItem.item_code = `tabItem Supplier`.parent
-			AND `tabItem Price`.item_code = tabItem.item_code
-			AND `tabItem Price`.price_list = "Standard Selling"
 			AND tabItem.item_code = '{2}'
 			""".format("Stores%", "Stall%", filters.name),
 			as_dict=True
