@@ -83,7 +83,21 @@ def get_data(filters):
 		FROM `tabStock Ledger Entry`, tabBatch
 		WHERE `tabStock Ledger Entry`.is_cancelled = 0
 		AND `tabStock Ledger Entry`.batch_no = tabBatch.name
-		AND tabBatch.batch_qty < 0
+		AND (
+
+		(
+			SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+			WHERE is_cancelled = 0 AND warehouse LIKE '{0}'
+			AND batch_no = tabBatch.name
+		) < 0
+		OR
+		(
+			SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+			WHERE is_cancelled = 0 AND warehouse LIKE '{1}'
+			AND batch_no = tabBatch.name
+		) < 0
+
+		)
 		GROUP BY tabBatch.name
 		""".format("Stores%", "Stall%", filters.name),
 		as_dict=True

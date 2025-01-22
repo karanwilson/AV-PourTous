@@ -120,7 +120,9 @@
 				<td style="width: 47%;">
 					<div style="border: 0px;">{{ row.description }}</div></td>
 				<td style="width: 10%; text-align: right;">{{ row.qty }} {{ row.uom or row.stock_uom }}</td>
-				<td style="width: 10%; text-align: right;">{{ row.custom_comments }}</td>
+				{%- if row.custom_comments -%}
+					<td style="width: 10%; text-align: right;">{{ row.custom_comments }}</td>
+				{%- endif %}
 				<!-- <td style="width: 15%; text-align: right;">{{
 					row.get_formatted("rate", doc) }}</td>
 				<td style="width: 15%; text-align: right;">{{
