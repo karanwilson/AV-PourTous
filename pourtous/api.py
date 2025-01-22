@@ -104,14 +104,16 @@ def supplier_batch_items(supplier):
 			limit 1
 		) AS stall_qty,
 		(
-			SELECT SUM(`tabSales Invoice Item`.qty)
-			FROM `tabSales Invoice Item`
-			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate())-1)
-		) AS sold_last_month,
+			select SUM(actual_qty) from `tabStock Ledger Entry`
+			where item_code = `tabItem Supplier`.parent
+			AND voucher_type = "Sales Invoice"
+			AND (month(date(`tabStock Ledger Entry`.posting_date))) = IF(month(curdate())-1, month(curdate())-1, 12)
+		) AS sold_last_month, 
 		(
-			SELECT SUM(`tabSales Invoice Item`.qty)
-			FROM `tabSales Invoice Item`
-			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate()))
+			select SUM(actual_qty) from `tabStock Ledger Entry`
+			where item_code = `tabItem Supplier`.parent
+			AND voucher_type = "Sales Invoice"
+			AND (month(date(`tabStock Ledger Entry`.posting_date)) = month(curdate()))
 		) AS sold_this_month
 		FROM tabItem, `tabPurchase Receipt Item`, `tabItem Supplier`
 		WHERE tabItem.has_batch_no = 1
@@ -146,14 +148,16 @@ def supplier_non_batch_items(supplier):
 			limit 1
 		) AS stall_qty,
 		(
-			SELECT SUM(`tabSales Invoice Item`.qty)
-			FROM `tabSales Invoice Item`
-			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate())-1)
-		) AS sold_last_month,
+			select SUM(actual_qty) from `tabStock Ledger Entry`
+			where item_code = `tabItem Supplier`.parent
+			AND voucher_type = "Sales Invoice"
+			AND (month(date(`tabStock Ledger Entry`.posting_date))) = IF(month(curdate())-1, month(curdate())-1, 12)
+		) AS sold_last_month, 
 		(
-			SELECT SUM(`tabSales Invoice Item`.qty)
-			FROM `tabSales Invoice Item`
-			WHERE (`tabSales Invoice Item`.item_code = tabItem.item_code) AND (month(date(`tabSales Invoice Item`.creation)) = month(curdate()))
+			select SUM(actual_qty) from `tabStock Ledger Entry`
+			where item_code = `tabItem Supplier`.parent
+			AND voucher_type = "Sales Invoice"
+			AND (month(date(`tabStock Ledger Entry`.posting_date)) = month(curdate()))
 		) AS sold_this_month
 		FROM tabItem, `tabPurchase Receipt Item`, `tabItem Supplier`
 		WHERE tabItem.has_batch_no = 0

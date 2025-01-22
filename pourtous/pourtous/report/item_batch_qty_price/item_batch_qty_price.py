@@ -43,7 +43,7 @@ def get_columns(filters):
 				"width": "250"
 			},
 			{
-				"fieldname": "batch",
+				"fieldname": "batch_no",
 				"label": "Batch No.",
 				"fieldtype": "Data",
 				"width": "130"
@@ -125,7 +125,7 @@ def get_data(filters):
 	if frappe.get_value("Item", filters.name, "has_batch_no"):
 		query = frappe.db.sql(
 			"""
-			SELECT `tabStock Ledger Entry`.item_code, tabBatch.item_name, tabBatch.supplier, tabBatch.name AS batch,
+			SELECT `tabStock Ledger Entry`.item_code, tabBatch.item_name, `tabItem Supplier`.supplier, `tabStock Ledger Entry`.batch_no,
 			(
 				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
 				WHERE is_cancelled = 0 AND warehouse LIKE '{0}'
@@ -142,12 +142,25 @@ def get_data(filters):
 				AND price_list = "Standard Buying"
 			) AS buying_price,
 			tabBatch.posa_batch_price AS selling_price
-			FROM `tabStock Ledger Entry`, tabBatch
+			FROM `tabStock Ledger Entry`, `tabItem Supplier`, tabBatch
 			WHERE `tabStock Ledger Entry`.is_cancelled = 0
-			AND `tabStock Ledger Entry`.batch_no = tabBatch.name
-			AND tabBatch.batch_qty != 0
+			AND tabBatch.name = `tabStock Ledger Entry`.batch_no
+			AND `tabItem Supplier`.parent = `tabStock Ledger Entry`.item_code
+			AND (
+			(
+				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+				WHERE is_cancelled = 0 AND warehouse LIKE '{0}'
+				AND batch_no = tabBatch.name
+			) != 0
+			OR
+			(
+				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+				WHERE is_cancelled = 0 AND warehouse LIKE '{1}'
+				AND batch_no = tabBatch.name
+			) != 0
+			)
 			AND `tabStock Ledger Entry`.item_code = '{2}'
-			GROUP BY tabBatch.name
+			GROUP BY `tabStock Ledger Entry`.batch_no
 			""".format("Stores%", "Stall%", filters.name),
 			as_dict=True
 		)
