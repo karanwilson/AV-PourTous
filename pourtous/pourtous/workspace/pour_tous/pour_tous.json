@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"dfXMDVBByV\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Pour Tous</span>\",\"col\":12}},{\"id\":\"pFUtqaR8mD\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Order\",\"col\":3}},{\"id\":\"p8Mf4_3JgR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Direct Receive\",\"col\":3}},{\"id\":\"xcnXx4QTZx\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Direct Transfer\",\"col\":3}},{\"id\":\"LuCutZlcdc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item Price\",\"col\":3}},{\"id\":\"zSHpJvPE4p\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Reconciliation\",\"col\":3}},{\"id\":\"L8J8kPhaWF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payment Entry\",\"col\":3}},{\"id\":\"KMCglCDk6h\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Invoice\",\"col\":3}},{\"id\":\"Zz_yXF5bjz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous Settings\",\"col\":3}},{\"id\":\"hD-LESfNVo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous App\",\"col\":3}},{\"id\":\"aPLIoPDTbh\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports <br></b></span>\",\"col\":12}},{\"id\":\"yATZltas3X\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Veg Fruit Prices\",\"col\":3}},{\"id\":\"oa7TEac-mR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item Batch-Qty-Price\",\"col\":3}},{\"id\":\"0h2vs_b7AS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock-In List\",\"col\":3}},{\"id\":\"eiLlC8b9oT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Movement\",\"col\":3}},{\"id\":\"8PjwR1zJs1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Per Item Stock Balance\",\"col\":3}},{\"id\":\"nUDldg2ntU\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier Stock Report\",\"col\":3}},{\"id\":\"_cYuIJY3JA\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Full Stock Balance\",\"col\":3}},{\"id\":\"OGSirJ8WJX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Zero Stock Report\",\"col\":3}},{\"id\":\"uwJyHnN4D0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Negative Batch Report\",\"col\":3}},{\"id\":\"V5j5yrz0gQ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Negative Stock Report\",\"col\":3}},{\"id\":\"awh8Gv1JOk\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Daily GST-Sales\",\"col\":3}},{\"id\":\"i-DEVi_w66\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Analytics\",\"col\":3}},{\"id\":\"U4rARYRYXX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Unpaid Invoices\",\"col\":3}},{\"id\":\"faRPG6jvUH\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Reconciliation Report\",\"col\":3}},{\"id\":\"EOiMcmsNHW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Aurocard Invoice Query\",\"col\":3}},{\"id\":\"A7k2suxNbg\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"pRCB9ixN0d\",\"type\":\"card\",\"data\":{\"card_name\":\"Records\",\"col\":4}},{\"id\":\"-XmEnPPJt-\",\"type\":\"card\",\"data\":{\"card_name\":\"Records 2\",\"col\":4}}]",
+ "content": "[{\"id\":\"dfXMDVBByV\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Pour Tous</span>\",\"col\":12}},{\"id\":\"pFUtqaR8mD\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Order\",\"col\":3}},{\"id\":\"p8Mf4_3JgR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Direct Receive\",\"col\":3}},{\"id\":\"xcnXx4QTZx\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Direct Transfer\",\"col\":3}},{\"id\":\"LuCutZlcdc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item Price\",\"col\":3}},{\"id\":\"zSHpJvPE4p\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Reconciliation\",\"col\":3}},{\"id\":\"L8J8kPhaWF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payment Entry\",\"col\":3}},{\"id\":\"KMCglCDk6h\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Invoice\",\"col\":3}},{\"id\":\"Zz_yXF5bjz\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous Settings\",\"col\":3}},{\"id\":\"hD-LESfNVo\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Pour Tous App\",\"col\":3}},{\"id\":\"aPLIoPDTbh\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports <br></b></span>\",\"col\":12}},{\"id\":\"yATZltas3X\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Veg Fruit Prices\",\"col\":3}},{\"id\":\"oa7TEac-mR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item Batch-Qty-Price\",\"col\":3}},{\"id\":\"0h2vs_b7AS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock-In List\",\"col\":3}},{\"id\":\"eiLlC8b9oT\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Movement\",\"col\":3}},{\"id\":\"8PjwR1zJs1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Per Item Stock Balance\",\"col\":3}},{\"id\":\"nUDldg2ntU\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier Stock Report\",\"col\":3}},{\"id\":\"_cYuIJY3JA\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Full Stock Balance\",\"col\":3}},{\"id\":\"EOiMcmsNHW\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Aurocard Invoice Query\",\"col\":3}},{\"id\":\"5M7_dPx10L\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Analytics Reports</b></span>\",\"col\":12}},{\"id\":\"awh8Gv1JOk\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Daily GST-Sales\",\"col\":3}},{\"id\":\"c4a66S451X\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item Purchase Sales Analytics\",\"col\":3}},{\"id\":\"i-DEVi_w66\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Analytics\",\"col\":3}},{\"id\":\"faRPG6jvUH\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Reconciliation Report\",\"col\":3}},{\"id\":\"U4rARYRYXX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Unpaid Invoices\",\"col\":3}},{\"id\":\"OGSirJ8WJX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Zero Stock Report\",\"col\":3}},{\"id\":\"uwJyHnN4D0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Negative Batch Report\",\"col\":3}},{\"id\":\"V5j5yrz0gQ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Negative Stock Report\",\"col\":3}},{\"id\":\"A7k2suxNbg\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"pRCB9ixN0d\",\"type\":\"card\",\"data\":{\"card_name\":\"Purchase Records\",\"col\":4}},{\"id\":\"-XmEnPPJt-\",\"type\":\"card\",\"data\":{\"card_name\":\"Sales Records\",\"col\":4}}]",
  "creation": "2024-08-15 20:57:18.765870",
  "custom_blocks": [],
  "docstatus": 0,
@@ -15,8 +15,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Records 2",
-   "link_count": 6,
+   "label": "Purchase Records",
+   "link_count": 7,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -24,71 +24,12 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Supplier",
+   "label": "Item",
    "link_count": 0,
-   "link_to": "Supplier",
+   "link_to": "Item",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Batch List",
-   "link_count": 0,
-   "link_to": "Batch",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sales Invoices",
-   "link_count": 0,
-   "link_to": "Sales Invoice",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Customers",
-   "link_count": 0,
-   "link_to": "Customer",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Payment Entries",
-   "link_count": 0,
-   "link_to": "Payment Entry",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "FS Account Details",
-   "link_count": 0,
-   "link_to": "FS Account Details",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Records",
-   "link_count": 6,
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Card Break"
   },
   {
    "hidden": 0,
@@ -143,15 +84,84 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Supplier",
+   "link_count": 0,
+   "link_to": "Supplier",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Records",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Batch List",
+   "link_count": 0,
+   "link_to": "Batch",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Invoice",
+   "link_count": 0,
+   "link_to": "Sales Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Sales Order",
    "link_count": 0,
    "link_to": "Sales Order",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer",
+   "link_count": 0,
+   "link_to": "Customer",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Entry",
+   "link_count": 0,
+   "link_to": "Payment Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "FS Account Details",
+   "link_count": 0,
+   "link_to": "FS Account Details",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2025-01-19 14:39:00.212804",
+ "modified": "2025-01-22 09:21:45.739258",
  "modified_by": "karan@pourtous-av.in",
  "module": "pourtous",
  "name": "Pour Tous",
@@ -195,6 +205,13 @@
    "link_to": "Stock Ledger Entry",
    "stats_filter": "[]",
    "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Item Purchase Sales Analytics",
+   "link_to": "Item Purchase Sale Analytics",
+   "type": "Report"
   },
   {
    "color": "Grey",

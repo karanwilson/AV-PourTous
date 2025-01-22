@@ -12,7 +12,7 @@ frappe.listview_settings['Customer'] = {
             });
         });
 
-        listview.page.add_inner_button("Sync FS Accounts", () => {
+        /* listview.page.add_inner_button("Sync FS Accounts", () => {
             frappe.call({
                 method: 'pourtous.api.sync_fs_accounts',
                 freeze: true,
@@ -22,6 +22,6 @@ frappe.listview_settings['Customer'] = {
                     location.reload();
                 }
             });
-        });
+        }); */
     },
 };

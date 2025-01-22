@@ -50,7 +50,7 @@ def get_columns():
 		{
 			"fieldname": "warehouse",
 			"label": "warehouse",
-			"fieldtype": "Float",
+			"fieldtype": "Data",
 			"width": "100"
 		},
 		{
