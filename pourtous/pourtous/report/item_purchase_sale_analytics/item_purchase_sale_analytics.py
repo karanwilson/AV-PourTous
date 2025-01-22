@@ -74,19 +74,22 @@ def get_data(filters):
 		select `tabStock Ledger Entry`.item_code, tabItem.item_name, tabItem.item_group, tabItem.stock_uom,
 		(
 			select SUM(actual_qty) from `tabStock Ledger Entry`
-			where item_code = `tabItem Supplier`.parent AND `tabStock Ledger Entry`.voucher_type = "Purchase Receipt"
+			where item_code = `tabItem Supplier`.parent
+			AND `tabStock Ledger Entry`.voucher_type = "Purchase Receipt"
+			AND `tabStock Ledger Entry`.posting_date BETWEEN '{1}' AND '{2}'
 		) AS qty_purchased,
 
 		(
 			select SUM(actual_qty) from `tabStock Ledger Entry`
-			where item_code = `tabItem Supplier`.parent AND voucher_type = "Sales Invoice"
+			where item_code = `tabItem Supplier`.parent
+			AND voucher_type = "Sales Invoice"
+			AND `tabStock Ledger Entry`.posting_date BETWEEN '{1}' AND '{2}'
 		) AS qty_sold
 		FROM `tabStock Ledger Entry`, `tabItem Supplier`, tabItem
 		WHERE `tabStock Ledger Entry`.is_cancelled = 0
 		AND `tabStock Ledger Entry`.item_code = `tabItem Supplier`.parent
 		AND `tabStock Ledger Entry`.item_code = tabItem.item_code
 		AND`tabItem Supplier`.supplier = '{0}'
-		AND `tabStock Ledger Entry`.posting_date BETWEEN '{1}' AND '{2}'
 		GROUP BY `tabStock Ledger Entry`.item_code
 		""".format(filters.supplier, filters.from_date, filters.to_date),
 		as_dict=True
