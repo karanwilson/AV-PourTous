@@ -26,7 +26,8 @@ def get_columns():
 		{
 			"fieldname": "voucher_id",
 			"label": "Voucher ID",
-			"fieldtype": "Data",
+			"fieldtype": "Link",
+			"options": "Stock Reconciliation",
 			"width": "200"
 		},
 		{

@@ -26,13 +26,15 @@ def get_columns():
 		{
 			"fieldname": "name",
 			"label": "Invoice ID",
-			"fieldtype": "Data",
+			"fieldtype": "Link",
+			"options": "Sales Invoice",
 			"width": "150"
 		},
 		{
 			"fieldname": "customer",
 			"label": "Customer",
-			"fieldtype": "Data",
+			"fieldtype": "Link",
+			"options": "Customer",
 			"width": "150"
 		},
 		{

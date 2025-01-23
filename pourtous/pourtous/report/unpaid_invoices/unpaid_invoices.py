@@ -23,7 +23,8 @@ def get_columns():
 		{
 			"fieldname": "name",
 			"label": "Invoice ID",
-			"fieldtype": "Data",
+			"fieldtype": "Link",
+			"options": "Sales Invoice",
 			"width": "150"
 		},
 

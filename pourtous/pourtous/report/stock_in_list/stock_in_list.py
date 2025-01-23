@@ -11,7 +11,7 @@ def execute(filters=None):
 
 	columns, data = [], []
 
-	columns = get_columns()
+	columns = get_columns(filters)
 	data = get_data(filters)
 
 	if not data:
@@ -21,64 +21,126 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns():
-	return [
-		{
-			"fieldname": "voucher_type",
-			"label": "Voucher Type",
-			"fieldtype": "Data",
-			"width": "135"
-		},
+def get_columns(filters):
+	if filters.voucher_type == "Purchase Receipt":
+		return [
+			{
+				"fieldname": "voucher_type",
+				"label": "Voucher Type",
+				"fieldtype": "Data",
+				"width": "135"
+			},
 
-		{
-			"fieldname": "voucher_name",
-			"label": "Voucher ID",
-			"fieldtype": "Data",
-			"width": "200"
-		},
+			{
+				"fieldname": "voucher_name",
+				"label": "Voucher ID",
+				"fieldtype": "Link",
+				"options": "Purchase Receipt",
+				"width": "200"
+			},
 
-		{
-			"fieldname": "supplier",
-			"label": "Supplier",
-			"fieldtype": "Data",
-			"width": "150"
-		},
+			{
+				"fieldname": "supplier",
+				"label": "Supplier",
+				"fieldtype": "Data",
+				"width": "150"
+			},
 
-		{
-			"fieldname": "item_code",
-			"label": "Item Code",
-			"fieldtype": "Data",
-			"width": "90"
-		},
+			{
+				"fieldname": "item_code",
+				"label": "Item Code",
+				"fieldtype": "Data",
+				"width": "90"
+			},
 
-		{
-			"fieldname": "batch_no",
-			"label": "Batch",
-			"fieldtype": "Data",
-			"width": "100"
-		},
+			{
+				"fieldname": "batch_no",
+				"label": "Batch",
+				"fieldtype": "Data",
+				"width": "100"
+			},
 
-		{
-			"fieldname": "item_name",
-			"label": "Item Name",
-			"fieldtype": "Data",
-			"width": "250"
-		},
+			{
+				"fieldname": "item_name",
+				"label": "Item Name",
+				"fieldtype": "Data",
+				"width": "250"
+			},
 
-		{
-			"fieldname": "qty",
-			"label": "Quantity",
-			"fieldtype": "Float",
-			"width": "100"
-		},
+			{
+				"fieldname": "qty",
+				"label": "Quantity",
+				"fieldtype": "Float",
+				"width": "100"
+			},
 
-		{
-			"fieldname": "rate",
-			"label": "Price",
-			"fieldtype": "Currency",
-			"width": "100"
-		},
-	]
+			{
+				"fieldname": "rate",
+				"label": "Price",
+				"fieldtype": "Currency",
+				"width": "100"
+			},
+		]
+
+	else:
+		return [
+			{
+				"fieldname": "voucher_type",
+				"label": "Voucher Type",
+				"fieldtype": "Data",
+				"width": "135"
+			},
+
+			{
+				"fieldname": "voucher_name",
+				"label": "Voucher ID",
+				"fieldtype": "Link",
+				"options": "Stock Entry",
+				"width": "200"
+			},
+
+			{
+				"fieldname": "supplier",
+				"label": "Supplier",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+
+			{
+				"fieldname": "item_code",
+				"label": "Item Code",
+				"fieldtype": "Data",
+				"width": "90"
+			},
+
+			{
+				"fieldname": "batch_no",
+				"label": "Batch",
+				"fieldtype": "Data",
+				"width": "100"
+			},
+
+			{
+				"fieldname": "item_name",
+				"label": "Item Name",
+				"fieldtype": "Data",
+				"width": "250"
+			},
+
+			{
+				"fieldname": "qty",
+				"label": "Quantity",
+				"fieldtype": "Float",
+				"width": "100"
+			},
+
+			{
+				"fieldname": "rate",
+				"label": "Price",
+				"fieldtype": "Currency",
+				"width": "100"
+			},
+		]
 
 
 def get_data(filters):
