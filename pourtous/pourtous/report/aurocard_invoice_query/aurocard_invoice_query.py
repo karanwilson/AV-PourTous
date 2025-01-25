@@ -52,8 +52,8 @@ def get_columns():
 		{
 			"fieldname": "remarks",
 			"label": "Remarks",
-			"fieldtype": "Small Text",
-			"width": "300"
+			"fieldtype": "Data",
+			"width": "450"
 		},
 	]
 
