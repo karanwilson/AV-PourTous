@@ -99,7 +99,7 @@ def get_data(filters):
 
 		)
 		GROUP BY tabBatch.name
-		""".format("Stores%", "Stall%", filters.name),
+		""".format("Stores%", "Stall%"),
 		as_dict=True
 	)
 
