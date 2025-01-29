@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Itemised HSN monthly sales"] = {
+frappe.query_reports["HSN-wise GST Sales Report"] = {
 	"filters": [
 		{
 			"fieldname": "from_date",

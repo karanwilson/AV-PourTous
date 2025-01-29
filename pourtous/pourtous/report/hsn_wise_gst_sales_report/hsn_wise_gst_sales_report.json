@@ -1,7 +1,7 @@
 {
  "add_total_row": 0,
  "columns": [],
- "creation": "2025-01-28 21:27:44.049643",
+ "creation": "2025-01-29 21:37:19.220413",
  "disable_prepared_report": 0,
  "disabled": 0,
  "docstatus": 0,
@@ -9,14 +9,14 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2025-01-28 21:27:44.049643",
+ "modified": "2025-01-29 21:37:19.220413",
  "modified_by": "Administrator",
  "module": "pourtous",
- "name": "Itemised HSN monthly sales",
+ "name": "HSN-wise GST Sales Report",
  "owner": "Administrator",
  "prepared_report": 0,
  "ref_doctype": "Sales Invoice",
- "report_name": "Itemised HSN monthly sales",
+ "report_name": "HSN-wise GST Sales Report",
  "report_type": "Script Report",
  "roles": [
   {
