@@ -45,6 +45,19 @@ def get_columns(filters):
 				"fieldtype": "Link",
 				"options": "Sales Order",
 				"width": "200"
+			},
+			{
+				"fieldname": "customer",
+				"label": "Customer ID",
+				"fieldtype": "Link",
+				"options": "Customer",
+				"width": "150"
+			},
+			{
+				"fieldname": "customer_name",
+				"label": "Customer Name",
+				"fieldtype": "Data",
+				"width": "200"
 			}
 		]
 
@@ -75,7 +88,8 @@ def get_data(filters):
 	if filters.item and filters.view_so:
 		query = frappe.db.sql(
 			"""
-			SELECT item_code, item_name, qty, parent AS sales_order
+			SELECT item_code, item_name, qty, parent AS sales_order,
+			`tabSales Order`.customer, `tabSales Order`.customer_name
 			FROM `tabSales Order Item`, `tabSales Order`
 			WHERE parent = `tabSales Order`.name AND `tabSales Order`.docstatus = 1
 			AND item_code = '{0}'
@@ -89,7 +103,7 @@ def get_data(filters):
 	elif filters.item and not filters.view_so:
 		query = frappe.db.sql(
 			"""
-			SELECT item_code, item_name, SUM(qty) AS qty, parent AS sales_order
+			SELECT item_code, item_name, SUM(qty) AS qty
 			FROM `tabSales Order Item`, `tabSales Order`
 			WHERE parent = `tabSales Order`.name AND `tabSales Order`.docstatus = 1
 			AND item_code = '{0}'
@@ -104,7 +118,8 @@ def get_data(filters):
 	elif not filters.item and filters.view_so:
 		query = frappe.db.sql(
 			"""
-			SELECT item_code, item_name, qty, parent AS sales_order
+			SELECT item_code, item_name, qty, parent AS sales_order,
+			`tabSales Order`.customer, `tabSales Order`.customer_name
 			FROM `tabSales Order Item`, `tabSales Order`
 			WHERE parent = `tabSales Order`.name AND `tabSales Order`.docstatus = 1
 			AND parent NOT IN ( SELECT sales_order FROM `tabSales Invoice Item` WHERE sales_order != "NULL" )
@@ -117,7 +132,7 @@ def get_data(filters):
 	else:
 		query = frappe.db.sql(
 			"""
-			SELECT item_code, item_name, SUM(qty) AS qty, parent AS sales_order
+			SELECT item_code, item_name, SUM(qty) AS qty
 			FROM `tabSales Order Item`, `tabSales Order`
 			WHERE parent = `tabSales Order`.name AND `tabSales Order`.docstatus = 1
 			AND parent NOT IN ( SELECT sales_order FROM `tabSales Invoice Item` WHERE sales_order != "NULL" )
