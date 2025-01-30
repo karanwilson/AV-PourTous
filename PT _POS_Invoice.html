@@ -20,7 +20,10 @@
 <p class="text-center" style="margin-bottom: 1rem; font-size: smaller;">
 	{{ doc.company }}<br>
 	{{ _("GSTIN/UIN: 33AAATA0037BPZ3") }}<br>
-	{% if doc.doctype == "Sales Invoice" %}
+	{% if doc.docstatus == 1 %}
+	<!--docstatus of 1 indicates Submitted-->
+	<!--as per POS design, only Sales Invoice is pushed for a print; Sales Order are generated in the backend, mapping to the Invoice-->
+	<!--In Case of Sales Orders, the Invoice docstatus will remain a draft, to be deleted after print-->
 		<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
 	{% else %}
 		<b>{{ doc.select_print_heading or _("Sales Order") }}</b><br>
@@ -34,9 +37,13 @@
 		<b>{{ _("FS Account") }}:</b>
 		{{ doc.custom_fs_account_number }}<br>
 	{%- endif -%}
-	<b>{{ _("Posting Date") }}:</b> {{ doc.get_formatted("posting_date") }},&nbsp;
+	{%- if doc.docstatus == 1 and doc.custom_transaction_date -%}
+		<b>{{ _("Posting Date") }}:</b> {{ doc.get_formatted("posting_date") }},&nbsp;
+	{% else %}
+		<b>{{ _("Transaction Date") }}:</b> {{ doc.get_formatted("posting_date") }},&nbsp;
+	{%- endif -%}
 	<b>{{ _("Time") }}:</b> {{  doc.get_formatted("posting_time") }}<br>
-	{%- if doc.custom_transaction_date -%}
+	{%- if doc.docstatus == 1 and doc.custom_transaction_date -%}
 		<b>{{ _("Transaction Date") }}:</b> {{ doc.get_formatted("custom_transaction_date") }}
 	{%- endif -%}
 </p>
