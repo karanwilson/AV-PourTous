@@ -25,16 +25,15 @@ def get_columns(filters):
 	return [
 		{
 			"fieldname": "item_code",
-			"label": "Item",
-			"fieldtype": "Link",
-			"options": "Item",
-			"width": "500"
-		},
-		{
-			"fieldname": "item_code",
 			"label": "Item Code",
 			"fieldtype": "Data",
 			"width": "100"
+		},
+		{
+			"fieldname": "item_name",
+			"label": "Item Name",
+			"fieldtype": "Data",
+			"width": "500"
 		},
 		{
 			"fieldname": "qty",

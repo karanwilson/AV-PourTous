@@ -131,8 +131,6 @@ doc_events = {
 	},
 	"Item": {
 		"before_save": "pourtous.api.verify_tax_template", # verifies whether a tax template was added
-		#"before_cancel": "pourtous.api.delete_item_price", # deletes the linked 'Item Price' before cancelling the Purchase Receipt
-        #"before_cancel": "pourtous.api.delete_item_batch" # deletes the linked Item Batch before cancelling the Purchase Receipt
 	},
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {

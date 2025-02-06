@@ -1,7 +1,6 @@
 import frappe
 from frappe import _
 from frappe.utils import flt
-from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 
 
 def verify_tax_template(doc, method):
