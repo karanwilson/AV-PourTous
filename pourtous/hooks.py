@@ -272,6 +272,8 @@ fixtures = [
 
                     "Purchase Order Item-custom_comments", # for putting custom UOM (like bag, etc.) in Purchase Orders
 
+                    "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
+
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
                     "Batch-custom_barcode", # for adding a batch barcode
 				)
