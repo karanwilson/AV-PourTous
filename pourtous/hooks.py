@@ -135,9 +135,10 @@ doc_events = {
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
 		"on_submit": "pourtous.api.update_selling_price_list", # Add the 'Item Price'
-		#"before_cancel": "pourtous.api.delete_item_price", # deletes the linked 'Item Price' before cancelling the Purchase Receipt
-        #"before_cancel": "pourtous.api.delete_item_batch" # deletes the linked Item Batch before cancelling the Purchase Receipt
 	},
+    "Batch": {
+        "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
+    }
 # 	"*": {
 # 		"on_update": "method",
 # 		"on_cancel": "method",
@@ -272,7 +273,7 @@ fixtures = [
                     "Purchase Order Item-custom_comments", # for putting custom UOM (like bag, etc.) in Purchase Orders
 
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
-                    #"Purchase Receipt Item-custom_rate_with_tax"
+                    "Batch-custom_barcode", # for adding a batch barcode
 				)
 			]
 		]

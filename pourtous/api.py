@@ -1,6 +1,13 @@
 import frappe
 from frappe import _
-from frappe.utils import flt
+#from frappe.utils import flt
+
+
+def create_barcode(doc, method):
+	from stdnum import ean
+	pre_barcode = '890' + doc.name
+	doc.custom_barcode = pre_barcode + ean.calc_check_digit(pre_barcode)
+	doc.save()
 
 
 def verify_tax_template(doc, method):
