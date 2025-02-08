@@ -234,10 +234,23 @@ def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
 def update_selling_price_list(doc, method):
 	for item in doc.items:
 
-		if not item.batch_no:
+		if item.batch_no:
+			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
+			frappe.db.commit()
+			""" item_price = frappe.get_doc({
+				"doctype": "Item Price",
+				"item_code": item.item_code,
+				"uom": item.uom,
+				"price_list": "Standard Selling",
+				"price_list_rate": item.custom_selling_price,
+				"batch_no": item.batch_no
+			})
+			item_price.insert() """
+
+		else:
 			existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
 			if existing_item_price_entry:
-				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.rate)
+				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
 				frappe.db.commit()
 
 			else:
@@ -246,23 +259,11 @@ def update_selling_price_list(doc, method):
 					"item_code": item.item_code,
 					"uom": item.uom,
 					"price_list": "Standard Selling",
-					"price_list_rate": item.rate,
+					"price_list_rate": item.custom_selling_price,
 					#"batch_no": item.batch_no
 				})
 				item_price.insert()
 
-		else:
-			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.rate)
-			frappe.db.commit()
-			""" item_price = frappe.get_doc({
-				"doctype": "Item Price",
-				"item_code": item.item_code,
-				"uom": item.uom,
-				"price_list": "Standard Selling",
-				"price_list_rate": item.rate,
-				"batch_no": item.batch_no
-			})
-			item_price.insert() """
 
 """ def delete_item_batch(doc, method):
 	for item in doc.items:
