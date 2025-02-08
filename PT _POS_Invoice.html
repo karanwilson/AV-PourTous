@@ -20,17 +20,18 @@
 <p class="text-center" style="margin-bottom: 1rem; font-size: smaller;">
 	{{ doc.company }}<br>
 	{{ _("GSTIN/UIN: 33AAATA0037BPZ3") }}<br>
-	{% if doc.docstatus == 1 %}
-	<!--docstatus of 1 indicates Submitted-->
-	<!--as per POS design, only Sales Invoice is pushed for a print; Sales Order are generated in the backend, mapping to the Invoice-->
-	<!--In Case of Sales Orders, the Invoice docstatus will remain a draft, to be deleted after print-->
+	{% if doc.doctype == "Sales Invoice" %}
 		<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
 	{% else %}
 		<b>{{ doc.select_print_heading or _("Sales Order") }}</b><br>
 	{% endif %}
 </p>
 <p style="font-size: smaller;">
-	<b>{{ _("Receipt No") }}:</b> {{ doc.name }}<br>
+	{% if doc.doctype == "Sales Invoice" %}
+		<b>{{ _("Receipt No") }}:</b> {{ doc.name }}<br>
+	{% else %}
+		<b>{{ _("Order No") }}:</b> {{ doc.name }}<br>
+	{% endif %}
 	<b>{{ _("Cashier") }}:</b> {{ doc.owner }}<br>
 	<b>{{ _("Customer") }}:</b> {{ doc.customer_name }}<br>
 	{%- if doc.custom_fs_account_number -%}
