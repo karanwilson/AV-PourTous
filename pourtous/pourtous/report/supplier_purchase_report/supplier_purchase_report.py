@@ -57,7 +57,7 @@ def get_data(filters):
 	query = frappe.db.sql(
 		"""
 		SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.supplier, `tabPurchase Receipt`.posting_date,
-		SUM(`tabPurchase Receipt Item`.price_list_rate) AS taxable_purchase_amount
+		SUM(price_list_rate * qty) AS taxable_purchase_amount
 		FROM `tabPurchase Receipt`, `tabPurchase Receipt Item`
 		WHERE `tabPurchase Receipt`.docstatus = 1
 		AND `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
