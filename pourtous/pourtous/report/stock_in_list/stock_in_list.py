@@ -36,7 +36,7 @@ def get_columns(filters):
 				"label": "Voucher ID",
 				"fieldtype": "Link",
 				"options": "Purchase Receipt",
-				"width": "200"
+				"width": "135"
 			},
 
 			{
@@ -56,8 +56,9 @@ def get_columns(filters):
 			{
 				"fieldname": "batch_no",
 				"label": "Batch",
-				"fieldtype": "Data",
-				"width": "100"
+				"fieldtype": "Link",
+				"options": "Batch",
+				"width": "120"
 			},
 
 			{
@@ -69,16 +70,23 @@ def get_columns(filters):
 
 			{
 				"fieldname": "qty",
-				"label": "Quantity",
+				"label": "Qty",
 				"fieldtype": "Float",
+				"width": "90"
+			},
+
+			{
+				"fieldname": "custom_selling_price",
+				"label": "S Price",
+				"fieldtype": "Currency",
 				"width": "100"
 			},
 
 			{
 				"fieldname": "rate",
-				"label": "Price",
+				"label": "Rate (Old PR)",
 				"fieldtype": "Currency",
-				"width": "100"
+				"width": "120"
 			},
 		]
 
@@ -100,13 +108,6 @@ def get_columns(filters):
 			},
 
 			{
-				"fieldname": "supplier",
-				"label": "Supplier",
-				"fieldtype": "Data",
-				"width": "150"
-			},
-
-			{
 				"fieldname": "item_code",
 				"label": "Item Code",
 				"fieldtype": "Data",
@@ -116,8 +117,9 @@ def get_columns(filters):
 			{
 				"fieldname": "batch_no",
 				"label": "Batch",
-				"fieldtype": "Data",
-				"width": "100"
+				"fieldtype": "Link",
+				"options": "Batch",
+				"width": "130"
 			},
 
 			{
@@ -136,7 +138,7 @@ def get_columns(filters):
 
 			{
 				"fieldname": "rate",
-				"label": "Price",
+				"label": "S Price",
 				"fieldtype": "Currency",
 				"width": "100"
 			},
@@ -149,7 +151,8 @@ def get_data(filters):
 		query = frappe.db.sql(
 			"""
 				SELECT parenttype AS voucher_type, `tabPurchase Receipt`.name AS voucher_name,
-				title AS supplier, item_code, batch_no, item_name, qty, rate
+				title AS supplier, item_code, batch_no, item_name, qty, custom_selling_price,
+				IF((custom_selling_price = 0), rate, 0) AS rate
 				FROM `tabPurchase Receipt Item`, `tabPurchase Receipt`
 				WHERE `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
 				AND `tabPurchase Receipt`.docstatus = 1
@@ -162,11 +165,12 @@ def get_data(filters):
 		query = frappe.db.sql(
 			"""
 				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name,
-				item_code, batch_no, item_name, qty, basic_rate AS rate
-				FROM `tabStock Entry Detail`, `tabStock Entry`
+				item_code, batch_no, `tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price AS rate
+				FROM `tabStock Entry Detail`, `tabStock Entry`, tabBatch
 				WHERE `tabStock Entry Detail`.parent = `tabStock Entry`.name
 				AND `tabStock Entry`.docstatus = 1
 				AND `tabStock Entry`.posting_date = '{0}'
+				AND batch_no = tabBatch.name
 			""".format(filters.posting_date),
 			as_dict=True
 		)
