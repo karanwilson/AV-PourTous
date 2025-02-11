@@ -11,5 +11,13 @@ frappe.query_reports["Veg Fruit Prices"] = {
 			"options": "Item Group",
 			"width": "60px"
 		},
+
+		{
+			"fieldname": "price_list",
+			"label": __("Price List"),
+			"fieldtype": "Link",
+			"options": "Price List",
+			"width": "60px"
+		},
 	]
 };
