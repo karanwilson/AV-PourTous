@@ -3,6 +3,18 @@ from frappe import _
 #from frappe.utils import flt
 
 
+@frappe.whitelist(allow_guest=True)
+def get_tax_template():
+	return frappe.get_list(
+		'Purchase Taxes and Charges Template',
+		{
+			"company": frappe.defaults.get_user_default("company"),
+			"tax_category": "In-State"
+		},
+		"name"
+	)
+
+
 def create_barcode(doc, method):
 	from stdnum import ean
 	pre_barcode = '890' + doc.name
