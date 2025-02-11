@@ -7,8 +7,16 @@ frappe.query_reports["Store Stall Stock report"] = {
 		{
 			"fieldname": "warehouse",
 			"label": __("Warehouse"),
-			"fieldtype": "Select",
-			"options": ["", "Stores", "Stall"],
+			"fieldtype": "Link",
+			"options": "Warehouse",
+			"width": "60px"
+		},
+
+		{
+			"fieldname": "item_group",
+			"label": __("Item Group"),
+			"fieldtype": "Link",
+			"options": "Item Group",
 			"width": "60px"
 		},
 	]
