@@ -135,13 +135,6 @@ def get_columns(filters):
 				"fieldtype": "Float",
 				"width": "100"
 			},
-
-			{
-				"fieldname": "rate",
-				"label": "S Price",
-				"fieldtype": "Currency",
-				"width": "100"
-			},
 		]
 
 
@@ -165,12 +158,11 @@ def get_data(filters):
 		query = frappe.db.sql(
 			"""
 				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name,
-				item_code, batch_no, `tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price AS rate
-				FROM `tabStock Entry Detail`, `tabStock Entry`, tabBatch
+				item_code, batch_no, `tabStock Entry Detail`.item_name, qty
+				FROM `tabStock Entry Detail`, `tabStock Entry`
 				WHERE `tabStock Entry Detail`.parent = `tabStock Entry`.name
 				AND `tabStock Entry`.docstatus = 1
 				AND `tabStock Entry`.posting_date = '{0}'
-				AND batch_no = tabBatch.name
 			""".format(filters.posting_date),
 			as_dict=True
 		)
