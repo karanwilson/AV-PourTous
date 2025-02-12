@@ -1,7 +1,7 @@
 frappe.ui.form.on('Purchase Receipt', {
 	refresh(frm) {
 		console.log("(Refresh) frappe.session.user_fullname: ", frappe.session.user_fullname);
-		if (frappe.session.user_fullname != 'Administrator' && frappe.session.user_fullname != 'Maroma')
+		if (frappe.session.user_fullname != 'Administrator' && frappe.session.user_fullname != 'Kalki')
 			{
 				frm.set_query('supplier', () => {
 					return {
@@ -12,8 +12,6 @@ frappe.ui.form.on('Purchase Receipt', {
 				});
 			}
 
-        /* if (!frm.doc.taxes_and_charges) {
-        } */
         frm.set_value('taxes_and_charges', 'Input GST In-state - M')
             .then(() => {
                 frm.refresh_field('taxes_and_charges');
@@ -28,13 +26,4 @@ frappe.ui.form.on('Purchase Receipt', {
             };
         });
     }, */
-
-    /* after_save(frm) {
-        let custom_rate_with_tax = 0;
-        frm.doc.items.forEach((item) => {
-            custom_rate_with_tax = (item.amount + item.cgst_amount + item.sgst_amount)/item.qty;
-            item.custom_rate_with_tax = custom_rate_with_tax;
-            frm.refresh_field(frm.doc.items);
-        });
-    } */
 });
