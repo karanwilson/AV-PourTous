@@ -62,6 +62,12 @@ def get_columns(filters):
 				"width": "100"
 			},
 			{
+				"fieldname": "so_reserve",
+				"label": "SO Reserve",
+				"fieldtype": "Float",
+				"width": "100"
+			},
+			{
 				"fieldname": "buying_price",
 				"label": "B.Price",
 				"fieldtype": "Currency",
@@ -108,6 +114,12 @@ def get_columns(filters):
 				"width": "100"
 			},
 			{
+				"fieldname": "so_reserve",
+				"label": "SO Reserve",
+				"fieldtype": "Float",
+				"width": "100"
+			},
+			{
 				"fieldname": "buying_price",
 				"label": "B.Price",
 				"fieldtype": "Currency",
@@ -138,6 +150,11 @@ def get_data(filters):
 				AND batch_no = tabBatch.name
 			) AS stall_qty,
 			(
+				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+				WHERE is_cancelled = 0 AND warehouse LIKE '{2}'
+				AND batch_no = tabBatch.name
+			) AS so_reserve,
+			(
 				SELECT price_list_rate FROM `tabItem Price`
 				WHERE `tabItem Price`.item_code = `tabStock Ledger Entry`.item_code
 				AND price_list = "Standard Buying"
@@ -159,10 +176,16 @@ def get_data(filters):
 				WHERE is_cancelled = 0 AND warehouse LIKE '{1}'
 				AND batch_no = tabBatch.name
 			) != 0
+			OR
+			(
+				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+				WHERE is_cancelled = 0 AND warehouse LIKE '{2}'
+				AND batch_no = tabBatch.name
+			) != 0
 			)
-			AND `tabStock Ledger Entry`.item_code = '{2}'
+			AND `tabStock Ledger Entry`.item_code = '{3}'
 			GROUP BY `tabStock Ledger Entry`.batch_no
-			""".format("Stores%", "Stall%", filters.name),
+			""".format("Stores%", "Stall%", "Sales Order Reserve%", filters.name),
 			as_dict=True
 		)
 
@@ -185,6 +208,13 @@ def get_data(filters):
 				limit 1
 			) AS stall_qty,
 			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{2}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS so_reserve,
+			(
 				SELECT price_list_rate FROM `tabItem Price`
 				WHERE `tabItem Price`.item_code = tabItem.item_code
 				AND price_list = "Standard Buying"
@@ -196,8 +226,8 @@ def get_data(filters):
 			) AS selling_price
 			FROM tabItem, `tabItem Supplier`
 			WHERE tabItem.item_code = `tabItem Supplier`.parent
-			AND tabItem.item_code = '{2}'
-			""".format("Stores%", "Stall%", filters.name),
+			AND tabItem.item_code = '{3}'
+			""".format("Stores%", "Stall%", "Sales Order Reserve%", filters.name),
 			as_dict=True
 		)
 

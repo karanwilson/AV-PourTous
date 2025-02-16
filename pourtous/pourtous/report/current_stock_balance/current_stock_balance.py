@@ -93,18 +93,17 @@ def get_data(filters):
 				limit 1
 			) AS stall_qty,
 			(
-				SELECT SUM(qty)
-				FROM `tabSales Order Item`, `tabSales Order`
-				WHERE parent = `tabSales Order`.name AND `tabSales Order`.docstatus = 1
-				AND parent NOT IN ( SELECT sales_order FROM `tabSales Invoice Item` WHERE sales_order != "NULL" )
-				AND `tabSales Order Item`.item_code = tabItem.item_code
-				GROUP BY item_code
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{2}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
 			) AS so_reserved
 			FROM tabItem, `tabItem Supplier`
 			WHERE tabItem.item_code = `tabItem Supplier`.parent
-			AND tabItem.item_code = '{2}'
+			AND tabItem.item_code = '{3}'
 			) table1
-			""".format("Stores%", "Stall%", filters.name),
+			""".format("Stores%", "Stall%", "Sales Order Reserve%", filters.name),
 			as_dict=True
 		)
 
