@@ -3,6 +3,69 @@ from frappe import _
 #from frappe.utils import flt
 
 
+def cancel_stock_reservation(doc, method):
+	stock_entry = frappe.get_doc("Stock Entry", {"remarks": doc.name}, "name")
+
+	if stock_entry:
+		stock_entry.cancel()
+		frappe.db.commit()
+
+
+@frappe.whitelist(allow_guest=True)
+def fetch_so_stock_reservation():
+	return frappe.db.sql(
+    	"""
+		SELECT name
+		FROM `tabSales Order`, `tabStock Entry`
+		WHERE status = "To Deliver and Bill"
+		AND name != `tabStock Entry`.remarks
+	    """,
+        #as_dict=1,
+    )
+
+@frappe.whitelist(allow_guest=True)
+def make_so_stock_reservation(order):
+	order_doc = frappe.get_doc("Sales Order", order)
+
+	stock_entry = frappe.new_doc("Stock Entry")
+	stock_entry.company = order_doc.company
+	stock_entry.stock_entry_type = "Material Transfer"
+	stock_entry.remarks = order_doc.name
+
+	# get company abbreviation
+	abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+	t_warehouse = "Sales Order Reserve - " + abbr
+
+	for item in order_doc.items:
+		stock_entry.append(
+			"items",
+			{
+				"item_code": item.item_code,
+				"s_warehouse": item.warehouse,
+				"t_warehouse" : t_warehouse,
+				"qty": item.qty,
+				"basic_rate": item.rate,
+				"uom": item.uom,
+				"stock_uom": item.stock_uom,
+				"conversion_factor": item.conversion_factor or 1.0,
+				#"batch_no": item.batch_no,
+			},
+		)
+
+	try:
+		stock_entry.insert()
+		stock_entry.submit()
+	except Exception as err:
+		frappe.msgprint(
+			msg=str(err),
+			title='Error',
+		)
+		return
+	
+	if stock_entry.docstatus == 1:
+		return "OK"
+
+
 @frappe.whitelist(allow_guest=True)
 def get_tax_template():
 	return frappe.get_list(

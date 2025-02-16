@@ -138,7 +138,10 @@ doc_events = {
 	},
     "Batch": {
         "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
-    }
+    },
+    "Sales Order": {
+        "before_cancel": "pourtous.api.cancel_stock_reservation", # removes the associated Sales Order Stock Reservation
+    },
 # 	"*": {
 # 		"on_update": "method",
 # 		"on_cancel": "method",
