@@ -11,11 +11,5 @@ frappe.query_reports["Current Stock Balance"] = {
 			"options": "Item",
 			"width": "60px",
 		},
-		{
-			"fieldname": "item_code",
-			"label": __("Item Code"),
-			"fieldtype": "Data",
-			"width": "60px",
-		},
 	]
 };

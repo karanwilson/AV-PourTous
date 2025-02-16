@@ -53,6 +53,18 @@ def get_columns():
 			"fieldtype": "Float",
 			"width": "100"
 		},
+		{
+			"fieldname": "so_reserved",
+			"label": "SO Reserved",
+			"fieldtype": "Float",
+			"width": "115"
+		},
+		{
+			"fieldname": "balance_qty",
+			"label": "Stall Balance",
+			"fieldtype": "Float",
+			"width": "120"
+		}
 	]
 
 
@@ -60,31 +72,11 @@ def get_data(filters):
 	if filters.name:
 		query = frappe.db.sql(
 			"""
-			SELECT tabItem.item_code, tabItem.item_name, `tabItem Supplier`.supplier,
-			(
-				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
-				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
-				and warehouse like '{0}'
-				order by posting_date desc, posting_time desc, creation desc
-				limit 1
-			) AS store_qty,
-			(
-				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
-				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
-				and warehouse like '{1}'
-				order by posting_date desc, posting_time desc, creation desc
-				limit 1
-			) AS stall_qty
-			FROM tabItem, `tabItem Supplier`
-			WHERE tabItem.item_code = `tabItem Supplier`.parent
-			AND tabItem.item_code = '{2}'
-			""".format("Stores%", "Stall%", filters.name),
-			as_dict=True
-		)
+			SELECT table1.*,
+			IF((table1.so_reserved != "NULL"), (table1.stall_qty - table1.so_reserved), (table1.stall_qty - 0)) AS balance_qty
+			FROM
 
-	elif filters.item_code:
-		query = frappe.db.sql(
-			"""
+			(
 			SELECT tabItem.item_code, tabItem.item_name, `tabItem Supplier`.supplier,
 			(
 				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
@@ -99,11 +91,20 @@ def get_data(filters):
 				and warehouse like '{1}'
 				order by posting_date desc, posting_time desc, creation desc
 				limit 1
-			) AS stall_qty
+			) AS stall_qty,
+			(
+				SELECT SUM(qty)
+				FROM `tabSales Order Item`, `tabSales Order`
+				WHERE parent = `tabSales Order`.name AND `tabSales Order`.docstatus = 1
+				AND parent NOT IN ( SELECT sales_order FROM `tabSales Invoice Item` WHERE sales_order != "NULL" )
+				AND `tabSales Order Item`.item_code = tabItem.item_code
+				GROUP BY item_code
+			) AS so_reserved
 			FROM tabItem, `tabItem Supplier`
 			WHERE tabItem.item_code = `tabItem Supplier`.parent
 			AND tabItem.item_code = '{2}'
-			""".format("Stores%", "Stall%", filters.item_code),
+			) table1
+			""".format("Stores%", "Stall%", filters.name),
 			as_dict=True
 		)
 
