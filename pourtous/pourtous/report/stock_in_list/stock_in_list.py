@@ -25,13 +25,6 @@ def get_columns(filters):
 	if filters.voucher_type == "Purchase Receipt":
 		return [
 			{
-				"fieldname": "voucher_type",
-				"label": "Voucher Type",
-				"fieldtype": "Data",
-				"width": "135"
-			},
-
-			{
 				"fieldname": "voucher_name",
 				"label": "Voucher ID",
 				"fieldtype": "Link",
@@ -150,14 +143,16 @@ def get_data(filters):
 	if filters.voucher_type == "Purchase Receipt":
 		query = frappe.db.sql(
 			"""
-				SELECT parenttype AS voucher_type, `tabPurchase Receipt`.name AS voucher_name,
-				title AS supplier, item_code, batch_no, custom_barcode, `tabPurchase Receipt Item`.item_name, qty, custom_selling_price,
-				IF((custom_selling_price = 0), rate, 0) AS rate
-				FROM `tabPurchase Receipt Item`, `tabPurchase Receipt`, tabBatch
-				WHERE `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
-				AND `tabPurchase Receipt`.docstatus = 1
-				AND `tabPurchase Receipt`.posting_date = '{0}'
-				AND `tabPurchase Receipt Item`.batch_no = tabBatch.name
+			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.title AS supplier,
+			`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
+			tabBatch.custom_barcode, `tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
+			IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
+			FROM `tabPurchase Receipt Item`
+			INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
+			AND `tabPurchase Receipt`.docstatus = 1
+			AND `tabPurchase Receipt`.posting_date = '{0}'
+			LEFT JOIN tabBatch
+			ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
 			""".format(filters.posting_date),
 			as_dict=True
 		)
