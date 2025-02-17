@@ -4,39 +4,46 @@ from frappe import _
 
 
 def cancel_stock_reservation(doc, method):
-	stock_entry = frappe.get_doc("Stock Entry", {"remarks": doc.name}, "name")
+	stock_entry_id = frappe.get_value("Stock Entry", {"remarks": doc.name}, "name")
 
-	if stock_entry:
+	if stock_entry_id:
+		stock_entry = frappe.get_doc("Stock Entry", stock_entry_id)
 		stock_entry.cancel()
 		frappe.db.commit()
 
+#@frappe.whitelist(allow_guest=True)
+#def fetch_so_stock_reservation():
+#	return frappe.db.sql(
+#    	"""
+#		SELECT name
+#		FROM `tabSales Order`, `tabStock Entry`
+#		WHERE status = "To Deliver and Bill"
+#		AND name != `tabStock Entry`.remarks
+#	    """,
+#       #as_dict=1,
+#  )
 
-@frappe.whitelist(allow_guest=True)
-def fetch_so_stock_reservation():
-	return frappe.db.sql(
-    	"""
-		SELECT name
-		FROM `tabSales Order`, `tabStock Entry`
-		WHERE status = "To Deliver and Bill"
-		AND name != `tabStock Entry`.remarks
-	    """,
-        #as_dict=1,
-    )
+def make_stock_reservation(doc, method):
+	stock_entry_id = frappe.get_value("Stock Entry", {"remarks": doc.name}, "name")
+	if stock_entry_id:
+		stock_entry = frappe.get_doc("Stock Entry", stock_entry_id)
+		if stock_entry.docstatus == 1:
+			message = "SO Stock Reservation for " + stock_entry_id + " exists: please cancel it before making a new SO Stock Reservation"
+			frappe.throw(message)
+		elif stock_entry.docstatus == 2:
+			stock_entry = frappe.new_doc("Stock Entry")
+	else:
+		stock_entry = frappe.new_doc("Stock Entry")
 
-@frappe.whitelist(allow_guest=True)
-def make_so_stock_reservation(order):
-	order_doc = frappe.get_doc("Sales Order", order)
-
-	stock_entry = frappe.new_doc("Stock Entry")
-	stock_entry.company = order_doc.company
+	stock_entry.company = doc.company
 	stock_entry.stock_entry_type = "Material Transfer"
-	stock_entry.remarks = order_doc.name
+	stock_entry.remarks = doc.name
 
 	# get company abbreviation
 	abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
 	t_warehouse = "Sales Order Reserve - " + abbr
 
-	for item in order_doc.items:
+	for item in doc.items:
 		stock_entry.append(
 			"items",
 			{
@@ -53,17 +60,16 @@ def make_so_stock_reservation(order):
 		)
 
 	try:
-		stock_entry.insert()
+		if stock_entry.name: # in case a Stock Entry draft pre-exists
+			stock_entry.save()
+		else:
+			stock_entry.insert()
 		stock_entry.submit()
 	except Exception as err:
 		frappe.msgprint(
 			msg=str(err),
 			title='Error',
 		)
-		return
-	
-	if stock_entry.docstatus == 1:
-		return "OK"
 
 
 @frappe.whitelist(allow_guest=True)
