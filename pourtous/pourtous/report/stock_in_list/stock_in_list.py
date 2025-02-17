@@ -62,6 +62,13 @@ def get_columns(filters):
 			},
 
 			{
+				"fieldname": "custom_barcode",
+				"label": "Barcode",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+
+			{
 				"fieldname": "item_name",
 				"label": "Item Name",
 				"fieldtype": "Data",
@@ -144,12 +151,13 @@ def get_data(filters):
 		query = frappe.db.sql(
 			"""
 				SELECT parenttype AS voucher_type, `tabPurchase Receipt`.name AS voucher_name,
-				title AS supplier, item_code, batch_no, item_name, qty, custom_selling_price,
+				title AS supplier, item_code, batch_no, custom_barcode, `tabPurchase Receipt Item`.item_name, qty, custom_selling_price,
 				IF((custom_selling_price = 0), rate, 0) AS rate
-				FROM `tabPurchase Receipt Item`, `tabPurchase Receipt`
+				FROM `tabPurchase Receipt Item`, `tabPurchase Receipt`, tabBatch
 				WHERE `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
 				AND `tabPurchase Receipt`.docstatus = 1
 				AND `tabPurchase Receipt`.posting_date = '{0}'
+				AND `tabPurchase Receipt Item`.batch_no = tabBatch.name
 			""".format(filters.posting_date),
 			as_dict=True
 		)
