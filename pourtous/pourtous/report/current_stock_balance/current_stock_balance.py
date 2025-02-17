@@ -58,12 +58,6 @@ def get_columns():
 			"label": "SO Reserved",
 			"fieldtype": "Float",
 			"width": "115"
-		},
-		{
-			"fieldname": "balance_qty",
-			"label": "Stall Balance",
-			"fieldtype": "Float",
-			"width": "120"
 		}
 	]
 
@@ -72,8 +66,7 @@ def get_data(filters):
 	if filters.name:
 		query = frappe.db.sql(
 			"""
-			SELECT table1.*,
-			IF((table1.so_reserved != "NULL"), (table1.stall_qty - table1.so_reserved), (table1.stall_qty - 0)) AS balance_qty
+			SELECT table1.*
 			FROM
 
 			(
