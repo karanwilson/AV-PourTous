@@ -24,52 +24,52 @@ def cancel_stock_reservation(doc, method):
 #  )
 
 def make_stock_reservation(doc, method):
-	stock_entry_id = frappe.get_value("Stock Entry", {"remarks": doc.name}, "name")
-	if stock_entry_id:
-		stock_entry = frappe.get_doc("Stock Entry", stock_entry_id)
-		if stock_entry.docstatus == 1:
-			message = "SO Stock Reservation for " + stock_entry_id + " exists: please cancel it before making a new SO Stock Reservation"
-			frappe.throw(message)
-		elif stock_entry.docstatus == 2:
-			stock_entry = frappe.new_doc("Stock Entry")
-	else:
+	# trigger the stock reservation hook, only if it is a modified doc
+	if doc.amended_from:
+		""" stock_entry_id = frappe.get_value("Stock Entry", {"remarks": doc.name}, "name")
+		if stock_entry_id:
+			stock_entry = frappe.get_doc("Stock Entry", stock_entry_id)
+			if stock_entry.docstatus == 1:
+				message = "SO Stock Reservation for " + stock_entry_id + " exists: please cancel it before making a new SO Stock Reservation"
+				frappe.throw(message)
+			elif stock_entry.docstatus == 2:
+				stock_entry = frappe.new_doc("Stock Entry")
+		else: """
+
 		stock_entry = frappe.new_doc("Stock Entry")
 
-	stock_entry.company = doc.company
-	stock_entry.stock_entry_type = "Material Transfer"
-	stock_entry.remarks = doc.name
+		stock_entry.company = doc.company
+		stock_entry.stock_entry_type = "Material Transfer"
+		stock_entry.remarks = doc.name
 
-	# get company abbreviation
-	abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
-	t_warehouse = "Sales Order Reserve - " + abbr
+		# get company abbreviation
+		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+		t_warehouse = "Sales Order Reserve - " + abbr
 
-	for item in doc.items:
-		stock_entry.append(
-			"items",
-			{
-				"item_code": item.item_code,
-				"s_warehouse": item.warehouse,
-				"t_warehouse" : t_warehouse,
-				"qty": item.qty,
-				"basic_rate": item.rate,
-				"uom": item.uom,
-				"stock_uom": item.stock_uom,
-				"conversion_factor": item.conversion_factor or 1.0,
-				#"batch_no": item.batch_no,
-			},
-		)
+		for item in doc.items:
+			stock_entry.append(
+				"items",
+				{
+					"item_code": item.item_code,
+					"s_warehouse": item.warehouse,
+					"t_warehouse" : t_warehouse,
+					"qty": item.qty,
+					"basic_rate": item.rate,
+					"uom": item.uom,
+					"stock_uom": item.stock_uom,
+					"conversion_factor": item.conversion_factor or 1.0,
+					#"batch_no": item.batch_no,
+				},
+			)
 
-	try:
-		if stock_entry.name: # in case a Stock Entry draft pre-exists
-			stock_entry.save()
-		else:
+		try:
 			stock_entry.insert()
-		stock_entry.submit()
-	except Exception as err:
-		frappe.msgprint(
-			msg=str(err),
-			title='Error',
-		)
+			stock_entry.submit()
+		except Exception as err:
+			frappe.msgprint(
+				msg=str(err),
+				title='Error',
+			)
 
 
 @frappe.whitelist(allow_guest=True)

@@ -141,7 +141,7 @@ doc_events = {
     },
     "Sales Order": {
         "before_cancel": "pourtous.api.cancel_stock_reservation", # removes the associated Sales Order Stock Reservation
-        "before_save": "pourtous.api.make_stock_reservation" # adds stock reservation for the Sales Order
+        "before_submit": "pourtous.api.make_stock_reservation" # adds stock reservation for the Sales Order
     },
 # 	"*": {
 # 		"on_update": "method",
