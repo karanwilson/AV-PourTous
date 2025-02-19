@@ -158,15 +158,19 @@ def get_data(filters):
 		)
 
 	else:
+		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+		# get company abbreviation
+		warehouse = "Sales Order Reserve - " + abbr
 		query = frappe.db.sql(
 			"""
 				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name,
 				item_code, batch_no, `tabStock Entry Detail`.item_name, qty
 				FROM `tabStock Entry Detail`, `tabStock Entry`
 				WHERE `tabStock Entry Detail`.parent = `tabStock Entry`.name
+				AND `tabStock Entry Detail`.t_warehouse != '{1}'
 				AND `tabStock Entry`.docstatus = 1
 				AND `tabStock Entry`.posting_date = '{0}'
-			""".format(filters.posting_date),
+			""".format(filters.posting_date, warehouse),
 			as_dict=True
 		)
 
