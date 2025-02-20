@@ -3,6 +3,11 @@ from frappe import _
 #from frappe.utils import flt
 
 
+@frappe.whitelist(allow_guest=True)
+def set_so_warehouse():
+	pass
+
+
 def cancel_stock_reservation(doc, method):
 	stock_entry_id = frappe.get_value("Stock Entry", {"remarks": doc.name}, "name")
 

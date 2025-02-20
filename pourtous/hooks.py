@@ -261,6 +261,7 @@ fixtures = [
                     "Sales Invoice-custom_zb_sync_status", # for syncing with Zoho Books
                     "Sales Order-custom_fs_account_number", # to Identify Sales Order based on FS Account number
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions
+                    "Sales Order Item-custom_batch_no", # for SO Stock reservations
                     "Customer-custom_fs_account_number", # for FS Transactions
                     "Customer-custom_fs_kind_account_3", # for FS Transactions
                     "Customer-custom_fs_cash_account_4", # for FS Transactions
