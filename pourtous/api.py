@@ -4,8 +4,8 @@ from frappe import _
 
 
 @frappe.whitelist(allow_guest=True)
-def set_so_warehouse():
-	pass
+def get_so_item_batch(sales_order, item_code):
+	return frappe.get_value("Sales Order Item", {"parent": sales_order, "item_code": item_code}, "custom_batch_no")
 
 
 def cancel_stock_reservation(doc, method):
@@ -16,17 +16,48 @@ def cancel_stock_reservation(doc, method):
 		stock_entry.cancel()
 		frappe.db.commit()
 
-#@frappe.whitelist(allow_guest=True)
-#def fetch_so_stock_reservation():
-#	return frappe.db.sql(
-#    	"""
-#		SELECT name
-#		FROM `tabSales Order`, `tabStock Entry`
-#		WHERE status = "To Deliver and Bill"
-#		AND name != `tabStock Entry`.remarks
-#	    """,
-#       #as_dict=1,
-#  )
+
+@frappe.whitelist(allow_guest=True)
+def fetch_old_so_list():
+	return frappe.db.sql(
+    	"""
+		SELECT name FROM `tabSales Order`
+		WHERE
+			transaction_date between "2025-02-01" and "2025-02-19"
+			AND docstatus = 1
+			AND ifnull(status, "") != "Closed"
+			AND abs(100 - per_billed) > 0.01
+		ORDER BY
+			transaction_date, name
+	    """,
+       #as_dict=1,
+	)
+
+@frappe.whitelist(allow_guest=True)
+def update_old_so_item_batch(sales_order_name):
+	stock_entry_name = frappe.get_value("Stock Entry", {"remarks": sales_order_name}, "name")
+
+	if stock_entry_name:
+		stock_entry = frappe.get_doc("Stock Entry", stock_entry_name)
+
+		if stock_entry.docstatus == 1:
+			stock_entry = frappe.get_doc("Stock Entry", stock_entry_name)
+			for item in stock_entry.items:
+				sales_order_item = frappe.get_value("Sales Order Item", {"parent": sales_order_name, "item_code": item.item_code}, "name")
+
+				sales_order_item_doc = frappe.get_doc("Sales Order Item", sales_order_item)
+				sales_order_item_doc.custom_batch_no = item.batch_no
+				sales_order_item_doc.save()
+				frappe.db.commit()
+
+			return "Updated " + sales_order_name
+
+		else:
+			return "Stock Entry for " + sales_order_name + " is in draft"
+		
+	else:
+		return "No Stock Entry for " + sales_order_name
+
 
 def make_stock_reservation(doc, method):
 	# trigger the stock reservation hook, only if it is a modified doc
@@ -71,10 +102,11 @@ def make_stock_reservation(doc, method):
 			stock_entry.insert()
 			stock_entry.submit()
 		except Exception as err:
-			frappe.msgprint(
+			raise err
+			""" frappe.msgprint(
 				msg=str(err),
 				title='Error',
-			)
+			) """
 
 
 @frappe.whitelist(allow_guest=True)
