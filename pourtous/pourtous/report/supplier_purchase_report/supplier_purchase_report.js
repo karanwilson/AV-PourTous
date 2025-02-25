@@ -5,6 +5,13 @@
 frappe.query_reports["Supplier Purchase Report"] = {
 	"filters": [
 		{
+			"fieldname": "voucher_type",
+			"label": __("Voucher Type"),
+			"fieldtype": "Select",
+			"options": ["", "Purchase Receipt", "Purchase Invoice"],
+			"width": "60px",
+		},
+		{
 			"fieldname": "supplier",
 			"label": __("Supplier"),
 			"fieldtype": "Link",

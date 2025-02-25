@@ -10,7 +10,7 @@ def execute(filters=None):
 
 	columns, data = [], []
 
-	columns = get_columns()
+	columns = get_columns(filters)
 	data = get_data(filters)
 
 	if not data:
@@ -20,41 +20,74 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns():
-	return [
-		{
-			"fieldname": "voucher_name",
-			"label": "Voucher ID",
-			"fieldtype": "Link",
-			"options": "Purchase Receipt",
-			"width": "150"
-		},
+def get_columns(filters):
+	if filters.voucher_type == "Purchase Receipt":
+		return [
+			{
+				"fieldname": "voucher_name",
+				"label": "Voucher ID",
+				"fieldtype": "Link",
+				"options": "Purchase Receipt",
+				"width": "150"
+			},
 
-		{
-			"fieldname": "supplier",
-			"label": "Supplier",
-			"fieldtype": "Data",
-			"width": "300"
-		},
+			{
+				"fieldname": "supplier",
+				"label": "Supplier",
+				"fieldtype": "Data",
+				"width": "300"
+			},
 
-		{
-			"fieldname": "posting_date",
-			"label": "Posting Date",
-			"fieldtype": "Date",
-			"width": "150"
-		},
+			{
+				"fieldname": "posting_date",
+				"label": "Posting Date",
+				"fieldtype": "Date",
+				"width": "150"
+			},
 
-		{
-			"fieldname": "taxable_purchase_amount",
-			"label": "Taxable Purchase Amount",
-			"fieldtype": "Currency",
-			"width": "200"
-		},
-	]
+			{
+				"fieldname": "taxable_purchase_amount",
+				"label": "Taxable Purchase Amount",
+				"fieldtype": "Currency",
+				"width": "200"
+			},
+		]
+	
+	else:
+		return [
+			{
+				"fieldname": "voucher_name",
+				"label": "Voucher ID",
+				"fieldtype": "Link",
+				"options": "Purchase Invoice",
+				"width": "150"
+			},
+
+			{
+				"fieldname": "supplier",
+				"label": "Supplier",
+				"fieldtype": "Data",
+				"width": "300"
+			},
+
+			{
+				"fieldname": "posting_date",
+				"label": "Posting Date",
+				"fieldtype": "Date",
+				"width": "150"
+			},
+
+			{
+				"fieldname": "taxable_purchase_amount",
+				"label": "Taxable Purchase Amount",
+				"fieldtype": "Currency",
+				"width": "200"
+			},
+		]
 
 
 def get_data(filters):
-	if filters.supplier:
+	if filters.voucher_type == "Purchase Receipt" and filters.supplier:
 		query = frappe.db.sql(
 			"""
 			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.supplier, `tabPurchase Receipt`.posting_date,
@@ -70,7 +103,7 @@ def get_data(filters):
 		)
 		return query
 	
-	else:
+	elif filters.voucher_type == "Purchase Receipt" and not filters.supplier:
 		query = frappe.db.sql(
 			"""
 			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.supplier, `tabPurchase Receipt`.posting_date,
@@ -80,6 +113,37 @@ def get_data(filters):
 			AND `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
 			AND `tabPurchase Receipt`.posting_date BETWEEN '{0}' AND '{1}'
 			GROUP BY `tabPurchase Receipt`.name
+			""".format(filters.from_date, filters.to_date),
+			as_dict=True
+		)
+		return query
+	
+	elif filters.voucher_type == "Purchase Invoice" and filters.supplier:
+		query = frappe.db.sql(
+			"""
+			SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.supplier, `tabPurchase Invoice`.posting_date,
+			SUM(price_list_rate * qty) AS taxable_purchase_amount
+			FROM `tabPurchase Invoice`, `tabPurchase Invoice Item`
+			WHERE `tabPurchase Invoice`.docstatus = 1
+			AND `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
+			AND `tabPurchase Invoice`.supplier = '{0}'
+			AND `tabPurchase Invoice`.posting_date BETWEEN '{1}' AND '{2}'
+			GROUP BY `tabPurchase Invoice`.name
+			""".format(filters.supplier, filters.from_date, filters.to_date),
+			as_dict=True
+		)
+		return query
+	
+	else:
+		query = frappe.db.sql(
+			"""
+			SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.supplier, `tabPurchase Invoice`.posting_date,
+			SUM(price_list_rate * qty) AS taxable_purchase_amount
+			FROM `tabPurchase Invoice`, `tabPurchase Invoice Item`
+			WHERE `tabPurchase Invoice`.docstatus = 1
+			AND `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
+			AND `tabPurchase Invoice`.posting_date BETWEEN '{0}' AND '{1}'
+			GROUP BY `tabPurchase Invoice`.name
 			""".format(filters.from_date, filters.to_date),
 			as_dict=True
 		)
