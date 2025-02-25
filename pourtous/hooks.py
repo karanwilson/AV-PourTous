@@ -125,10 +125,10 @@ doc_events = {
     #"Sales Invoice": {
     #    "on_submit": "pourtous.api.payment_entry_for_return" # creates 'Payment Entry' for item returns
 	#},
-    "Payment Entry": {
+    #"Payment Entry": {
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)
         #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
-	},
+	#},
 	"Item": {
 		"before_save": "pourtous.api.verify_tax_template", # verifies whether a tax template was added
 	},
