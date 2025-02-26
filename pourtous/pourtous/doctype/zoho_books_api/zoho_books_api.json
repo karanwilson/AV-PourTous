@@ -23,7 +23,7 @@
   },
   {
    "fieldname": "client_id",
-   "fieldtype": "Password",
+   "fieldtype": "Data",
    "label": "Client ID"
   },
   {
@@ -57,7 +57,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-02-26 12:12:29.752747",
+ "modified": "2025-02-26 13:15:59.066144",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",

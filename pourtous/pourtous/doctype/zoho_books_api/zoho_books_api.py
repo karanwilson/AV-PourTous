@@ -24,7 +24,7 @@ class ZohoBooksAPI(Document):
 			r = s.get(self.token_url)
 			r.raise_for_status()
 
-			data = r.json()
+			return r.json()
 
 
 		""" client_id = ''
