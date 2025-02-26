@@ -7,19 +7,25 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "api_url"
+  "api_url",
+  "login"
  ],
  "fields": [
   {
    "fieldname": "api_url",
    "fieldtype": "Data",
    "label": "API URL"
+  },
+  {
+   "fieldname": "login",
+   "fieldtype": "Button",
+   "label": "Login"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-02-13 16:06:36.171466",
+ "modified": "2025-02-25 19:19:20.456332",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",
