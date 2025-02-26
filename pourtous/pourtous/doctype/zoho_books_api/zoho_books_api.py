@@ -21,21 +21,21 @@ class ZohoBooksAPI(Document):
 				'soid': self.soid
 				}
 
-			r = s.get("https://accounts.zoho.in/oauth/v2/token?")
+			r = s.get(self.token_url)
 			r.raise_for_status()
 
 			data = r.json()
 
 
-		""" client_id = '1000.AYZFMY8YD7JAGU0E1IGVMMNDTDZICR'
-		client_secret = 'e0a04002642b69c66be36ef1a307f0d91916d53387'
+		""" client_id = ''
+		client_secret = ''
 		grant_type = 'client_credentials'
-		scope = ['ZohoBooks.invoices.CREATE', 'ZohoBooks.invoices.READ', 'ZohoBooks.invoices.UPDATE', 'ZohoBooks.invoices.DELETE']
-		soid = 'ZohoBooks.60037640038'
-		token_url = 'https://accounts.zoho.in/oauth/v2/token?'
+		scope = ['', '', '', '']
+		soid = ''
+		token_url = ''
 
 		#oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
-		#authorization_url, state = oauth.authorization_url('https://accounts.zoho.com/oauth/v2/auth?', access_type="offline")
+		#authorization_url, state = oauth.authorization_url('', access_type="offline")
 
 		client = BackendApplicationClient(client_id=client_id)
 		oauth = OAuth2Session(client=client)
@@ -58,13 +58,13 @@ def sync_with_zoho_books(invoice):
 
 @frappe.whitelist(allow_guest=True)
 def generate_grant_token():
-	url = 'https://accounts.zoho.com/oauth/v2/auth?'
+	url = ''
 	headers = {
-		'scope': 'ZohoBooks.invoices.CREATE,ZohoBooks.invoices.READ,ZohoBooks.invoices.UPDATE,ZohoBooks.invoices.DELETE',
-		'client_id': '1000.AYZFMY8YD7JAGU0E1IGVMMNDTDZICR',
+		'scope': '',
+		'client_id': '',
 		'state': 'testing',
 		'response_type': 'code',
-		'redirect_uri': 'https://accounts.zoho.in/oauth/v2/token?',
+		'redirect_uri': '',
 		#'prompt': 'Consent'
 	}
 
