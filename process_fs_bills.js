@@ -70,18 +70,6 @@ frappe.listview_settings['Sales Invoice'] = {
         });
 
 
-        listview.page.add_inner_button("Get Zoho Books Auth Code", () => {
-            frappe.call({
-                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.generate_grant_token',
-                async: false,
-                callback: (r) => {
-                    if (r.message) {
-                        console.log(r.message);
-                    }
-                }
-            });
-        });
-
         /* listview.page.add_inner_button("Exception Process FS Credit Bills", () => {
             frappe.call({
                 method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.fetch_exception_fs_credit_bills',
