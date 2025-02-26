@@ -7,25 +7,57 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "api_url",
+  "client_id",
+  "client_secret",
+  "grant_type",
+  "scope",
+  "soid",
+  "token_url",
   "login"
  ],
  "fields": [
   {
-   "fieldname": "api_url",
-   "fieldtype": "Data",
-   "label": "API URL"
-  },
-  {
    "fieldname": "login",
    "fieldtype": "Button",
    "label": "Login"
+  },
+  {
+   "fieldname": "client_id",
+   "fieldtype": "Password",
+   "label": "Client ID"
+  },
+  {
+   "fieldname": "client_secret",
+   "fieldtype": "Password",
+   "label": "Client Secret"
+  },
+  {
+   "fieldname": "grant_type",
+   "fieldtype": "Data",
+   "label": "Grant Type"
+  },
+  {
+   "description": "Eg: ZohoBooks.settings.READ",
+   "fieldname": "scope",
+   "fieldtype": "Data",
+   "label": "Scope"
+  },
+  {
+   "description": "Syntax: {servicename}.{zsoid}",
+   "fieldname": "soid",
+   "fieldtype": "Data",
+   "label": "SOID"
+  },
+  {
+   "fieldname": "token_url",
+   "fieldtype": "Data",
+   "label": "Token URL"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-02-25 19:19:20.456332",
+ "modified": "2025-02-26 12:12:29.752747",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",

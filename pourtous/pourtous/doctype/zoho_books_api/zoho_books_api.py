@@ -14,11 +14,11 @@ class ZohoBooksAPI(Document):
 	def zoho_api_token(self, throw_if_missing=False):
 		with requests.Session() as s:
 			s.params = {
-				'client_id': '1000.35AXATHCTJTWEEK74H9XPP1F1QYD3B',
-				'client_secret': '64e0e14c3ef0dd43f8c37490b54fa541cf0ddda8a1',
-				'grant_type': 'client_credentials',
-				'scope': 'ZohoBooks.invoices.CREATE,ZohoBooks.invoices.READ,ZohoBooks.invoices.UPDATE,ZohoBooks.invoices.DELETE',
-				'soid': 'ZohoBooks.60037640038'
+				'client_id': self.client_id,
+				'client_secret': self.client_secret,
+				'grant_type': self.grant_type,
+				'scope': self.scope,
+				'soid': self.soid
 				}
 
 			r = s.get("https://accounts.zoho.in/oauth/v2/token?")
