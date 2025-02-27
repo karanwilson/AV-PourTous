@@ -93,20 +93,37 @@ def make_stock_reservation(doc, method):
 
 		for item in doc.items:
 			item.warehouse = t_warehouse
-			stock_entry.append(
-				"items",
-				{
-					"item_code": item.item_code,
-					"s_warehouse": s_warehouse,
-					"t_warehouse" : t_warehouse,
-					"qty": item.qty,
-					#"basic_rate": item.rate,
-					"uom": item.uom,
-					"stock_uom": item.stock_uom,
-					"conversion_factor": item.conversion_factor or 1.0,
-					#"batch_no": item.custom_batch_no
-				},
-			)
+			if item.custom_batch_no:
+				stock_entry.append(
+					"items",
+					{
+						"item_code": item.item_code,
+						"s_warehouse": s_warehouse,
+						"t_warehouse" : t_warehouse,
+						"qty": item.qty,
+						#"basic_rate": item.rate,
+						"uom": item.uom,
+						"stock_uom": item.stock_uom,
+						"conversion_factor": item.conversion_factor or 1.0,
+						"batch_no": item.custom_batch_no
+					},
+				)
+
+			else:
+				stock_entry.append(
+					"items",
+					{
+						"item_code": item.item_code,
+						"s_warehouse": s_warehouse,
+						"t_warehouse" : t_warehouse,
+						"qty": item.qty,
+						#"basic_rate": item.rate,
+						"uom": item.uom,
+						"stock_uom": item.stock_uom,
+						"conversion_factor": item.conversion_factor or 1.0,
+						#"batch_no": item.custom_batch_no
+					},
+				)
 
 		try:
 			stock_entry.insert()
@@ -115,7 +132,8 @@ def make_stock_reservation(doc, method):
 			raise err
 
 		for se_item in stock_entry.items:
-			doc.items[se_item.idx-1].custom_batch_no = se_item.batch_no
+			if not doc.items[se_item.idx-1].custom_batch_no:
+				doc.items[se_item.idx-1].custom_batch_no = se_item.batch_no
 			# fetch the item price or batch price
 			if doc.items[se_item.idx-1].rate == 0:
 				if doc.items[se_item.idx-1].custom_batch_no:
