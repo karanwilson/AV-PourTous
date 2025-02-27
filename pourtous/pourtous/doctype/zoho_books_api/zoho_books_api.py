@@ -4,43 +4,40 @@
 import frappe
 from frappe.model.document import Document
 
-#import requests
-import urllib
-from requests_oauthlib import OAuth2Session
-from oauthlib.oauth2 import BackendApplicationClient
+import requests
+#import urllib
+#from requests_oauthlib import OAuth2Session
+#from oauthlib.oauth2 import BackendApplicationClient
 
 class ZohoBooksAPI(Document):
 	@frappe.whitelist(allow_guest=True)
 	def zoho_api_token(self, throw_if_missing=False):
-		client_id = self.client_id
-		client_secret = self.client_secret
-		grant_type = self.grant_type
-		scope = ['', '', '', '']
-		soid = ''
-		token_url = ''
+		#soid = 'ZohoBooks.' + self.organization_id
+		token_url = 'https://accounts.zoho.com/oauth/v2/token?'
+		with requests.Session() as s:
+			s.params = {
+				'client_id': self.client_id,
+				'client_secret': self.client_secret,
+				'grant_type': 'client_credentials',
+				'scope': 'ZohoBooks.invoices.CREATE,ZohoBooks.invoices.READ,ZohoBooks.invoices.UPDATE,ZohoBooks.invoices.DELETE',
+				#'soid': soid
+				}
 
-		#oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
-		#authorization_url, state = oauth.authorization_url('', access_type="offline")
+			r = s.get(token_url)
+			r.raise_for_status()
+			return r.json()
+
+		""" client_id = self.client_id
+		client_secret = self.client_secret
+		grant_type = 'client_credentials'
+		scope = ['ZohoBooks.invoices.CREATE', 'ZohoBooks.invoices.READ', 'ZohoBooks.invoices.UPDATE', 'ZohoBooks.invoices.DELETE']
+		#authorization_url = 'https://accounts.zoho.com/oauth/v2/auth?'
+		token_url = 'https://accounts.zoho.com/oauth/v2/token?'
 
 		client = BackendApplicationClient(client_id=client_id)
 		oauth = OAuth2Session(client=client)
 
-		#oauth = OAuth2Session(client_id, scope=scope)
-		#token = oauth.fetch_token(token_url=token_url, client_id=client_id, client_secret=client_secret, grant_type=grant_type, scope=scope, soid=soid)
-
-		""" with requests.Session() as s:
-			s.params = {
-				'client_id': self.client_id,
-				'client_secret': self.client_secret,
-				'grant_type': self.grant_type,
-				'scope': self.scope,
-				'soid': self.soid
-				}
-
-			r = s.get(self.token_url)
-			r.raise_for_status()
-
-			return r.json() """
+		token = oauth.fetch_token(token_url=token_url, client_id=client_id, client_secret=client_secret, grant_type=grant_type, scope=scope) """
 
 
 def fetch_unsynced_sales_invoice_list():

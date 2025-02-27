@@ -9,10 +9,7 @@
  "field_order": [
   "client_id",
   "client_secret",
-  "grant_type",
-  "scope",
-  "soid",
-  "token_url",
+  "organization_id",
   "login"
  ],
  "fields": [
@@ -32,32 +29,15 @@
    "label": "Client Secret"
   },
   {
-   "fieldname": "grant_type",
+   "fieldname": "organization_id",
    "fieldtype": "Data",
-   "label": "Grant Type"
-  },
-  {
-   "description": "Eg: ZohoBooks.settings.READ",
-   "fieldname": "scope",
-   "fieldtype": "Data",
-   "label": "Scope"
-  },
-  {
-   "description": "Syntax: {servicename}.{zsoid}",
-   "fieldname": "soid",
-   "fieldtype": "Data",
-   "label": "SOID"
-  },
-  {
-   "fieldname": "token_url",
-   "fieldtype": "Data",
-   "label": "Token URL"
+   "label": "Organization ID"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-02-26 13:15:59.066144",
+ "modified": "2025-02-27 11:37:56.383438",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",
