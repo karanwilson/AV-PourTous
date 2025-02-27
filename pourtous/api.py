@@ -146,7 +146,7 @@ def make_stock_reservation(doc, method):
 					doc.items[se_item.idx-1].amount = doc.items[se_item.idx-1].rate * doc.items[se_item.idx-1].qty
 					if doc.items[se_item.idx-1].rate == 0:
 						frappe.msgprint(_("Price is not set for Item {0}").format(doc.items[se_item.idx-1].item_code))
-			
+
 				doc.calculate_taxes_and_totals()
 
 
