@@ -8,15 +8,6 @@ def get_so_item_batch(sales_order, item_code):
 	return frappe.get_value("Sales Order Item", {"parent": sales_order, "item_code": item_code}, "custom_batch_no")
 
 
-def cancel_stock_reservation(doc, method):
-	stock_entry_id = frappe.get_value("Stock Entry", {"remarks": doc.name}, "name")
-
-	if stock_entry_id:
-		stock_entry = frappe.get_doc("Stock Entry", stock_entry_id)
-		stock_entry.cancel()
-		frappe.db.commit()
-
-
 @frappe.whitelist(allow_guest=True)
 def fetch_old_so_list():
 	return frappe.db.sql(
@@ -59,6 +50,23 @@ def update_old_so_item_batch(sales_order_name):
 		return "No Stock Entry for " + sales_order_name
 
 
+# Sales Order before_cancel hook
+def cancel_stock_reservation(doc, method):
+	if doc.custom_fs_transfer_status == "OK":
+		payment_entry_name = frappe.get_value("Payment Entry Reference", {"reference_name": doc.name, "docstatus": 1}, "parent")
+		if payment_entry_name:
+			message = "Cannot Modify this document, as Payment Entry " + payment_entry_name + " has been received"
+			frappe.throw(message)
+
+	stock_entry_id = frappe.get_value("Stock Entry", {"remarks": doc.name}, "name")
+
+	if stock_entry_id:
+		stock_entry = frappe.get_doc("Stock Entry", stock_entry_id)
+		stock_entry.cancel()
+		frappe.db.commit()
+
+
+# Sales Order before_submit hook
 def make_stock_reservation(doc, method):
 	# trigger the stock reservation hook, only if it is a modified doc
 	if doc.amended_from:
@@ -80,21 +88,23 @@ def make_stock_reservation(doc, method):
 
 		# get company abbreviation
 		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+		s_warehouse = "Stall - " + abbr
 		t_warehouse = "Sales Order Reserve - " + abbr
 
 		for item in doc.items:
+			item.warehouse = t_warehouse
 			stock_entry.append(
 				"items",
 				{
 					"item_code": item.item_code,
-					"s_warehouse": item.warehouse,
+					"s_warehouse": s_warehouse,
 					"t_warehouse" : t_warehouse,
 					"qty": item.qty,
-					"basic_rate": item.rate,
+					#"basic_rate": item.rate,
 					"uom": item.uom,
 					"stock_uom": item.stock_uom,
 					"conversion_factor": item.conversion_factor or 1.0,
-					#"batch_no": item.batch_no,
+					#"batch_no": item.custom_batch_no
 				},
 			)
 
@@ -103,10 +113,21 @@ def make_stock_reservation(doc, method):
 			stock_entry.submit()
 		except Exception as err:
 			raise err
-			""" frappe.msgprint(
-				msg=str(err),
-				title='Error',
-			) """
+
+		for se_item in stock_entry.items:
+			doc.items[se_item.idx-1].custom_batch_no = se_item.batch_no
+			# fetch the item price or batch price
+			if doc.items[se_item.idx-1].rate == 0:
+				if doc.items[se_item.idx-1].custom_batch_no:
+					doc.items[se_item.idx-1].rate = frappe.get_value("Batch", doc.items[se_item.idx-1].custom_batch_no, "posa_batch_price")
+					doc.items[se_item.idx-1].amount = doc.items[se_item.idx-1].rate * doc.items[se_item.idx-1].qty
+					if doc.items[se_item.idx-1].rate == 0:
+						frappe.msgprint(_("Price is not set for Item {0} Batch {1}").format(doc.items[se_item.idx-1].item_code, doc.items[se_item.idx-1].custom_batch_no))
+				else:
+					doc.items[se_item.idx-1].rate = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": doc.items[se_item.idx-1].item_code}, "price_list_rate")
+					doc.items[se_item.idx-1].amount = doc.items[se_item.idx-1].rate * doc.items[se_item.idx-1].qty
+					if doc.items[se_item.idx-1].rate == 0:
+						frappe.msgprint(_("Price is not set for Item {0}").format(doc.items[se_item.idx-1].item_code))
 
 
 @frappe.whitelist(allow_guest=True)
