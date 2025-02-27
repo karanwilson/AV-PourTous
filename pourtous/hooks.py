@@ -140,7 +140,6 @@ doc_events = {
         "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
     },
     "Sales Order": {
-        "before_save" : "pourtous.api.fetch_item_price",
         "before_cancel": "pourtous.api.cancel_stock_reservation", # removes the associated Sales Order Stock Reservation
         "before_submit": "pourtous.api.make_stock_reservation" # adds stock reservation for the Sales Order
     },
