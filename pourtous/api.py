@@ -4,8 +4,20 @@ from frappe import _
 
 
 @frappe.whitelist(allow_guest=True)
-def get_so_item_batch(sales_order, item_code):
-	return frappe.get_value("Sales Order Item", {"parent": sales_order, "item_code": item_code}, "custom_batch_no")
+def get_warehouse_name():
+	abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+	return "Sales Order Reserve - " + abbr
+
+
+@frappe.whitelist(allow_guest=True)
+def get_so_item_batch(sales_order):
+	#return frappe.get_value("Sales Order Item", {"parent": sales_order, "item_code": item_code, "qty": qty}, "custom_batch_no")
+	return frappe.get_doc("Sales Order", sales_order)
+
+	""" rows = {}
+	for item in sales_order_doc.items:
+		if item.item_code == item_code and item.qty == qty:
+			rows[item.idx] = item.custom_batch_no """
 
 
 @frappe.whitelist(allow_guest=True)
@@ -30,27 +42,20 @@ def update_old_so_item_batch(sales_order_name):
 
 	if stock_entry_name:
 		stock_entry = frappe.get_doc("Stock Entry", stock_entry_name)
+		sales_order = frappe.get_doc("Sales Order", sales_order_name)
 
-		if stock_entry.docstatus == 1:
-			stock_entry = frappe.get_doc("Stock Entry", stock_entry_name)
-			for item in stock_entry.items:
-				# We can apply the below commented method from March onward,
-				# as in Feb there may be some row indexes which may not match between the Sales Order Items, and Stock Entry Items.
+		for item in stock_entry.items:
+			# the Items child table array index starts from 0, where the idx field start from 1; hence array[0] = array[array.idx-1]
+			try:
+				if item.item_code == sales_order.items[item.idx-1].item_code and item.qty == sales_order.items[item.idx-1].qty:
+					sales_order.items[item.idx-1].custom_batch_no = item.batch_no
+			except Exception as err:
+				return sales_order_name + "IndexError: list index out of range"
 
-				# the Items child table array index starts from 0, where the idx field start from 1; hence array[0] = array[array.idx-1]
-				#sales_order_doc = frappe.get_doc("Sales Order", sales_order_name)
-				#sales_order_doc.items[item.idx-1].custom_batch_no = item.batch_no
+		sales_order.save()
+		frappe.db.commit()
 
-				sales_order_item = frappe.get_value("Sales Order Item", {"parent": sales_order_name, "item_code": item.item_code}, "name")
-				sales_order_item_doc = frappe.get_doc("Sales Order Item", sales_order_item)
-				sales_order_item_doc.custom_batch_no = item.batch_no
-				sales_order_item_doc.save()
-				frappe.db.commit()
-
-			return "Updated " + sales_order_name
-
-		else:
-			return "Stock Entry for " + sales_order_name + " is in draft"
+		return "Updated " + sales_order_name
 		
 	else:
 		return "No Stock Entry for " + sales_order_name
