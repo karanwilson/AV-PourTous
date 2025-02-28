@@ -47,6 +47,7 @@
 		<td style="font-size: x-small;">
 			<b>{{ item.item_code }}</b>:&nbsp;
 			{%- if item.item_name != item.item_code -%}
+				<!-- string[0:5] extracts the first 5 chars of the string -->
 				<b>{{ item.item_name }}</b>
 			{%- endif -%}
 			{%- if item.serial_no -%}

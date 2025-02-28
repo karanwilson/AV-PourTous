@@ -26,7 +26,7 @@ def fetch_old_so_list():
 
 @frappe.whitelist(allow_guest=True)
 def update_old_so_item_batch(sales_order_name):
-	stock_entry_name = frappe.get_value("Stock Entry", {"remarks": sales_order_name}, "name")
+	stock_entry_name = frappe.get_value("Stock Entry", {"remarks": sales_order_name, "docstatus": 1}, "name")
 
 	if stock_entry_name:
 		stock_entry = frappe.get_doc("Stock Entry", stock_entry_name)
@@ -34,8 +34,14 @@ def update_old_so_item_batch(sales_order_name):
 		if stock_entry.docstatus == 1:
 			stock_entry = frappe.get_doc("Stock Entry", stock_entry_name)
 			for item in stock_entry.items:
-				sales_order_item = frappe.get_value("Sales Order Item", {"parent": sales_order_name, "item_code": item.item_code}, "name")
+				# We can apply the below commented method from March onward,
+				# as in Feb there may be some row indexes which may not match between the Sales Order Items, and Stock Entry Items.
 
+				# the Items child table array index starts from 0, where the idx field start from 1; hence array[0] = array[array.idx-1]
+				#sales_order_doc = frappe.get_doc("Sales Order", sales_order_name)
+				#sales_order_doc.items[item.idx-1].custom_batch_no = item.batch_no
+
+				sales_order_item = frappe.get_value("Sales Order Item", {"parent": sales_order_name, "item_code": item.item_code}, "name")
 				sales_order_item_doc = frappe.get_doc("Sales Order Item", sales_order_item)
 				sales_order_item_doc.custom_batch_no = item.batch_no
 				sales_order_item_doc.save()
@@ -70,16 +76,6 @@ def cancel_stock_reservation(doc, method):
 def make_stock_reservation(doc, method):
 	# trigger the stock reservation hook, only if it is a modified doc
 	if doc.amended_from:
-		""" stock_entry_id = frappe.get_value("Stock Entry", {"remarks": doc.name}, "name")
-		if stock_entry_id:
-			stock_entry = frappe.get_doc("Stock Entry", stock_entry_id)
-			if stock_entry.docstatus == 1:
-				message = "SO Stock Reservation for " + stock_entry_id + " exists: please cancel it before making a new SO Stock Reservation"
-				frappe.throw(message)
-			elif stock_entry.docstatus == 2:
-				stock_entry = frappe.new_doc("Stock Entry")
-		else: """
-
 		stock_entry = frappe.new_doc("Stock Entry")
 
 		stock_entry.company = doc.company
@@ -132,6 +128,7 @@ def make_stock_reservation(doc, method):
 			raise err
 
 		for se_item in stock_entry.items:
+			# the Items child table array index starts from 0, where the idx field start from 1; hence array[0] = array[array.idx-1]
 			if not doc.items[se_item.idx-1].custom_batch_no:
 				doc.items[se_item.idx-1].custom_batch_no = se_item.batch_no
 			# fetch the item price or batch price

@@ -49,9 +49,9 @@ frappe.listview_settings['Sales Order'] = {
                                 //async: false,
                             }).then(r => {
                                 console.log(r.message);
-                            })
+                            });
                         });
-                    };
+                    }
                 }
             });
         });
