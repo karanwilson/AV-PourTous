@@ -14,11 +14,6 @@ def get_so_item_batch(sales_order):
 	#return frappe.get_value("Sales Order Item", {"parent": sales_order, "item_code": item_code, "qty": qty}, "custom_batch_no")
 	return frappe.get_doc("Sales Order", sales_order)
 
-	""" rows = {}
-	for item in sales_order_doc.items:
-		if item.item_code == item_code and item.qty == qty:
-			rows[item.idx] = item.custom_batch_no """
-
 
 @frappe.whitelist(allow_guest=True)
 def fetch_old_so_list():
