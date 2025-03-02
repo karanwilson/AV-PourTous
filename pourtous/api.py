@@ -3,15 +3,19 @@ from frappe import _
 #from frappe.utils import flt
 
 
+# called from B2B Sales Invoice client script
 @frappe.whitelist(allow_guest=True)
-def get_warehouse_name():
-	abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
-	return "Sales Order Reserve - " + abbr
+def get_warehouse_name(customer):
+	customer_type = frappe.get_value("Customer", customer, "customer_type")
+	warehouse = "Sales Order Reserve - " + frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+	return {
+		"customer_type": customer_type,
+		"warehouse": warehouse
+	}
 
-
+# called from B2B Sales Invoice client script
 @frappe.whitelist(allow_guest=True)
 def get_so_item_batch(sales_order):
-	#return frappe.get_value("Sales Order Item", {"parent": sales_order, "item_code": item_code, "qty": qty}, "custom_batch_no")
 	return frappe.get_doc("Sales Order", sales_order)
 
 
