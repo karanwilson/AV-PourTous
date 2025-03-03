@@ -17,5 +17,17 @@ frappe.query_reports["Stock-In List"] = {
 			"fieldtype": "Date",
 			"width": "60px",
 		},
+		{
+			"fieldname": "from_time",
+			"label": __("From Time"),
+			"fieldtype": "Time",
+			"width": "60px",
+		},
+		{
+			"fieldname": "to_time",
+			"label": __("To Time"),
+			"fieldtype": "Time",
+			"width": "60px",
+		},
 	]
 };

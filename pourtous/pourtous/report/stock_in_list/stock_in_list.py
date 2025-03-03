@@ -12,7 +12,11 @@ def execute(filters=None):
 	columns, data = [], []
 
 	columns = get_columns(filters)
-	data = get_data(filters)
+
+	if filters.from_time and filters.to_time:
+		data = get_data1(filters)
+	else:
+		data = get_data2(filters)
 
 	if not data:
 		msgprint(_('No records found'))
@@ -138,7 +142,50 @@ def get_columns(filters):
 		]
 
 
-def get_data(filters):
+def get_data1(filters):
+	# with Time based filter
+
+	if filters.voucher_type == "Purchase Receipt":
+		query = frappe.db.sql(
+			"""
+			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.title AS supplier,
+			`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
+			tabBatch.custom_barcode, `tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
+			IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
+			FROM `tabPurchase Receipt Item`
+			INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
+			AND `tabPurchase Receipt`.docstatus = 1
+			AND `tabPurchase Receipt`.posting_date = '{0}'
+			AND `tabPurchase Receipt`.posting_time BETWEEN '{1}' AND '{2}'
+			LEFT JOIN tabBatch
+			ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
+			""".format(filters.posting_date, filters.from_time, filters.to_time),
+			as_dict=True
+		)
+
+	else:
+		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+		# get company abbreviation
+		warehouse = "Sales Order Reserve - " + abbr
+		query = frappe.db.sql(
+			"""
+				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name,
+				item_code, batch_no, `tabStock Entry Detail`.item_name, qty
+				FROM `tabStock Entry Detail`, `tabStock Entry`
+				WHERE `tabStock Entry Detail`.parent = `tabStock Entry`.name
+				AND `tabStock Entry Detail`.t_warehouse != '{1}'
+				AND `tabStock Entry`.docstatus = 1
+				AND `tabStock Entry`.posting_date = '{0}'
+				AND `tabStock Entry`.posting_time BETWEEN '{2}' AND '{3}'
+			""".format(filters.posting_date, warehouse, filters.from_time, filters.to_time),
+			as_dict=True
+		)
+
+	return query
+
+
+def get_data2(filters):
+	# without Time based filter
 
 	if filters.voucher_type == "Purchase Receipt":
 		query = frappe.db.sql(
