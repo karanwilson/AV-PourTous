@@ -37,6 +37,13 @@ def get_columns(filters):
 			},
 
 			{
+				"fieldname": "posting_time",
+				"label": "Time",
+				"fieldtype": "Time",
+				"width": "100",
+			},
+
+			{
 				"fieldname": "supplier",
 				"label": "Supplier",
 				"fieldtype": "Data",
@@ -112,6 +119,13 @@ def get_columns(filters):
 			},
 
 			{
+				"fieldname": "posting_time",
+				"label": "Time",
+				"fieldtype": "Time",
+				"width": "100",
+			},
+
+			{
 				"fieldname": "item_code",
 				"label": "Item Code",
 				"fieldtype": "Data",
@@ -148,7 +162,7 @@ def get_data1(filters):
 	if filters.voucher_type == "Purchase Receipt":
 		query = frappe.db.sql(
 			"""
-			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.title AS supplier,
+			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
 			`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
 			tabBatch.custom_barcode, `tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
 			IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
@@ -169,7 +183,7 @@ def get_data1(filters):
 		warehouse = "Sales Order Reserve - " + abbr
 		query = frappe.db.sql(
 			"""
-				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name,
+				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
 				item_code, batch_no, `tabStock Entry Detail`.item_name, qty
 				FROM `tabStock Entry Detail`, `tabStock Entry`
 				WHERE `tabStock Entry Detail`.parent = `tabStock Entry`.name
@@ -190,7 +204,7 @@ def get_data2(filters):
 	if filters.voucher_type == "Purchase Receipt":
 		query = frappe.db.sql(
 			"""
-			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.title AS supplier,
+			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
 			`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
 			tabBatch.custom_barcode, `tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
 			IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
@@ -210,7 +224,7 @@ def get_data2(filters):
 		warehouse = "Sales Order Reserve - " + abbr
 		query = frappe.db.sql(
 			"""
-				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name,
+				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
 				item_code, batch_no, `tabStock Entry Detail`.item_name, qty
 				FROM `tabStock Entry Detail`, `tabStock Entry`
 				WHERE `tabStock Entry Detail`.parent = `tabStock Entry`.name
