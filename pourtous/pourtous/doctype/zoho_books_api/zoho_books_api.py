@@ -3,25 +3,22 @@
 
 import frappe
 from frappe.model.document import Document
+from frappe.utils import today, nowtime, nowdate
+from datetime import datetime, timedelta
 
 import requests
 #import urllib
-#from requests_oauthlib import OAuth2Session
-#from oauthlib.oauth2 import BackendApplicationClient
+
 
 class ZohoBooksAPI(Document):
+	def	validate(self):
+		self.request_access_token()
+
 	@frappe.whitelist(allow_guest=True)
-	def zoho_api_token(self, throw_if_missing=False):
+	def request_access_token(self, throw_if_missing=False):
 		soid = 'ZohoBooks.' + self.organization_id
 		token_url = 'https://accounts.zoho.in/oauth/v2/token?'
-		""" with open('zoho_token1.txt', 'w') as file:
-			file.write(str(token_url))
-		with open('zoho_token2.txt', 'w') as file:
-			file.write(str(self.client_id))
-		with open('zoho_token3.txt', 'w') as file:
-			file.write(str(self.get_password(fieldname="client_secret", raise_exception=False)))
-		with open('zoho_token4.txt', 'w') as file:
-			file.write(str(soid)) """
+
 		with requests.Session() as s:
 			s.params = {
 				'client_id': self.client_id,
@@ -31,25 +28,33 @@ class ZohoBooksAPI(Document):
 				'soid': soid
 				}
 
-			with open('zoho_token5.txt', 'w') as file:
-				file.write(str(s.params))
+			#with open('zoho_token5.txt', 'w') as file:
+			#	file.write(str(s.params))
 
 			r = s.post(token_url)
 			r.raise_for_status()
+
+			self.last_access_token = r.json().get('access_token')
+			self.token_scope = r.json().get('scope')
+			self.api_domain = r.json().get('api_domain')
+			self.token_type = r.json().get('token_type')
+			self.last_token_date = today()
+			self.last_token_time = nowtime()
+			self.token_received_at = nowdate()
+			self.expires_in = r.json().get('expires_in') / 60
+
+			#self.save()
+
 			return r.json()
+			""" start_time = datetime.strptime(, '%H:%M:%S')
+			if self.token_received_at < nowtime() + timedelta(minutes=60):
+				return "Token Valid"
+			else:
+				return "Token Expired" """
 
-		""" client_id = self.client_id
-		client_secret = self.client_secret
-		grant_type = 'client_credentials'
-		scope = ['ZohoBooks.invoices.CREATE', 'ZohoBooks.invoices.READ', 'ZohoBooks.invoices.UPDATE', 'ZohoBooks.invoices.DELETE']
-		#authorization_url = 'https://accounts.zoho.com/oauth/v2/auth?'
-		token_url = 'https://accounts.zoho.com/oauth/v2/token?'
 
-		client = BackendApplicationClient(client_id=client_id)
-		oauth = OAuth2Session(client=client)
-
-		token = oauth.fetch_token(token_url=token_url, client_id=client_id, client_secret=client_secret, grant_type=grant_type, scope=scope) """
-
+	#def post_invoice(self, invoice):
+	#	if self.last_token_date == today() and self.last_token_time < self.last_token_time + 60
 
 def fetch_unsynced_sales_invoice_list():
 	return frappe.get_list('Sales Invoice',

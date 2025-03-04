@@ -10,6 +10,14 @@
   "client_id",
   "client_secret",
   "organization_id",
+  "last_access_token",
+  "token_scope",
+  "api_domain",
+  "token_type",
+  "last_token_date",
+  "last_token_time",
+  "token_received_at",
+  "expires_in",
   "login"
  ],
  "fields": [
@@ -32,12 +40,61 @@
    "fieldname": "organization_id",
    "fieldtype": "Data",
    "label": "Organization ID"
+  },
+  {
+   "fieldname": "last_token_date",
+   "fieldtype": "Date",
+   "label": "Last Token Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_token_time",
+   "fieldtype": "Time",
+   "label": "Last Token Time",
+   "read_only": 1
+  },
+  {
+   "description": "Minutes",
+   "fieldname": "expires_in",
+   "fieldtype": "Data",
+   "label": "Expires in",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_access_token",
+   "fieldtype": "Data",
+   "label": "Last Access Token",
+   "read_only": 1
+  },
+  {
+   "fieldname": "token_scope",
+   "fieldtype": "Data",
+   "label": "Token Scope",
+   "read_only": 1
+  },
+  {
+   "fieldname": "api_domain",
+   "fieldtype": "Data",
+   "label": "API Domain",
+   "read_only": 1
+  },
+  {
+   "fieldname": "token_type",
+   "fieldtype": "Data",
+   "label": "Token Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "token_received_at",
+   "fieldtype": "Datetime",
+   "label": "Token received at",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-02-27 11:37:56.383438",
+ "modified": "2025-03-04 23:25:54.026875",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",
