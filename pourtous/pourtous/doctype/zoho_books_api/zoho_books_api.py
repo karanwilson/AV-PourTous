@@ -12,18 +12,29 @@ import requests
 class ZohoBooksAPI(Document):
 	@frappe.whitelist(allow_guest=True)
 	def zoho_api_token(self, throw_if_missing=False):
-		#soid = 'ZohoBooks.' + self.organization_id
-		token_url = 'https://accounts.zoho.com/oauth/v2/token?'
+		soid = 'ZohoBooks.' + self.organization_id
+		token_url = 'https://accounts.zoho.in/oauth/v2/token?'
+		""" with open('zoho_token1.txt', 'w') as file:
+			file.write(str(token_url))
+		with open('zoho_token2.txt', 'w') as file:
+			file.write(str(self.client_id))
+		with open('zoho_token3.txt', 'w') as file:
+			file.write(str(self.get_password(fieldname="client_secret", raise_exception=False)))
+		with open('zoho_token4.txt', 'w') as file:
+			file.write(str(soid)) """
 		with requests.Session() as s:
 			s.params = {
 				'client_id': self.client_id,
-				'client_secret': self.client_secret,
+				'client_secret': self.get_password(fieldname="client_secret", raise_exception=False),
 				'grant_type': 'client_credentials',
 				'scope': 'ZohoBooks.invoices.CREATE,ZohoBooks.invoices.READ,ZohoBooks.invoices.UPDATE,ZohoBooks.invoices.DELETE',
-				#'soid': soid
+				'soid': soid
 				}
 
-			r = s.get(token_url)
+			with open('zoho_token5.txt', 'w') as file:
+				file.write(str(s.params))
+
+			r = s.post(token_url)
 			r.raise_for_status()
 			return r.json()
 
