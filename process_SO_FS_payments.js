@@ -34,7 +34,7 @@ frappe.listview_settings['Sales Order'] = {
             });
         });
 
-        listview.page.add_inner_button("Old SO Batch Update", () => {
+        /* listview.page.add_inner_button("Old SO Batch Update", () => {
             frappe.call({
                 method: 'pourtous.api.fetch_old_so_list',
                 //async: false,
@@ -54,6 +54,6 @@ frappe.listview_settings['Sales Order'] = {
                     }
                 }
             });
-        });
+        }); */
     },
 };
