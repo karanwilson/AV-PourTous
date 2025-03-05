@@ -7,9 +7,10 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "user_id",
+  "organization_id",
   "client_id",
   "client_secret",
-  "organization_id",
   "last_access_token",
   "token_scope",
   "api_domain",
@@ -27,19 +28,27 @@
    "label": "Login"
   },
   {
+   "description": "Application Type: Self Client",
    "fieldname": "client_id",
    "fieldtype": "Data",
-   "label": "Client ID"
+   "in_list_view": 1,
+   "label": "Client ID",
+   "reqd": 1
   },
   {
+   "description": "Application Type: Self Client",
    "fieldname": "client_secret",
    "fieldtype": "Password",
-   "label": "Client Secret"
+   "in_list_view": 1,
+   "label": "Client Secret",
+   "reqd": 1
   },
   {
    "fieldname": "organization_id",
    "fieldtype": "Data",
-   "label": "Organization ID"
+   "in_list_view": 1,
+   "label": "Organization ID",
+   "reqd": 1
   },
   {
    "fieldname": "last_token_date",
@@ -89,12 +98,20 @@
    "fieldtype": "Datetime",
    "label": "Token received at",
    "read_only": 1
+  },
+  {
+   "description": "Zoho Account User ID",
+   "fieldname": "user_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "User ID",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-03-04 23:25:54.026875",
+ "modified": "2025-03-05 09:09:31.006393",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",

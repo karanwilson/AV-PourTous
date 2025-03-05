@@ -43,9 +43,8 @@ class ZohoBooksAPI(Document):
 			self.token_received_at = nowdate()
 			self.expires_in = r.json().get('expires_in') / 60
 
-			#self.save()
-
 			return r.json()
+
 			""" start_time = datetime.strptime(, '%H:%M:%S')
 			if self.token_received_at < nowtime() + timedelta(minutes=60):
 				return "Token Valid"
