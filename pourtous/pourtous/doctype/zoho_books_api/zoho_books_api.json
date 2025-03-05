@@ -19,12 +19,14 @@
   "last_token_time",
   "token_received_at",
   "expires_in",
+  "test",
   "login"
  ],
  "fields": [
   {
    "fieldname": "login",
    "fieldtype": "Button",
+   "hidden": 1,
    "label": "Login"
   },
   {
@@ -32,23 +34,20 @@
    "fieldname": "client_id",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Client ID",
-   "reqd": 1
+   "label": "Client ID"
   },
   {
    "description": "Application Type: Self Client",
    "fieldname": "client_secret",
    "fieldtype": "Password",
    "in_list_view": 1,
-   "label": "Client Secret",
-   "reqd": 1
+   "label": "Client Secret"
   },
   {
    "fieldname": "organization_id",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Organization ID",
-   "reqd": 1
+   "label": "Organization ID"
   },
   {
    "fieldname": "last_token_date",
@@ -104,14 +103,20 @@
    "fieldname": "user_id",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "User ID",
-   "reqd": 1
+   "label": "User ID"
+  },
+  {
+   "default": "0",
+   "description": "check/uncheck to trigger token request on save",
+   "fieldname": "test",
+   "fieldtype": "Check",
+   "label": "Test"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-03-05 09:09:31.006393",
+ "modified": "2025-03-05 09:58:34.398113",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",

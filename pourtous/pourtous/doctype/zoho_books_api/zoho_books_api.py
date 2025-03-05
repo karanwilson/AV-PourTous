@@ -12,7 +12,22 @@ import requests
 
 class ZohoBooksAPI(Document):
 	def	validate(self):
-		self.request_access_token()
+		if self.client_id and self.client_secret and self.user_id and self.organization_id:
+			self.validate_zoho_api_params()
+
+	def validate_zoho_api_params(self):
+		r = self.request_access_token()
+		if r.json().get('access_token'):
+			#update token details on Zoho API page
+			self.last_access_token = r.json().get('access_token')
+			self.token_scope = r.json().get('scope')
+			self.api_domain = r.json().get('api_domain')
+			self.token_type = r.json().get('token_type')
+			self.last_token_date = today()
+			self.last_token_time = nowtime()
+			self.token_received_at = nowdate()
+			self.expires_in = r.json().get('expires_in') / 60
+
 
 	@frappe.whitelist(allow_guest=True)
 	def request_access_token(self, throw_if_missing=False):
@@ -34,16 +49,7 @@ class ZohoBooksAPI(Document):
 			r = s.post(token_url)
 			r.raise_for_status()
 
-			self.last_access_token = r.json().get('access_token')
-			self.token_scope = r.json().get('scope')
-			self.api_domain = r.json().get('api_domain')
-			self.token_type = r.json().get('token_type')
-			self.last_token_date = today()
-			self.last_token_time = nowtime()
-			self.token_received_at = nowdate()
-			self.expires_in = r.json().get('expires_in') / 60
-
-			return r.json()
+			return r
 
 			""" start_time = datetime.strptime(, '%H:%M:%S')
 			if self.token_received_at < nowtime() + timedelta(minutes=60):
@@ -52,10 +58,30 @@ class ZohoBooksAPI(Document):
 				return "Token Expired" """
 
 
-	#def post_invoice(self, invoice):
-	#	if self.last_token_date == today() and self.last_token_time < self.last_token_time + 60
+	def post_invoice(self, invoice):
+		api_url = 'https://www.zohoapis.in/books/v3/invoices?'
 
-def fetch_unsynced_sales_invoice_list():
+		r = self.request_access_token()
+		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			#with open('zoho_token5.txt', 'w') as file:
+			#	file.write(str(s.params))
+
+			r = s.post(api_url)
+			r.raise_for_status()
+
+
+""" def fetch_unsynced_sales_invoice_list():
 	return frappe.get_list('Sales Invoice',
 		filters={
 			'custom_zb_sync_status': ['!=', 'Success']
@@ -82,4 +108,4 @@ def generate_grant_token():
 	response = requests.request("GET", url, headers=headers)
 
 
-	return response
+	return response """
