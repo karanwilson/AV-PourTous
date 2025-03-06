@@ -251,6 +251,7 @@ fixtures = [
 					"Item-custom_select_add_on_item", # To select the Add-On Item for configuring Item-add-ons bundling
 					"Item-custom_item_add_on", # Automatically pulls the item_code from the above selection
                     "Item-custom_uom_int", #'UOM INT' for fetching stock_uom.must_be_whole_number setting from Item doctype
+                    "Item-custom_zoho_item_id", # required in case we create Invoices/Purchases on Zoho Books, via API
                     				#-used in code to prevent decimal entries in Integer values
                     "Payment Entry-custom_contribution_type", # for PTDC Contributions FS Transactions
                     "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
@@ -265,6 +266,9 @@ fixtures = [
                     "Customer-custom_fs_account_number", # for FS Transactions
                     "Customer-custom_fs_kind_account_3", # for FS Transactions
                     "Customer-custom_fs_cash_account_4", # for FS Transactions
+                    "Customer-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
+
+                    "Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
 
                     "Purchase Order-custom_batch_items", # Creates a Tab Break for custom_batch_items_data and custom_add_batch_items
                     "Purchase Order-custom_batch_items_fetch", # Button
