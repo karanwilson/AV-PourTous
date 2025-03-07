@@ -105,6 +105,10 @@ class ZohoBooksAPI(Document):
 			r = s.post(api_url, data=json.loads(data))
 			r.raise_for_status()
 
+			if r.json().get('message') == 'The invoice has been added.':
+				custom_zoho_contact_id = r.json().get('invoice').get('invoice_id')
+				return custom_zoho_contact_id
+
 
 	def post_customer(self, customer):
 		api_url = 'https://www.zohoapis.in/books/v3/contacts?'
