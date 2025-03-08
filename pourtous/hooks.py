@@ -266,7 +266,7 @@ fixtures = [
                     "Customer-custom_fs_account_number", # for FS Transactions
                     "Customer-custom_fs_kind_account_3", # for FS Transactions
                     "Customer-custom_fs_cash_account_4", # for FS Transactions
-                    "Customer-custom_fs_account_disable", # for recording disabled/enabled
+                    #"Customer-custom_fs_account_disable", # for recording disabled/enabled
                     #"Customer-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
 
                     #"Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
