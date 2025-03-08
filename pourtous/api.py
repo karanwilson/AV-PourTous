@@ -3,6 +3,39 @@ from frappe import _
 #from frappe.utils import flt
 
 
+@frappe.whitelist(allow_guest=True)
+def update_fs_accounts(fs_account, name, disable):
+	existing_fs_customer = frappe.get_value("Customer", {"custom_fs_account_number": fs_account}, "name")
+	if existing_fs_customer:
+		updated = "" # to reduce the number of db commits
+		if int(disable) != frappe.get_value("Customer", existing_fs_customer, "disabled"):
+			frappe.set_value("Customer", existing_fs_customer, "disabled", int(disable))
+			updated = "UPDATED"
+		if name != frappe.get_value("Customer", existing_fs_customer, "customer_name"):
+			frappe.set_value("Customer", existing_fs_customer, "customer_name", name)
+			updated = "UPDATED"
+
+		if updated == "UPDATED":
+			frappe.db.commit()
+			return updated
+
+	else:
+		new_customer = frappe.new_doc("Customer")
+
+		new_customer.customer_name = name
+		new_customer.custom_fs_account_number = fs_account
+		new_customer.disabled = int(disable)
+
+		new_customer.customer_type = 'Individual'
+		new_customer.customer_group = 'Individual'
+		new_customer.territory = 'India'
+
+		new_customer.insert()
+		frappe.db.commit()
+
+		return "NEW"
+
+
 # called from B2B Sales Invoice client script
 @frappe.whitelist(allow_guest=True)
 def get_warehouse_name(customer):
