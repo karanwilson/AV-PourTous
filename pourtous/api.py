@@ -424,11 +424,12 @@ def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
 		advance_payment_entry.submit() """
 
 
-def update_selling_price_list(doc, method):
+def update_price_lists(doc, method):
 	for item in doc.items:
 
 		if item.batch_no:
 			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
+			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
 			frappe.db.commit()
 			""" item_price = frappe.get_doc({
 				"doctype": "Item Price",

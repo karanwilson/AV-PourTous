@@ -134,7 +134,7 @@ doc_events = {
 	},
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
-		"on_submit": "pourtous.api.update_selling_price_list", # Add the 'Item Price'
+		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
 	},
     "Batch": {
         "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
@@ -286,7 +286,9 @@ fixtures = [
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
 
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
+
                     "Batch-custom_barcode", # for adding a batch barcode
+                    "Batch-custom_buying_price", # for recording batch wise buying price
 				)
 			]
 		]
