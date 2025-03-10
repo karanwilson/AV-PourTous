@@ -28,38 +28,38 @@ def get_columns(filters):
 				"fieldname": "item_code",
 				"label": "Code",
 				"fieldtype": "Data",
-				"width": "80"
+				"width": "70"
 			},
 			{
 				"fieldname": "item_name",
 				"label": "Item Name",
 				"fieldtype": "Data",
-				"width": "300"
+				"width": "250"
 			},
 			{
 				"fieldname": "supplier",
 				"label": "Supplier",
 				"fieldtype": "Data",
-				"width": "250"
+				"width": "200"
 			},
 			{
 				"fieldname": "batch_no",
 				"label": "Batch No.",
 				"fieldtype": "Link",
 				"options": "Batch",
-				"width": "130"
+				"width": "100"
 			},
 			{
 				"fieldname": "store_qty",
 				"label": "Store Qty",
 				"fieldtype": "Float",
-				"width": "100"
+				"width": "90"
 			},
 			{
 				"fieldname": "stall_qty",
 				"label": "Stall Qty",
 				"fieldtype": "Float",
-				"width": "100"
+				"width": "80"
 			},
 			{
 				"fieldname": "so_reserve",
@@ -72,6 +72,12 @@ def get_columns(filters):
 				"label": "B.Price",
 				"fieldtype": "Currency",
 				"width": "80"
+			},
+			{
+				"fieldname": "batch_buying_price",
+				"label": "Batch B.Price",
+				"fieldtype": "Currency",
+				"width": "110"
 			},
 			{
 				"fieldname": "selling_price",
@@ -159,6 +165,7 @@ def get_data(filters):
 				WHERE `tabItem Price`.item_code = `tabStock Ledger Entry`.item_code
 				AND price_list = "Standard Buying"
 			) AS buying_price,
+			tabBatch.custom_buying_price AS batch_buying_price,
 			tabBatch.posa_batch_price AS selling_price
 			FROM `tabStock Ledger Entry`, `tabItem Supplier`, tabBatch
 			WHERE `tabStock Ledger Entry`.is_cancelled = 0
