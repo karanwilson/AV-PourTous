@@ -7,16 +7,18 @@ from frappe import _
 def update_fs_accounts(fs_account, name, disable):
 	existing_fs_customer = frappe.get_value("Customer", {"custom_fs_account_number": fs_account}, "name")
 	if existing_fs_customer:
+		customer_doc = frappe.get_doc("Customer", existing_fs_customer)
 		updated = "" # to reduce the number of db commits
-		if int(disable) != frappe.get_value("Customer", existing_fs_customer, "disabled"):
-			frappe.set_value("Customer", existing_fs_customer, "disabled", int(disable))
+		if customer_doc.disabled != int(disable):
+			customer_doc.disabled = int(disable)
 			updated = "UPDATED"
-		if name != frappe.get_value("Customer", existing_fs_customer, "customer_name"):
-			frappe.set_value("Customer", existing_fs_customer, "customer_name", name)
+		if customer_doc.customer_name != name:
+			customer_doc.customer_name = name
 			updated = "UPDATED"
 
 		if updated == "UPDATED":
-			frappe.db.commit()
+			customer_doc.custom_update_zoho_contact = 0
+			customer_doc.save()
 			return updated
 
 	else:
@@ -31,8 +33,6 @@ def update_fs_accounts(fs_account, name, disable):
 		new_customer.territory = 'India'
 
 		new_customer.insert()
-		frappe.db.commit()
-
 		return "NEW"
 
 
@@ -85,7 +85,6 @@ def update_old_so_item_batch(sales_order_name):
 				return sales_order_name + "IndexError: list index out of range"
 
 		sales_order.save()
-		frappe.db.commit()
 
 		return "Updated " + sales_order_name
 		

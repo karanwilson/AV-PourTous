@@ -202,11 +202,6 @@ class ZohoBooksAPI(Document):
 				custom_zoho_item_id = r.json().get('item').get('item_id')
 				return custom_zoho_item_id
 
-		# to access the fields within the items list, that is received when we send a 'get' request
-		#if r.json().get('message') == 'success':
-		#	for item in r.json().get('items'):
-		#		item.get('item_id')
-
 
 	def put_item(self, item_id, data):
 		api_url = 'https://www.zohoapis.in/books/v3/items/' + item_id + '?'
@@ -344,7 +339,7 @@ def delete_item_in_zoho(doc, method):
 
 
 def update_contact_in_zoho(doc, method):
-	if doc.custom_zoho_contact_id != None and doc.custom_fs_account_number != None:
+	if doc.custom_update_zoho_contact == 0:
 		return
 
 	api_controller = frappe.get_doc("Zoho Books API")

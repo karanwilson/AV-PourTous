@@ -19,16 +19,9 @@
   "last_token_time",
   "token_received_at",
   "expires_in",
-  "test",
-  "login"
+  "test"
  ],
  "fields": [
-  {
-   "fieldname": "login",
-   "fieldtype": "Button",
-   "hidden": 1,
-   "label": "Login"
-  },
   {
    "description": "Application Type: Self Client",
    "fieldname": "client_id",
@@ -116,7 +109,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-03-05 09:58:34.398113",
+ "modified": "2025-03-12 23:55:33.261694",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",
