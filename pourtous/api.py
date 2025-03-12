@@ -208,6 +208,55 @@ def verify_tax_template(doc, method):
 		frappe.throw("Please enter a Tax Template")
 
 
+def update_item_in_zoho(doc, method):
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	if doc.is_stock_item == 1:
+		product_type = "goods"
+	else:
+		product_type = "service"
+
+	uom = {
+		"Bag": "pcs",
+		"Bott": "pcs",
+		"Box": "box",
+		"Jar": "pcs",
+		"Kg": "kg",
+		"Litre": "litre",
+		"Nos": "pcs",
+		"Packet": "pcs",
+		"Set": "pcs",
+		"Slab": "pcs",
+		"Tin": "pcs",
+		"Tube": "pcs"
+	}
+
+	data = {
+		"name": doc.name,
+		"description": doc.item_name,
+		"unit": uom[doc.stock_uom],
+		"product_type": product_type,
+		"hsn_or_sac": doc.gst_hsn_code,
+		"rate": 0
+	}
+
+	if doc.custom_zoho_item_id == None:
+		res = api_controller.post_item(data)
+		if res:
+			doc.custom_zoho_item_id = res
+
+	else:
+		res = api_controller.put_item(doc.custom_zoho_item_id, data)
+		msg = "Zoho Books Response: " + res
+		frappe.msgprint(msg)
+
+def delete_item_in_zoho(doc, method):
+	api_controller = frappe.get_doc("Zoho Books API")
+	res = api_controller.delete_item(doc.custom_zoho_item_id)
+	msg = "Zoho Books Response: " + res
+	frappe.msgprint(msg)
+
+
 @frappe.whitelist(allow_guest=True)
 def fetch_batch_list():
 	return frappe.db.sql(

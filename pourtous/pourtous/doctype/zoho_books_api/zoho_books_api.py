@@ -16,8 +16,8 @@ class ZohoBooksAPI(Document):
 			scope = 'ZohoBooks.invoices.CREATE,ZohoBooks.invoices.READ,ZohoBooks.invoices.UPDATE,ZohoBooks.invoices.DELETE'
 			self.validate_zoho_api_params(scope)
 
-	def validate_zoho_api_params(self):
-		r = self.request_access_token()
+	def validate_zoho_api_params(self, scope):
+		r = self.request_access_token(scope)
 		if r.json().get('access_token'):
 			#update token details on Zoho API page
 			self.last_access_token = r.json().get('access_token')
@@ -140,20 +140,21 @@ class ZohoBooksAPI(Document):
 				return custom_zoho_contact_id
 
 
-	def post_item(self, item):
+	def post_item(self, data):
 		api_url = 'https://www.zohoapis.in/books/v3/items?'
 
-		r = self.request_access_token(scope='ZohoBooks.settings.CREATE')
+		r = self.request_access_token('ZohoBooks.settings.CREATE')
+
 		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
 
-		data = {
+		""" data = {
 			"name": "7321",
 			"description": 'BRAHMI/SEAME BALLS',
 			"unit": "pcs",
 			"product_type": "goods",
 			"hsn_or_sac": "2008",
 			"rate": 95
-		}
+		} """
 
 		with requests.Session() as s:
 			s.params = {
@@ -176,6 +177,50 @@ class ZohoBooksAPI(Document):
 		#if r.json().get('message') == 'success':
 		#	for item in r.json().get('items'):
 		#		item.get('item_id')
+
+
+	def put_item(self, item_id, data):
+		api_url = 'https://www.zohoapis.in/books/v3/items/' + item_id + '?'
+
+		r = self.request_access_token('ZohoBooks.settings.UPDATE')
+		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.put(api_url, data=json.dumps(data))
+			r.raise_for_status()
+
+			return r.json().get('message')
+
+
+	def delete_item(self, item_id):
+		api_url = 'https://www.zohoapis.in/books/v3/items/' + item_id + '?'
+
+		r = self.request_access_token('ZohoBooks.settings.DELETE')
+		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.delete(api_url)
+			r.raise_for_status()
+
+			return r.json().get('message')
 
 
 	def post_supplier(self, supplier):

@@ -130,7 +130,9 @@ doc_events = {
         #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
 	#},
 	"Item": {
-		"before_save": "pourtous.api.verify_tax_template", # verifies whether a tax template was added
+		"before_insert": "pourtous.api.verify_tax_template", # verifies whether a tax template was added
+        #"before_save": "pourtous.api.update_item_in_zoho",
+        #"on_trash": "pourtous.api.delete_item_in_zoho"
 	},
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
@@ -251,7 +253,7 @@ fixtures = [
 					"Item-custom_select_add_on_item", # To select the Add-On Item for configuring Item-add-ons bundling
 					"Item-custom_item_add_on", # Automatically pulls the item_code from the above selection
                     "Item-custom_uom_int", #'UOM INT' for fetching stock_uom.must_be_whole_number setting from Item doctype
-                    #"Item-custom_zoho_item_id", # required in case we create Invoices/Purchases on Zoho Books, via API
+                    "Item-custom_zoho_item_id", # required in case we create Invoices/Purchases on Zoho Books, via API
                     				#-used in code to prevent decimal entries in Integer values
                     "Payment Entry-custom_contribution_type", # for PTDC Contributions FS Transactions
                     "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
