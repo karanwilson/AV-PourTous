@@ -110,17 +110,11 @@ class ZohoBooksAPI(Document):
 				return custom_zoho_contact_id
 
 
-	def post_customer(self, customer):
+	def post_contact(self, data):
 		api_url = 'https://www.zohoapis.in/books/v3/contacts?'
 
 		r = self.request_access_token(scope='ZohoBooks.contacts.CREATE')
 		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
-
-		data = {
-			"contact_name": "PT-CUST-05713",
-			"contact_type": "customer",
-			"customer_sub_type": "individual"
-		}
 
 		with requests.Session() as s:
 			s.params = {
@@ -140,21 +134,56 @@ class ZohoBooksAPI(Document):
 				return custom_zoho_contact_id
 
 
+	def put_contact(self, contact_id, data):
+		api_url = 'https://www.zohoapis.in/books/v3/contacts/' + contact_id + '?'
+
+		r = self.request_access_token(scope='ZohoBooks.contacts.UPDATE')
+		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.put(api_url, data=json.dumps(data))
+			r.raise_for_status()
+
+			return r.json().get('message') 
+
+
+	def delete_contact(self, contact_id):
+		api_url = 'https://www.zohoapis.in/books/v3/contacts/' + contact_id + '?'
+
+		r = self.request_access_token('ZohoBooks.contacts.DELETE')
+		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.delete(api_url)
+			r.raise_for_status()
+
+			return r.json().get('message')
+
+
 	def post_item(self, data):
 		api_url = 'https://www.zohoapis.in/books/v3/items?'
 
 		r = self.request_access_token('ZohoBooks.settings.CREATE')
 
 		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
-
-		""" data = {
-			"name": "7321",
-			"description": 'BRAHMI/SEAME BALLS',
-			"unit": "pcs",
-			"product_type": "goods",
-			"hsn_or_sac": "2008",
-			"rate": 95
-		} """
 
 		with requests.Session() as s:
 			s.params = {
@@ -251,6 +280,110 @@ class ZohoBooksAPI(Document):
 			if r.json().get('message') == 'The contact has been added.':
 				custom_zoho_contact_id = r.json().get('contact').get('contact_id')
 				return custom_zoho_contact_id
+
+
+def update_item_in_zoho(doc, method):
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	if doc.is_stock_item == 1:
+		product_type = "goods"
+	else:
+		product_type = "service"
+
+	uom = {
+		"Bag": "pcs",
+		"Bott": "pcs",
+		"Box": "box",
+		"Jar": "pcs",
+		"Kg": "kg",
+		"Litre": "litre",
+		"Nos": "pcs",
+		"Packet": "pcs",
+		"Set": "pcs",
+		"Slab": "pcs",
+		"Tin": "pcs",
+		"Tube": "pcs"
+	}
+
+	data = {
+		"name": doc.name,
+		"description": doc.item_name,
+		"unit": uom[doc.stock_uom],
+		"product_type": product_type,
+		"hsn_or_sac": doc.gst_hsn_code,
+		"rate": 0
+	}
+
+	put_data = {
+		"description": doc.item_name,
+		"unit": uom[doc.stock_uom],
+		"product_type": product_type,
+		"hsn_or_sac": doc.gst_hsn_code,
+		"rate": 0
+	}
+
+	if doc.custom_zoho_item_id == None:
+		# post new Item
+		res = api_controller.post_item(data)
+		if res:
+			doc.custom_zoho_item_id = res
+
+	else:
+		# put/update existing Item
+		res = api_controller.put_item(doc.custom_zoho_item_id, put_data)
+		msg = "Zoho Books API Response: " + res
+		frappe.msgprint(msg)
+
+
+def delete_item_in_zoho(doc, method):
+	if doc.custom_zoho_item_id:
+		api_controller = frappe.get_doc("Zoho Books API")
+		res = api_controller.delete_item(doc.custom_zoho_item_id)
+		msg = "Zoho Books Response: " + res
+		frappe.msgprint(msg)
+
+
+def update_contact_in_zoho(doc, method):
+	if doc.custom_zoho_contact_id != None and doc.custom_fs_account_number != None:
+		return
+
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	if doc.customer_type == "Individual":
+		customer_sub_type = "individual"
+	else:
+		customer_sub_type = "business"
+
+	data = {
+		"contact_name": doc.name,
+		"contact_type": "customer",
+		"customer_sub_type": customer_sub_type
+	}
+
+	put_data = {
+		"contact_type": "customer",
+		"customer_sub_type": customer_sub_type
+	}
+
+	if doc.custom_zoho_contact_id == None:
+		# post new Contact
+		res = api_controller.post_contact(data)
+		if res:
+			doc.custom_zoho_contact_id = res
+
+	else:
+		# put/update existing Contact
+		res = api_controller.put_contact(doc.custom_zoho_contact_id, put_data)
+		msg = "Zoho Books API Response: " + res
+		frappe.msgprint(msg)
+
+
+def delete_contact_in_zoho(doc, method):
+	if doc.custom_zoho_contact_id:
+		api_controller = frappe.get_doc("Zoho Books API")
+		res = api_controller.delete_contact(doc.custom_zoho_contact_id)
+		msg = "Zoho Books Response: " + res
+		frappe.msgprint(msg)
 
 
 """ def fetch_unsynced_sales_invoice_list():

@@ -131,8 +131,12 @@ doc_events = {
 	#},
 	"Item": {
 		"before_insert": "pourtous.api.verify_tax_template", # verifies whether a tax template was added
-        #"before_save": "pourtous.api.update_item_in_zoho",
-        #"on_trash": "pourtous.api.delete_item_in_zoho"
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho", # update Zoho Books
+        "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_item_in_zoho" # update Zoho Books
+	},
+	"Customer": {
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_contact_in_zoho",
+        "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
 	},
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
@@ -269,7 +273,7 @@ fixtures = [
                     "Customer-custom_fs_kind_account_3", # for FS Transactions
                     "Customer-custom_fs_cash_account_4", # for FS Transactions
                     #"Customer-custom_fs_account_disable", # for recording disabled/enabled
-                    #"Customer-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
+                    "Customer-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
 
                     #"Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
 
