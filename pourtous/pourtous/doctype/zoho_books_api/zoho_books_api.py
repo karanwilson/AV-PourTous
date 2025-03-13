@@ -158,7 +158,11 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.put(api_url, data=json.dumps(data))
-			r.raise_for_status()
+			try:
+				r.raise_for_status()
+			except Exception as err:
+				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
+				raise err
 
 			return r.json().get('message') 
 
@@ -180,7 +184,11 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.delete(api_url)
-			r.raise_for_status()
+			try:
+				r.raise_for_status()
+			except Exception as err:
+				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
+				raise err
 
 			return r.json().get('message')
 
@@ -203,11 +211,18 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.post(api_url, data=json.dumps(data))
-			r.raise_for_status()
+			try:
+				r.raise_for_status()
+			except Exception as err:
+				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
+				raise err
 
 			if r.json().get('message') == 'The item has been added.':
 				custom_zoho_item_id = r.json().get('item').get('item_id')
 				return custom_zoho_item_id
+
+			else:
+				frappe.msgprint(r.json().get('message'))
 
 
 	def put_item(self, item_id, data):
@@ -227,7 +242,11 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.put(api_url, data=json.dumps(data))
-			r.raise_for_status()
+			try:
+				r.raise_for_status()
+			except Exception as err:
+				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
+				raise err
 
 			return r.json().get('message')
 
@@ -249,7 +268,11 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.delete(api_url)
-			r.raise_for_status()
+			try:
+				r.raise_for_status()
+			except Exception as err:
+				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
+				raise err
 
 			return r.json().get('message')
 
