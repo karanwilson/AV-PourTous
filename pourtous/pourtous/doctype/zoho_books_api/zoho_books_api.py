@@ -127,11 +127,18 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.post(api_url, data=json.dumps(data))
-			r.raise_for_status()
+			try:
+				r.raise_for_status()
+			except Exception as err:
+				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
+				raise err
 
 			if r.json().get('message') == 'The contact has been added.':
 				custom_zoho_contact_id = r.json().get('contact').get('contact_id')
 				return custom_zoho_contact_id
+
+			else:
+				frappe.msgprint(r.json().get('message'))
 
 
 	def put_contact(self, contact_id, data):
@@ -247,36 +254,6 @@ class ZohoBooksAPI(Document):
 			return r.json().get('message')
 
 
-	def post_supplier(self, supplier):
-		api_url = 'https://www.zohoapis.in/books/v3/contacts?'
-
-		r = self.request_access_token(scope='ZohoBooks.contacts.CREATE')
-		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
-
-		data = {
-			"contact_name": "AV.LOCAL HARVEST- 9786809518",
-			"contact_type": "vendor",
-			"customer_sub_type": "business"
-		}
-
-		with requests.Session() as s:
-			s.params = {
-				'organization_id': self.organization_id
-			}
-
-			s.headers = {
-				'Authorization': authorization,
-				'content-type': 'application/json'
-				}
-
-			r = s.post(api_url, data=json.dumps(data))
-			r.raise_for_status()
-
-			if r.json().get('message') == 'The contact has been added.':
-				custom_zoho_contact_id = r.json().get('contact').get('contact_id')
-				return custom_zoho_contact_id
-
-
 def update_item_in_zoho(doc, method):
 	api_controller = frappe.get_doc("Zoho Books API")
 
@@ -379,6 +356,21 @@ def delete_contact_in_zoho(doc, method):
 		res = api_controller.delete_contact(doc.custom_zoho_contact_id)
 		msg = "Zoho Books Response: " + res
 		frappe.msgprint(msg)
+
+
+def update_supplier_contact_in_zoho(doc, method):
+	if doc.custom_zoho_contact_id == None:
+		api_controller = frappe.get_doc("Zoho Books API")
+
+		data = {
+			"contact_name": doc.name,
+			"contact_type": "vendor",
+			"customer_sub_type": "business"
+		}
+
+		res = api_controller.post_contact(data)
+		if res:
+			doc.custom_zoho_contact_id = res
 
 
 """ def fetch_unsynced_sales_invoice_list():

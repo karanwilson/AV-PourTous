@@ -138,6 +138,10 @@ doc_events = {
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_contact_in_zoho",
         "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
 	},
+	"Supplier": {
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_supplier_contact_in_zoho",
+        "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
+	},
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
 		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
@@ -273,9 +277,9 @@ fixtures = [
                     "Customer-custom_fs_kind_account_3", # for FS Transactions
                     "Customer-custom_fs_cash_account_4", # for FS Transactions
                     "Customer-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
-                    "Customer-custom_update_zoho_contact",
+                    "Customer-custom_update_zoho_contact", # to prevent trigger of Zoho Contact update, during the FS account update script.
 
-                    #"Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
+                    "Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
 
                     "Purchase Order-custom_batch_items", # Creates a Tab Break for custom_batch_items_data and custom_add_batch_items
                     "Purchase Order-custom_batch_items_fetch", # Button
