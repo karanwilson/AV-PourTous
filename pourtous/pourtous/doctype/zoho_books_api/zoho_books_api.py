@@ -382,18 +382,23 @@ def delete_contact_in_zoho(doc, method):
 
 
 def update_supplier_contact_in_zoho(doc, method):
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	data = {
+		"contact_name": doc.supplier_name,
+		"contact_type": "vendor",
+		"customer_sub_type": "business"
+	}
+
 	if doc.custom_zoho_contact_id == None:
-		api_controller = frappe.get_doc("Zoho Books API")
-
-		data = {
-			"contact_name": doc.name,
-			"contact_type": "vendor",
-			"customer_sub_type": "business"
-		}
-
 		res = api_controller.post_contact(data)
 		if res:
 			doc.custom_zoho_contact_id = res
+
+	else:
+		# put/update existing Contact
+		res = api_controller.put_contact(doc.custom_zoho_contact_id, data)
+		frappe.msgprint("Zoho Books API Response: " + res)
 
 
 """ def fetch_unsynced_sales_invoice_list():
