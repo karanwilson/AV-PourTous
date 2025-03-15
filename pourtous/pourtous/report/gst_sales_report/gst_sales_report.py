@@ -89,17 +89,31 @@ def get_columns():
 		},
 
 		{
+			"fieldname": "sales_28_cess_12",
+			"label": "GST-28% CESS-12%",
+			"fieldtype": "Currency",
+			"width": "155"
+		},
+
+		{
 			"fieldname": "cgst_amount",
 			"label": "CGST Amount",
 			"fieldtype": "Currency",
-			"width": "125"
+			"width": "120"
 		},
 
 		{
 			"fieldname": "sgst_amount",
 			"label": "SGST Amount",
 			"fieldtype": "Currency",
-			"width": "125"
+			"width": "120"
+		},
+
+		{
+			"fieldname": "cess_amount",
+			"label": "CESS Amount",
+			"fieldtype": "Currency",
+			"width": "120"
 		},
 
 		{
@@ -123,6 +137,15 @@ def get_data(filters):
 	if filters.customer:
 		gst_sales_query = frappe.db.sql(
 			"""
+			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
+			table1.sales_exempted, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
+			table1.cgst_amount, table1.sgst_amount, table1.cess_amount,
+			(table1.cgst_amount + table1.sgst_amount + table1.cess_amount) AS total_tax,
+			table1.grand_total
+
+			FROM
+
+			(
 			SELECT name, return_against, customer_name, posting_date,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
@@ -131,20 +154,24 @@ def get_data(filters):
 			AS sales_exempted,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 5%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 5_ -%")
 			AS sales_5,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 12%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 12_ -%")
 			AS sales_12,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 18%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 18_ -%")
 			AS sales_18,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28_ -%")
 			AS sales_28,
+
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28_ CESS 12%")
+			AS sales_28_cess_12,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
 			WHERE parent = `tabSales Invoice`.name AND description = "CGST")
@@ -154,14 +181,15 @@ def get_data(filters):
 			WHERE parent = `tabSales Invoice`.name AND description = "SGST")
 			AS sgst_amount,
 
-			((SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name AND description = "CGST")
-			+(SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name AND description = "SGST"))
-			AS total_tax,
+			(SELECT tax_amount FROM `tabSales Taxes and Charges`
+			WHERE parent = `tabSales Invoice`.name AND description = "CESS")
+			AS cess_amount,
 
 			grand_total
 
 			FROM `tabSales Invoice` WHERE docstatus = 1
 			AND posting_date = '{0}' AND customer = '{1}'
+			) table1
 			""".format(filters.query_date, filters.customer),
 			as_dict=True
 		)
@@ -171,6 +199,15 @@ def get_data(filters):
 	else:
 		gst_sales_query = frappe.db.sql(
 			"""
+			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
+			table1.sales_exempted, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
+			table1.cgst_amount, table1.sgst_amount, table1.cess_amount,
+			(table1.cgst_amount + table1.sgst_amount + table1.cess_amount) AS total_tax,
+			table1.grand_total
+
+			FROM
+
+			(
 			SELECT name, return_against, customer_name, posting_date,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
@@ -179,20 +216,24 @@ def get_data(filters):
 			AS sales_exempted,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 5%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 5_ -%")
 			AS sales_5,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 12%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 12_ -%")
 			AS sales_12,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 18%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 18_ -%")
 			AS sales_18,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28%")
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28_ -%")
 			AS sales_28,
+
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28_ CESS 12%")
+			AS sales_28_cess_12,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
 			WHERE parent = `tabSales Invoice`.name AND description = "CGST")
@@ -202,14 +243,15 @@ def get_data(filters):
 			WHERE parent = `tabSales Invoice`.name AND description = "SGST")
 			AS sgst_amount,
 
-			((SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name AND description = "CGST")
-			+(SELECT tax_amount FROM `tabSales Taxes and Charges` WHERE parent = `tabSales Invoice`.name AND description = "SGST"))
-			AS total_tax,
+			(SELECT tax_amount FROM `tabSales Taxes and Charges`
+			WHERE parent = `tabSales Invoice`.name AND description = "CESS")
+			AS cess_amount,
 
 			grand_total
 
 			FROM `tabSales Invoice` WHERE docstatus = 1
 			AND posting_date = '{0}'
+			) table1
 			""".format(filters.query_date),
 			as_dict=True
 		)
