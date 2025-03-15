@@ -202,7 +202,7 @@ def get_data(filters):
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
 			table1.sales_exempted, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
 			table1.cgst_amount, table1.sgst_amount, table1.cess_amount,
-			(table1.cgst_amount + table1.sgst_amount + table1.cess_amount) AS total_tax,
+			IF((table1.cess_amount IS NULL), (table1.cgst_amount + table1.sgst_amount), (table1.cgst_amount + table1.sgst_amount + table1.cess_amount)) AS total_tax,
 			table1.grand_total
 
 			FROM
