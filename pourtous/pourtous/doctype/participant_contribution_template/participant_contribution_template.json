@@ -1,0 +1,189 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "creation": "2025-03-18 14:22:00.396972",
+ "default_view": "List",
+ "description": "PTDC Participant Contribution Details",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "customer_name",
+  "fs_account_number",
+  "in_kind_scheme",
+  "lunch_scheme",
+  "monthly_contribution",
+  "total_contribution",
+  "extra_contribution"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fetch_from": "customer.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "in_kind_scheme",
+   "fieldtype": "Currency",
+   "label": "In Kind Scheme"
+  },
+  {
+   "default": "0",
+   "fieldname": "lunch_scheme",
+   "fieldtype": "Currency",
+   "label": "Lunch Scheme"
+  },
+  {
+   "default": "0",
+   "fieldname": "monthly_contribution",
+   "fieldtype": "Currency",
+   "label": "Monthly Contribution"
+  },
+  {
+   "default": "0",
+   "description": "IKS + LS + Monthly Contribution",
+   "fieldname": "total_contribution",
+   "fieldtype": "Currency",
+   "label": "Total Contribution",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "customer.custom_fs_account_number",
+   "fieldname": "fs_account_number",
+   "fieldtype": "Data",
+   "label": "FS Account Number",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "extra_contribution",
+   "fieldtype": "Currency",
+   "label": "Extra Contribution"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-03-18 16:55:21.469174",
+ "modified_by": "Administrator",
+ "module": "pourtous",
+ "name": "Participant Contribution Template",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Item Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Purchase Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Purchase Master Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Master Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_name_in_global_search": 1,
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "customer_name"
+}

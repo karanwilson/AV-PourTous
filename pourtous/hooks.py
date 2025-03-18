@@ -261,18 +261,25 @@ fixtures = [
 					"Item-custom_select_add_on_item", # To select the Add-On Item for configuring Item-add-ons bundling
 					"Item-custom_item_add_on", # Automatically pulls the item_code from the above selection
                     "Item-custom_uom_int", #'UOM INT' for fetching stock_uom.must_be_whole_number setting from Item doctype
+                                           #-used in code to prevent decimal entries in Integer values
                     "Item-custom_zoho_item_id", # required in case we create Invoices/Purchases on Zoho Books, via API
-                    				#-used in code to prevent decimal entries in Integer values
-                    "Payment Entry-custom_contribution_type", # for PTDC Contributions FS Transactions
+
+                    "Payment Entry-custom_in_kind_scheme", # for PTDC Monthly Balance
+                    "Payment Entry-custom_lunch_scheme", # for PTDC Monthly Balance
+                    "Payment Entry-custom_monthly_contribution", # for PTDC Monthly Balance
+                    "Payment Entry-custom_extra_contribution", # for PTDC Monthly Balance
                     "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
+
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
                     "Sales Invoice-custom_fs_account_number", # to Identify Invoice based on FS Account number
                     "Sales Invoice-custom_transaction_date", # in case transaction date is earlier than the posting date
                     "Sales Invoice-custom_staff_member", # in case of accounts shared by a group
                     "Sales Invoice-custom_zb_sync_status", # for syncing with Zoho Books
+
                     "Sales Order-custom_fs_account_number", # to Identify Sales Order based on FS Account number
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions
                     "Sales Order Item-custom_batch_no", # for SO Stock reservations
+
                     "Customer-custom_master_list_number", # Auroville MLN
                     "Customer-custom_fs_account_number", # for FS Transactions
                     "Customer-custom_fs_kind_account_3", # for FS Transactions
