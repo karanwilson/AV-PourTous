@@ -16,7 +16,8 @@
   "lunch_scheme",
   "monthly_contribution",
   "total_contribution",
-  "extra_contribution"
+  "extra_contribution",
+  "receive_from_fs_api"
  ],
  "fields": [
   {
@@ -73,11 +74,18 @@
    "fieldname": "extra_contribution",
    "fieldtype": "Currency",
    "label": "Extra Contribution"
+  },
+  {
+   "default": "0",
+   "description": "Make an FS transfer from Participant Account to PTDC Account",
+   "fieldname": "receive_from_fs_api",
+   "fieldtype": "Check",
+   "label": "Receive from FS API"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-18 16:55:21.469174",
+ "modified": "2025-03-18 20:20:29.576860",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Participant Contribution Template",
