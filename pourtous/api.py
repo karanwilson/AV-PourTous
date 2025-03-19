@@ -3,6 +3,25 @@ from frappe import _
 #from frappe.utils import flt
 
 
+frappe.whitelist(allow_guest=True)
+def fetch_participant_list():
+    contributions_list = frappe.get_list(
+        "Customer",
+        filters={
+            "": "",
+            "": "",
+        },
+        fields=["name"],
+        limit_page_length=0,
+        order_by="modified desc",
+    )
+
+
+@frappe.whitelist(allow_guest=True)
+def process_pt_monthly_balances(participant):
+	pass
+
+
 @frappe.whitelist(allow_guest=True)
 def update_fs_accounts(fs_account, name, disable):
 	existing_fs_customer = frappe.get_value("Customer", {"custom_fs_account_number": fs_account}, "name")

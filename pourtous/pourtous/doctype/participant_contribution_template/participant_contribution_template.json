@@ -12,6 +12,7 @@
   "customer",
   "customer_name",
   "fs_account_number",
+  "disabled",
   "in_kind_scheme",
   "lunch_scheme",
   "monthly_contribution",
@@ -81,11 +82,19 @@
    "fieldname": "receive_from_fs_api",
    "fieldtype": "Check",
    "label": "Receive from FS API"
+  },
+  {
+   "default": "0",
+   "fetch_from": "customer.disabled",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-18 20:20:29.576860",
+ "modified": "2025-03-19 08:27:55.966736",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Participant Contribution Template",
