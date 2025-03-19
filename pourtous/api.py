@@ -1,25 +1,110 @@
 import frappe
 from frappe import _
-#from frappe.utils import flt
-
-
-frappe.whitelist(allow_guest=True)
-def fetch_participant_list():
-    contributions_list = frappe.get_list(
-        "Customer",
-        filters={
-            "": "",
-            "": "",
-        },
-        fields=["name"],
-        limit_page_length=0,
-        order_by="modified desc",
-    )
+from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
+from frappe.utils import nowdate #, flt
 
 
 @frappe.whitelist(allow_guest=True)
-def process_pt_monthly_balances(participant):
-	pass
+def fetch_monthly_contributions():
+	return frappe.db.sql(
+		"""
+		SELECT name, custom_in_kind_scheme, custom_lunch_scheme, custom_monthly_contribution
+		FROM tabCustomer
+		WHERE custom_fs_account_number IS NOT NULL
+		AND (custom_in_kind_scheme != 0 OR custom_lunch_scheme != 0 OR custom_monthly_contribution != 0)
+		""",
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_scheme, custom_monthly_contribution):
+	company = frappe.defaults.get_user_default("company")
+
+	if company == "Pour Tous Distribution Center":
+		amount = custom_in_kind_scheme + custom_lunch_scheme + custom_monthly_contribution
+		bank_account = get_bank_cash_account("FS", company)
+
+    	# creating advance payment
+		advance_payment_entry = frappe.get_doc(
+            {
+               	"doctype": "Payment Entry",
+               	"mode_of_payment": "FS",
+               	"paid_to": bank_account["account"],
+               	"payment_type": "Receive",
+               	"party_type": "Customer",
+               	"party": customer,
+				"custom_in_kind_scheme": custom_in_kind_scheme,
+				"custom_lunch_scheme": custom_lunch_scheme,
+				"custom_monthly_contribution": custom_monthly_contribution,
+               	"paid_amount": amount,
+               	"received_amount": amount,
+				"reference_no": customer,
+				"reference_date": nowdate(),
+               	"company": company,
+            }
+        )
+
+		advance_payment_entry.flags.ignore_permissions = True
+		frappe.flags.ignore_account_permission = True
+		try:
+			advance_payment_entry.insert()
+			advance_payment_entry.submit()
+		except Exception as err:
+			frappe.msgprint(err)
+			raise err
+		else:
+			return "OK"
+
+
+@frappe.whitelist(allow_guest=True)
+def fetch_extra_contributions():
+	return frappe.db.sql(
+		"""
+		SELECT name, custom_extra_contribution
+		FROM tabCustomer
+		WHERE custom_fs_account_number IS NOT NULL
+		AND (custom_extra_contribution != 0)
+		""",
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def process_pt_extra_contributions(customer, custom_extra_contribution):
+	company = frappe.defaults.get_user_default("company")
+
+	if company == "Pour Tous Distribution Center":
+		bank_account = get_bank_cash_account("FS", company)
+
+    	# creating advance payment
+		advance_payment_entry = frappe.get_doc(
+            {
+               	"doctype": "Payment Entry",
+               	"mode_of_payment": "FS",
+               	"paid_to": bank_account["account"],
+               	"payment_type": "Receive",
+               	"party_type": "Customer",
+               	"party": customer,
+				"custom_extra_contribution": custom_extra_contribution,
+               	"paid_amount": custom_extra_contribution,
+               	"received_amount": custom_extra_contribution,
+				"reference_no": customer,
+				"reference_date": nowdate(),
+               	"company": company,
+            }
+        )
+
+		advance_payment_entry.flags.ignore_permissions = True
+		frappe.flags.ignore_account_permission = True
+		try:
+			advance_payment_entry.insert()
+			advance_payment_entry.submit()
+		except Exception as err:
+			frappe.msgprint(err)
+			raise err
+		else:
+			# after the 'Extra Contribution' payment entry is successful, reset the custom_extra_contribution field
+			frappe.db.set_value("Customer", customer, "custom_extra_contribution", 0)
+			return "OK"
 
 
 @frappe.whitelist(allow_guest=True)
@@ -252,52 +337,6 @@ def sync_batch_prices(batch):
 		return {"OK"}
 
 
-# called from Customer Client-Script 'Sync FS Accounts'
-@frappe.whitelist(allow_guest=True)
-def sync_fs_accounts():
-	#with open('customer_import.txt', 'w') as file:
-	#	file.write(str("inside validate_customer_imports"))
-	#frappe.throw("inside validate_customer_imports")
-
-	fs_account_records = frappe.get_all("FS Account Details", pluck='name')
-
-	for record in fs_account_records:
-		fs_account_doc = frappe.get_doc("FS Account Details", record)
-		existing_customer_id = frappe.get_value("Customer", {"custom_fs_account_number": fs_account_doc.account_number}, "name")
-
-		if existing_customer_id:
-			if fs_account_doc.account_type == 3:
-				frappe.db.set_value("Customer", existing_customer_id, "custom_fs_kind_account_3", 1)
-			elif fs_account_doc.account_type == 4:
-				frappe.db.set_value("Customer", existing_customer_id, "custom_fs_cash_account_4", 1)
-
-		elif fs_account_doc.account_type == 3:
-			new_customer_doc = frappe.get_doc({
-				"doctype": "Customer",
-				"customer_name": fs_account_doc.account_name,
-				"custom_fs_account_number": fs_account_doc.account_number,
-				"custom_fs_kind_account_3": 1,
-				"disabled": fs_account_doc.disabled,
-				"territory": "India",
-				"customer_type": "Individual",
-				"customer_group": "Individual"
-			})
-			new_customer_doc.save()
-
-		elif fs_account_doc.account_type == 4:
-			new_customer_doc = frappe.get_doc({
-				"doctype": "Customer",
-				"customer_name": fs_account_doc.account_name,
-				"custom_fs_account_number": fs_account_doc.account_number,
-				"custom_fs_cash_account_4": 1,
-				"disabled": fs_account_doc.disabled,
-				"territory": "India",
-				"customer_type": "Individual",
-				"customer_group": "Individual"
-			})
-			new_customer_doc.save()
-
-
 # called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
 @frappe.whitelist(allow_guest=True)
 #@frappe.validate_and_sanitize_search_inputs
@@ -400,6 +439,53 @@ def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
 	)
 
 
+def update_price_lists(doc, method):
+	for item in doc.items:
+
+		if item.batch_no:
+			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
+			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
+			frappe.db.commit()
+			""" item_price = frappe.get_doc({
+				"doctype": "Item Price",
+				"item_code": item.item_code,
+				"uom": item.uom,
+				"price_list": "Standard Selling",
+				"price_list_rate": item.custom_selling_price,
+				"batch_no": item.batch_no
+			})
+			item_price.insert() """
+
+		else:
+			existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
+			if existing_item_price_entry:
+				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
+				frappe.db.commit()
+
+			else:
+				item_price = frappe.get_doc({
+					"doctype": "Item Price",
+					"item_code": item.item_code,
+					"uom": item.uom,
+					"price_list": "Standard Selling",
+					"price_list_rate": item.custom_selling_price,
+					#"batch_no": item.batch_no
+				})
+				item_price.insert()
+
+
+
+""" def delete_item_batch(doc, method):
+	for item in doc.items:
+		if item.batch_no:
+			frappe.delete_doc('Batch', item.batch_no) """
+
+""" def delete_item_price(doc, method):
+	for item in doc.items:
+		if item.batch_no:
+			item_price_name = frappe.get_list('Item Price', filters = {"batch_no": item.batch_no})	# returns a list of dicts (key value pairs)
+			frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name' """
+
 # creates credit vouchers for returns at PTDC (for pre-paid member accounts)
 # called from hooks.py when "Sales Invoice" documents are submitted
 """ def payment_entry_for_return(doc, method):
@@ -441,49 +527,47 @@ def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
 		advance_payment_entry.insert()
 		advance_payment_entry.submit() """
 
+# was called from Customer Client-Script 'Sync FS Accounts'
+""" @frappe.whitelist(allow_guest=True)
+def sync_fs_accounts():
+	#with open('customer_import.txt', 'w') as file:
+	#	file.write(str("inside validate_customer_imports"))
+	#frappe.throw("inside validate_customer_imports")
 
-def update_price_lists(doc, method):
-	for item in doc.items:
+	fs_account_records = frappe.get_all("FS Account Details", pluck='name')
 
-		if item.batch_no:
-			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
-			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
-			frappe.db.commit()
-			""" item_price = frappe.get_doc({
-				"doctype": "Item Price",
-				"item_code": item.item_code,
-				"uom": item.uom,
-				"price_list": "Standard Selling",
-				"price_list_rate": item.custom_selling_price,
-				"batch_no": item.batch_no
+	for record in fs_account_records:
+		fs_account_doc = frappe.get_doc("FS Account Details", record)
+		existing_customer_id = frappe.get_value("Customer", {"custom_fs_account_number": fs_account_doc.account_number}, "name")
+
+		if existing_customer_id:
+			if fs_account_doc.account_type == 3:
+				frappe.db.set_value("Customer", existing_customer_id, "custom_fs_kind_account_3", 1)
+			elif fs_account_doc.account_type == 4:
+				frappe.db.set_value("Customer", existing_customer_id, "custom_fs_cash_account_4", 1)
+
+		elif fs_account_doc.account_type == 3:
+			new_customer_doc = frappe.get_doc({
+				"doctype": "Customer",
+				"customer_name": fs_account_doc.account_name,
+				"custom_fs_account_number": fs_account_doc.account_number,
+				"custom_fs_kind_account_3": 1,
+				"disabled": fs_account_doc.disabled,
+				"territory": "India",
+				"customer_type": "Individual",
+				"customer_group": "Individual"
 			})
-			item_price.insert() """
+			new_customer_doc.save()
 
-		else:
-			existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
-			if existing_item_price_entry:
-				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
-				frappe.db.commit()
-
-			else:
-				item_price = frappe.get_doc({
-					"doctype": "Item Price",
-					"item_code": item.item_code,
-					"uom": item.uom,
-					"price_list": "Standard Selling",
-					"price_list_rate": item.custom_selling_price,
-					#"batch_no": item.batch_no
-				})
-				item_price.insert()
-
-
-""" def delete_item_batch(doc, method):
-	for item in doc.items:
-		if item.batch_no:
-			frappe.delete_doc('Batch', item.batch_no) """
-
-""" def delete_item_price(doc, method):
-	for item in doc.items:
-		if item.batch_no:
-			item_price_name = frappe.get_list('Item Price', filters = {"batch_no": item.batch_no})	# returns a list of dicts (key value pairs)
-			frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name' """
+		elif fs_account_doc.account_type == 4:
+			new_customer_doc = frappe.get_doc({
+				"doctype": "Customer",
+				"customer_name": fs_account_doc.account_name,
+				"custom_fs_account_number": fs_account_doc.account_number,
+				"custom_fs_cash_account_4": 1,
+				"disabled": fs_account_doc.disabled,
+				"territory": "India",
+				"customer_type": "Individual",
+				"customer_group": "Individual"
+			})
+			new_customer_doc.save() """
