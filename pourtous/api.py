@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
-from frappe.utils import nowdate #, flt
+from frappe.utils import nowdate, get_first_day #, flt
 
 
 @frappe.whitelist(allow_guest=True)
@@ -21,6 +21,18 @@ def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_sc
 	company = frappe.defaults.get_user_default("company")
 
 	if company == "Pour Tous Distribution Center":
+		existing_pe = frappe.db.sql(
+			"""
+			SELECT name from `tabPayment Entry`
+			WHERE party = '{0}'
+			AND posting_date >= '{1}'
+			AND (custom_in_kind_scheme > 0 OR custom_lunch_scheme > 0 OR custom_monthly_contribution > 0)
+			""".format(customer, get_first_day(nowdate()))
+		)
+
+		if len(existing_pe) > 0:
+			return
+
 		amount = custom_in_kind_scheme + custom_lunch_scheme + custom_monthly_contribution
 		bank_account = get_bank_cash_account("FS", company)
 
