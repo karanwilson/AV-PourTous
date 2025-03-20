@@ -24,7 +24,8 @@ def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_sc
 		existing_pe = frappe.db.sql(
 			"""
 			SELECT name from `tabPayment Entry`
-			WHERE party = '{0}'
+			WHERE docstatus = 1
+			AND party = '{0}'
 			AND posting_date >= '{1}'
 			AND (custom_in_kind_scheme > 0 OR custom_lunch_scheme > 0 OR custom_monthly_contribution > 0)
 			""".format(customer, get_first_day(nowdate()))
