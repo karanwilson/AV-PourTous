@@ -280,19 +280,21 @@ fixtures = [
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions
                     "Sales Order Item-custom_batch_no", # for SO Stock reservations
 
-                    "Customer-custom_master_list_number", # Auroville MLN
                     "Customer-custom_fs_account_number", # for FS Transactions
                     #"Customer-custom_fs_kind_account_3", # for FS Transactions
                     #"Customer-custom_fs_cash_account_4", # for FS Transactions
-
-                    "Customer-custom_in_kind_scheme", # for PTDC Monthly Balance
-                    "Customer-custom_lunch_scheme", # for PTDC Monthly Balance
-                    "Customer-custom_monthly_contribution", # for PTDC Monthly Balance
-                    "Customer-custom_extra_contribution", # for PTDC Monthly Balance
                     "Customer-custom_receive_from_fs_api", # for PTDC Monthly Balance
-
                     "Customer-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
                     "Customer-custom_update_zoho_contact", # to prevent trigger of Zoho Contact update, during the FS account update script.
+
+                    "Contact-custom_av_section_break"
+                    "Contact-custom_fs_account_number",
+                    "Contact-custom_master_list_number", # Auroville MLN
+                    "Contact-custom_av_column_break"
+                    "Contact-custom_in_kind_scheme", # for PTDC Monthly Balance
+                    "Contact-custom_lunch_scheme", # for PTDC Monthly Balance
+                    "Contact-custom_monthly_contribution", # for PTDC Monthly Balance
+                    "Contact-custom_extra_contribution", # for PTDC Monthly Balance
 
                     "Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
 
