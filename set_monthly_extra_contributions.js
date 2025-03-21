@@ -1,6 +1,6 @@
 frappe.listview_settings['Payment Entry'] = {
     refresh(listview) {
-        listview.page.add_inner_button("Initialise Monthly Balance", () => {
+        listview.page.add_inner_button("Initialise Monthly Balances", () => {
             frappe.call({
                 method: 'pourtous.api.fetch_monthly_contributions',
                 async: false,
@@ -11,6 +11,7 @@ frappe.listview_settings['Payment Entry'] = {
                         console.log("custom_in_kind_scheme: ", r.message[0]["custom_in_kind_scheme"]);
                         console.log("custom_lunch_scheme: ", r.message[0]["custom_lunch_scheme"]);
                         console.log("custom_monthly_contribution: ", r.message[0]["custom_monthly_contribution"]);
+                        console.log("custom_ptdc_maintenance: ", r.message[0]["custom_ptdc_maintenance"]);
                         const length = r.message.length;
                         console.log("Initialising Balances for " + length + " Participants");
                         let balances = 0;
@@ -19,10 +20,11 @@ frappe.listview_settings['Payment Entry'] = {
                                 frappe.call({
                                     method: 'pourtous.api.process_pt_monthly_balances',
                                     args: {
-                                        customer: r.message[i]["name"],
+                                        contact: r.message[i]["name"],
                                         custom_in_kind_scheme: r.message[i]["custom_in_kind_scheme"],
                                         custom_lunch_scheme: r.message[i]["custom_lunch_scheme"],
-                                        custom_monthly_contribution: r.message[i]["custom_monthly_contribution"]
+                                        custom_monthly_contribution: r.message[i]["custom_monthly_contribution"],
+                                        custom_ptdc_maintenance: r.message[i]["custom_ptdc_maintenance"]
                                     },
                                     async: false,
                                 }).then(r => {
@@ -61,7 +63,7 @@ frappe.listview_settings['Payment Entry'] = {
                                 frappe.call({
                                     method: 'pourtous.api.process_pt_extra_contributions',
                                     args: {
-                                        customer: r.message[i]["name"],
+                                        contact: r.message[i]["name"],
                                         custom_extra_contribution: r.message[i]["custom_extra_contribution"]
                                     },
                                     async: false,

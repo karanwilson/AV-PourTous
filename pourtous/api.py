@@ -8,33 +8,36 @@ from frappe.utils import nowdate, get_first_day #, flt
 def fetch_monthly_contributions():
 	return frappe.db.sql(
 		"""
-		SELECT name, custom_in_kind_scheme, custom_lunch_scheme, custom_monthly_contribution
-		FROM tabCustomer
-		WHERE custom_fs_account_number IS NOT NULL
-		AND (custom_in_kind_scheme != 0 OR custom_lunch_scheme != 0 OR custom_monthly_contribution != 0)
+		SELECT name, custom_in_kind_scheme, custom_lunch_scheme, custom_monthly_contribution, custom_ptdc_maintenance
+		FROM tabContact
+		WHERE (custom_member_fs_acc_num IS NOT NULL OR custom_personal_fs_acc_num IS NOT NULL)
+		AND (custom_in_kind_scheme != 0 OR custom_lunch_scheme != 0 OR custom_monthly_contribution != 0 OR custom_ptdc_maintenance != 0)
 		""",
 		as_dict=True
 	)
 
 @frappe.whitelist(allow_guest=True)
-def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_scheme, custom_monthly_contribution):
+def process_pt_monthly_balances(contact, custom_in_kind_scheme, custom_lunch_scheme, custom_monthly_contribution, custom_ptdc_maintenance):
 	company = frappe.defaults.get_user_default("company")
 
 	if company == "Pour Tous Distribution Center":
+		customer = frappe.get_value("Dynamic Link", {"parent": contact}, "link_name")
+
 		existing_pe = frappe.db.sql(
 			"""
 			SELECT name from `tabPayment Entry`
 			WHERE docstatus = 1
 			AND party = '{0}'
 			AND posting_date >= '{1}'
-			AND (custom_in_kind_scheme > 0 OR custom_lunch_scheme > 0 OR custom_monthly_contribution > 0)
+			AND (custom_in_kind_scheme > 0 OR custom_lunch_scheme > 0 OR custom_monthly_contribution > 0 OR custom_ptdc_maintenance > 0)
 			""".format(customer, get_first_day(nowdate()))
 		)
 
 		if len(existing_pe) > 0:
+			frappe.msgprint("Payment Exists for this month")
 			return
 
-		amount = custom_in_kind_scheme + custom_lunch_scheme + custom_monthly_contribution
+		amount = custom_in_kind_scheme + custom_lunch_scheme + custom_monthly_contribution + custom_ptdc_maintenance
 		bank_account = get_bank_cash_account("FS", company)
 
     	# creating advance payment
@@ -49,6 +52,7 @@ def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_sc
 				"custom_in_kind_scheme": custom_in_kind_scheme,
 				"custom_lunch_scheme": custom_lunch_scheme,
 				"custom_monthly_contribution": custom_monthly_contribution,
+				"custom_ptdc_maintenance": custom_ptdc_maintenance,
                	"paid_amount": amount,
                	"received_amount": amount,
 				"reference_no": customer,
@@ -74,18 +78,20 @@ def fetch_extra_contributions():
 	return frappe.db.sql(
 		"""
 		SELECT name, custom_extra_contribution
-		FROM tabCustomer
-		WHERE custom_fs_account_number IS NOT NULL
-		AND (custom_extra_contribution != 0)
+		FROM tabContact
+		WHERE (custom_member_fs_acc_num IS NOT NULL OR custom_personal_fs_acc_num IS NOT NULL)
+		AND custom_extra_contribution != 0
 		""",
 		as_dict=True
 	)
 
 @frappe.whitelist(allow_guest=True)
-def process_pt_extra_contributions(customer, custom_extra_contribution):
+def process_pt_extra_contributions(contact, custom_extra_contribution):
 	company = frappe.defaults.get_user_default("company")
 
 	if company == "Pour Tous Distribution Center":
+		customer = frappe.get_value("Dynamic Link", {"parent": contact}, "link_name")
+
 		bank_account = get_bank_cash_account("FS", company)
 
     	# creating advance payment
@@ -116,7 +122,8 @@ def process_pt_extra_contributions(customer, custom_extra_contribution):
 			raise err
 		else:
 			# after the 'Extra Contribution' payment entry is successful, reset the custom_extra_contribution field
-			frappe.db.set_value("Customer", customer, "custom_extra_contribution", 0)
+			frappe.db.set_value("Contact", contact, "custom_extra_contribution", 0)
+			frappe.db.commit()
 			return "OK"
 
 

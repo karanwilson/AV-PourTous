@@ -267,6 +267,7 @@ fixtures = [
                     "Payment Entry-custom_in_kind_scheme", # for PTDC Monthly Balance
                     "Payment Entry-custom_lunch_scheme", # for PTDC Monthly Balance
                     "Payment Entry-custom_monthly_contribution", # for PTDC Monthly Balance
+                    "Payment Entry-custom_ptdc_maintenance", # PTDC
                     "Payment Entry-custom_extra_contribution", # for PTDC Monthly Balance
                     "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
 
@@ -288,12 +289,15 @@ fixtures = [
                     "Customer-custom_update_zoho_contact", # to prevent trigger of Zoho Contact update, during the FS account update script.
 
                     "Contact-custom_av_section_break"
-                    "Contact-custom_fs_account_number",
                     "Contact-custom_master_list_number", # Auroville MLN
+                    "Contact-custom_member_fs_acc_num",
+                    "Contact-custom_personal_fs_acc_num",
+                    "Contact-custom_remarks", # PTDC
                     "Contact-custom_av_column_break"
                     "Contact-custom_in_kind_scheme", # for PTDC Monthly Balance
                     "Contact-custom_lunch_scheme", # for PTDC Monthly Balance
                     "Contact-custom_monthly_contribution", # for PTDC Monthly Balance
+                    "Contact-custom_ptdc_maintenance", # PTDC
                     "Contact-custom_extra_contribution", # for PTDC Monthly Balance
 
                     "Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
