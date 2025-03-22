@@ -4,6 +4,7 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_a
 from frappe.utils import nowdate, get_first_day #, flt
 
 
+# PTDC
 @frappe.whitelist(allow_guest=True)
 def fetch_monthly_contributions():
 	return frappe.db.sql(
@@ -16,6 +17,7 @@ def fetch_monthly_contributions():
 		as_dict=True
 	)
 
+# PTDC
 @frappe.whitelist(allow_guest=True)
 def process_pt_monthly_balances(contact, custom_in_kind_scheme, custom_lunch_scheme, custom_monthly_contribution, custom_ptdc_maintenance):
 	company = frappe.defaults.get_user_default("company")
@@ -72,7 +74,7 @@ def process_pt_monthly_balances(contact, custom_in_kind_scheme, custom_lunch_sch
 		else:
 			return "OK"
 
-
+# PTDC
 @frappe.whitelist(allow_guest=True)
 def fetch_extra_contributions():
 	return frappe.db.sql(
@@ -85,6 +87,7 @@ def fetch_extra_contributions():
 		as_dict=True
 	)
 
+# PTDC
 @frappe.whitelist(allow_guest=True)
 def process_pt_extra_contributions(contact, custom_extra_contribution):
 	company = frappe.defaults.get_user_default("company")
