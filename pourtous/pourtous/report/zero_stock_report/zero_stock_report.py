@@ -33,10 +33,11 @@ def get_columns():
 			"width": "300"
 		},
 		{
-			"fieldname": "item_group",
-			"label": "Item Group",
-			"fieldtype": "Data",
-			"width": "250"
+			"fieldname": "stock_uom",
+			"label": "UOM",
+			"fieldtype": "Link",
+			"options": "UOM",
+			"width": "90"
 		},
 		{
 			"fieldname": "supplier",
@@ -62,7 +63,7 @@ def get_columns():
 def get_data():
 	query = frappe.db.sql(
 		"""
-		SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier,
+		SELECT tabItem.item_code, tabItem.item_name, tabItem.stock_uom, `tabItem Supplier`.supplier,
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
@@ -87,7 +88,7 @@ def get_data():
 			and warehouse like '{0}'
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
-		) = 0
+		) > 0
 		OR
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
@@ -95,7 +96,7 @@ def get_data():
 			and warehouse like '{1}'
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
-		) = 0
+		) > 0
 		)
 		""".format("Stores%", "Stall%"),
 		as_dict=True
