@@ -264,12 +264,15 @@ fixtures = [
                                            #-used in code to prevent decimal entries in Integer values
                     "Item-custom_zoho_item_id", # required in case we create Invoices/Purchases on Zoho Books, via API
 
+                    "Payment Entry-custom_av_section_break", # PTDC
+                    "Payment Entry-custom_contact", # PTDC
+                    "Payment Entry-custom_extra_contribution", # for PTDC Monthly Balance
+                    "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
+                    "Payment Entry-custom_av_column_break" # PTDC
                     "Payment Entry-custom_in_kind_scheme", # for PTDC Monthly Balance
                     "Payment Entry-custom_lunch_scheme", # for PTDC Monthly Balance
                     "Payment Entry-custom_monthly_contribution", # for PTDC Monthly Balance
                     "Payment Entry-custom_ptdc_maintenance", # PTDC
-                    "Payment Entry-custom_extra_contribution", # for PTDC Monthly Balance
-                    "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
 
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
                     "Sales Invoice-custom_fs_account_number", # to Identify Invoice based on FS Account number
