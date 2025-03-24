@@ -1,6 +1,6 @@
 frappe.listview_settings['Payment Entry'] = {
     refresh(listview) {
-        listview.page.add_inner_button("Initialise Monthly Balances", () => {
+        listview.page.add_inner_button("Process Monthly Balances", () => {
             frappe.call({
                 method: 'pourtous.api.fetch_monthly_contributions',
                 async: false,
@@ -15,7 +15,7 @@ frappe.listview_settings['Payment Entry'] = {
                             console.log("custom_monthly_contribution: ", r.message[0]["custom_monthly_contribution"]);
                             console.log("custom_ptdc_maintenance: ", r.message[0]["custom_ptdc_maintenance"]);
                             const length = r.message.length;
-                            console.log("Initialising Balances for " + length + " Participants");
+                            console.log("Processing Balances for " + length + " Participants");
                             let balances = 0;
                             for (let i = 0; i < length; i++) {
                                 setTimeout(() => {
@@ -37,17 +37,17 @@ frappe.listview_settings['Payment Entry'] = {
                                         // placing this statement block here as it does not work outside of the main frappe.call block
                                         // though it prints on console for each loop iteration (comes in only one line, with the loop count),
                                         // it shows an accurate result in the end. This design works.
-                                        console.log("Initialised Balances for ", balances, " of ", length, " Participants");
+                                        console.log("Processed Balances for ", balances, " of ", length, " Participants");
                                     });
                                     const count = i+1;
-                                    const message = "Initialising "+count+" of "+length;
-                                    frappe.show_progress("Initialising Participant Balances", count, length, message);
+                                    const message = "Processing "+count+" of "+length;
+                                    frappe.show_progress("Processing Participant Monthly Balances", count, length, message);
                                 }, 0);
                             }
                         }
                         else {
                             console.log("No Records");
-                            frappe.msgprint(__("No Contribution Details Found"));
+                            frappe.msgprint(__("No Contribution Details Found or Monthly Balances already processed for this month"));
                         }
                     }
                 }

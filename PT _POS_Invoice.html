@@ -19,7 +19,9 @@
 
 <p class="text-center" style="margin-bottom: 1rem; font-size: smaller;">
 	{{ doc.company }}<br>
-	{{ _("GSTIN/UIN: 33AAATA0037BPZ3") }}<br>
+	{%- if doc.company == "Pour Tous Purchasing Service" -%}
+		{{ _("GSTIN/UIN: 33AAATA0037BPZ3") }}<br>
+	{%- endif -%}	
 	{% if doc.doctype == "Sales Invoice" %}
 		<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
 	{% else %}
