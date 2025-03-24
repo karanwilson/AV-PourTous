@@ -10,7 +10,7 @@ def fetch_monthly_contributions():
 	return frappe.db.sql(
 		"""
 		SELECT tabContact.custom_in_kind_scheme, tabContact.custom_lunch_scheme, tabContact.custom_monthly_contribution, tabContact.custom_ptdc_maintenance,
-		`tabDynamic Link`.link_name AS customer
+		tabContact.name AS contact, `tabDynamic Link`.link_name AS customer
 		FROM tabContact, `tabDynamic Link`, tabCustomer
 		WHERE `tabDynamic Link`.parenttype = 'Contact' AND `tabDynamic Link`.parent = tabContact.name
 		AND `tabDynamic Link`.link_name = tabCustomer.name AND tabCustomer.disabled = 0
@@ -25,7 +25,7 @@ def fetch_monthly_contributions():
 
 # PTDC
 @frappe.whitelist(allow_guest=True)
-def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_scheme, custom_monthly_contribution, custom_ptdc_maintenance):
+def process_pt_monthly_balances(contact, customer, custom_in_kind_scheme, custom_lunch_scheme, custom_monthly_contribution, custom_ptdc_maintenance):
 	company = frappe.defaults.get_user_default("company")
 
 	if company == "Pour Tous Distribution Center":
@@ -33,10 +33,10 @@ def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_sc
 			"""
 			SELECT name from `tabPayment Entry`
 			WHERE docstatus = 1
-			AND party = '{0}'
-			AND posting_date >= '{1}'
+			AND party = '{0}' AND custom_contact = '{1}'
+			AND posting_date >= '{2}'
 			AND (custom_in_kind_scheme > 0 OR custom_lunch_scheme > 0 OR custom_monthly_contribution > 0 OR custom_ptdc_maintenance > 0)
-			""".format(customer, get_first_day(nowdate()))
+			""".format(customer, contact, get_first_day(nowdate()))
 		)
 
 		if len(existing_pe) > 0:
@@ -60,6 +60,7 @@ def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_sc
                	"payment_type": "Receive",
                	"party_type": "Customer",
                	"party": customer,
+				"custom_contact": contact,
 				"custom_in_kind_scheme": in_kind_scheme,
 				"custom_lunch_scheme": lunch_scheme,
 				"custom_monthly_contribution": monthly_contribution,
@@ -91,7 +92,7 @@ def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_sc
 def fetch_extra_contributions():
 	return frappe.db.sql(
 		"""
-		SELECT tabContact.name, tabContact.custom_extra_contribution, `tabDynamic Link`.link_name AS customer
+		SELECT tabContact.name AS contact, tabContact.custom_extra_contribution, `tabDynamic Link`.link_name AS customer
 		FROM tabContact, `tabDynamic Link`, tabCustomer
 		WHERE `tabDynamic Link`.parenttype = 'Contact' AND `tabDynamic Link`.parent = tabContact.name
 		AND `tabDynamic Link`.link_name = tabCustomer.name AND tabCustomer.disabled = 0
@@ -119,6 +120,7 @@ def process_pt_extra_contributions(contact, customer, custom_extra_contribution)
                	"payment_type": "Receive",
                	"party_type": "Customer",
                	"party": customer,
+				"custom_contact": contact,
 				"custom_extra_contribution": extra_contribution,
                	"paid_amount": extra_contribution,
                	"received_amount": extra_contribution,

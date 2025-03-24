@@ -8,7 +8,7 @@ frappe.listview_settings['Payment Entry'] = {
                     if (r.message) {
                         if (r.message.length >0) {
                             console.log("r.message: ", r.message);
-                            //console.log("name: ", r.message[0]["name"]);
+                            console.log("contact: ", r.message[0]["contact"]);
                             console.log("customer: ", r.message[0]["customer"]);
                             console.log("custom_in_kind_scheme: ", r.message[0]["custom_in_kind_scheme"]);
                             console.log("custom_lunch_scheme: ", r.message[0]["custom_lunch_scheme"]);
@@ -22,6 +22,7 @@ frappe.listview_settings['Payment Entry'] = {
                                     frappe.call({
                                         method: 'pourtous.api.process_pt_monthly_balances',
                                         args: {
+                                            contact: r.message[i]["contact"],
                                             customer: r.message[i]["customer"],
                                             custom_in_kind_scheme: r.message[i]["custom_in_kind_scheme"],
                                             custom_lunch_scheme: r.message[i]["custom_lunch_scheme"],
@@ -61,7 +62,7 @@ frappe.listview_settings['Payment Entry'] = {
                     if (r.message) {
                         if (r.message.length >0) {
                             console.log("r.message: ", r.message);
-                            console.log("name: ", r.message[0]["name"]);
+                            console.log("contact: ", r.message[0]["contact"]);
                             console.log("customer: ", r.message[0]["customer"]);
                             console.log("custom_extra_contribution: ", r.message[0]["custom_extra_contribution"]);
                             const length = r.message.length;
@@ -72,7 +73,7 @@ frappe.listview_settings['Payment Entry'] = {
                                     frappe.call({
                                         method: 'pourtous.api.process_pt_extra_contributions',
                                         args: {
-                                            contact: r.message[i]["name"],
+                                            contact: r.message[i]["contact"],
                                             customer: r.message[i]["customer"],
                                             custom_extra_contribution: r.message[i]["custom_extra_contribution"]
                                         },
