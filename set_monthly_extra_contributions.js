@@ -22,7 +22,7 @@ frappe.listview_settings['Payment Entry'] = {
                                     frappe.call({
                                         method: 'pourtous.api.process_pt_monthly_balances',
                                         args: {
-                                            contact: r.message[i]["customer"],
+                                            customer: r.message[i]["customer"],
                                             custom_in_kind_scheme: r.message[i]["custom_in_kind_scheme"],
                                             custom_lunch_scheme: r.message[i]["custom_lunch_scheme"],
                                             custom_monthly_contribution: r.message[i]["custom_monthly_contribution"],

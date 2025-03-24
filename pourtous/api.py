@@ -43,7 +43,12 @@ def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_sc
 			frappe.msgprint("Payment Exists for this month")
 			return
 
-		amount = custom_in_kind_scheme + custom_lunch_scheme + custom_monthly_contribution + custom_ptdc_maintenance
+		in_kind_scheme = int(custom_in_kind_scheme)
+		lunch_scheme = int(custom_lunch_scheme)
+		monthly_contribution = int(custom_monthly_contribution)
+		ptdc_maintenance = int(custom_ptdc_maintenance)
+
+		amount = in_kind_scheme + lunch_scheme + monthly_contribution + ptdc_maintenance
 		bank_account = get_bank_cash_account("FS", company)
 
     	# creating advance payment
@@ -55,10 +60,10 @@ def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_sc
                	"payment_type": "Receive",
                	"party_type": "Customer",
                	"party": customer,
-				"custom_in_kind_scheme": custom_in_kind_scheme,
-				"custom_lunch_scheme": custom_lunch_scheme,
-				"custom_monthly_contribution": custom_monthly_contribution,
-				"custom_ptdc_maintenance": custom_ptdc_maintenance,
+				"custom_in_kind_scheme": in_kind_scheme,
+				"custom_lunch_scheme": lunch_scheme,
+				"custom_monthly_contribution": monthly_contribution,
+				"custom_ptdc_maintenance": ptdc_maintenance,
                	"paid_amount": amount,
                	"received_amount": amount,
 				"reference_no": customer,
@@ -73,7 +78,10 @@ def process_pt_monthly_balances(customer, custom_in_kind_scheme, custom_lunch_sc
 			advance_payment_entry.insert()
 			advance_payment_entry.submit()
 		except Exception as err:
-			frappe.msgprint(err)
+			frappe.msgprint(
+				msg=str(err),
+				title='Error',
+			)
 			raise err
 		else:
 			return "OK"
@@ -99,6 +107,7 @@ def process_pt_extra_contributions(contact, customer, custom_extra_contribution)
 	company = frappe.defaults.get_user_default("company")
 
 	if company == "Pour Tous Distribution Center":
+		extra_contribution = int(custom_extra_contribution)
 		bank_account = get_bank_cash_account("FS", company)
 
     	# creating advance payment
@@ -110,9 +119,9 @@ def process_pt_extra_contributions(contact, customer, custom_extra_contribution)
                	"payment_type": "Receive",
                	"party_type": "Customer",
                	"party": customer,
-				"custom_extra_contribution": custom_extra_contribution,
-               	"paid_amount": custom_extra_contribution,
-               	"received_amount": custom_extra_contribution,
+				"custom_extra_contribution": extra_contribution,
+               	"paid_amount": extra_contribution,
+               	"received_amount": extra_contribution,
 				"reference_no": customer,
 				"reference_date": nowdate(),
                	"company": company,
@@ -125,7 +134,10 @@ def process_pt_extra_contributions(contact, customer, custom_extra_contribution)
 			advance_payment_entry.insert()
 			advance_payment_entry.submit()
 		except Exception as err:
-			frappe.msgprint(err)
+			frappe.msgprint(
+				msg=str(err),
+				title='Error',
+			)
 			raise err
 		else:
 			# after the 'Extra Contribution' payment entry is successful, reset the custom_extra_contribution field
