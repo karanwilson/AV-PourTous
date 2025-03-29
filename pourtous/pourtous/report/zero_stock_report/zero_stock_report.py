@@ -40,12 +40,6 @@ def get_columns():
 			"width": "90"
 		},
 		{
-			"fieldname": "supplier",
-			"label": "Supplier",
-			"fieldtype": "Data",
-			"width": "250"
-		},
-		{
 			"fieldname": "store_qty",
 			"label": "Store Qty",
 			"fieldtype": "Float",
@@ -63,7 +57,7 @@ def get_columns():
 def get_data():
 	query = frappe.db.sql(
 		"""
-		SELECT tabItem.item_code, tabItem.item_name, tabItem.stock_uom, `tabItem Supplier`.supplier,
+		SELECT tabItem.item_code, tabItem.item_name, tabItem.stock_uom,
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
@@ -78,9 +72,8 @@ def get_data():
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
 		) AS stall_qty
-		FROM tabItem, `tabItem Supplier`
-		WHERE tabItem.item_code = `tabItem Supplier`.parent
-		AND
+		FROM tabItem
+		WHERE
 		(
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
