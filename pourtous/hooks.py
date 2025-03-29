@@ -122,9 +122,9 @@ app_include_js = [
 # Hook on document methods and events
 
 doc_events = {
-    #"Sales Invoice": {
-    #    "on_submit": "pourtous.api.payment_entry_for_return" # creates 'Payment Entry' for item returns
-	#},
+    "Sales Invoice": {
+        "on_submit": "pourtous.api.payment_entry_for_return" # creates 'Payment Entry' for item returns
+	},
     #"Payment Entry": {
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)
         #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
