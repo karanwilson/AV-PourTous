@@ -40,8 +40,7 @@ def process_pt_monthly_balances(contact, customer, custom_in_kind_scheme, custom
 		)
 
 		if len(existing_pe) > 0:
-			frappe.msgprint("Payment Exists for this month")
-			return
+			return "EXISTS"
 
 		in_kind_scheme = int(custom_in_kind_scheme)
 		lunch_scheme = int(custom_lunch_scheme)
