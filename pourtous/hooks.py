@@ -146,6 +146,9 @@ doc_events = {
 	"Purchase Receipt": {
 		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
 	},
+	"Stock Entry": {
+		"on_submit": "pourtous.api.opening_stock_update_price_lists", # Add the 'Item Price'
+	},
     "Batch": {
         "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
     },
