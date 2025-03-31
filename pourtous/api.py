@@ -40,8 +40,7 @@ def process_pt_monthly_balances(contact, customer, custom_in_kind_scheme, custom
 		)
 
 		if len(existing_pe) > 0:
-			frappe.msgprint("Payment Exists for this month")
-			return
+			return "EXISTS"
 
 		in_kind_scheme = int(custom_in_kind_scheme)
 		lunch_scheme = int(custom_lunch_scheme)
@@ -515,23 +514,11 @@ def update_price_lists(doc, method):
 				item_price.insert()
 
 
-
-""" def delete_item_batch(doc, method):
-	for item in doc.items:
-		if item.batch_no:
-			frappe.delete_doc('Batch', item.batch_no) """
-
-""" def delete_item_price(doc, method):
-	for item in doc.items:
-		if item.batch_no:
-			item_price_name = frappe.get_list('Item Price', filters = {"batch_no": item.batch_no})	# returns a list of dicts (key value pairs)
-			frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name' """
-
 # creates credit vouchers for returns at PTDC (for pre-paid member accounts)
 # called from hooks.py when "Sales Invoice" documents are submitted
-""" def payment_entry_for_return(doc, method):
-	#if doc.company == "Pour Tous Distribution Center" and doc.status == "Return":
-	if doc.status == "Return" and frappe.get_value("Sales Invoice", doc.return_against, "custom_fs_transfer_status") != "Insufficient Funds":
+def payment_entry_for_return(doc, method):
+	if doc.company == "Pour Tous Distribution Center" and doc.status == "Return":
+	#if doc.status == "Return" and frappe.get_value("Sales Invoice", doc.return_against, "custom_fs_transfer_status") != "Insufficient Funds":
 		# Check below whether all the MOP have amount == 0
 		mop_cash_list = [
         	i.mode_of_payment
@@ -566,7 +553,19 @@ def update_price_lists(doc, method):
 		advance_payment_entry.flags.ignore_permissions = True
 		frappe.flags.ignore_account_permission = True
 		advance_payment_entry.insert()
-		advance_payment_entry.submit() """
+		advance_payment_entry.submit()
+
+
+""" def delete_item_batch(doc, method):
+	for item in doc.items:
+		if item.batch_no:
+			frappe.delete_doc('Batch', item.batch_no) """
+
+""" def delete_item_price(doc, method):
+	for item in doc.items:
+		if item.batch_no:
+			item_price_name = frappe.get_list('Item Price', filters = {"batch_no": item.batch_no})	# returns a list of dicts (key value pairs)
+			frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name' """
 
 # was called from Customer Client-Script 'Sync FS Accounts'
 """ @frappe.whitelist(allow_guest=True)

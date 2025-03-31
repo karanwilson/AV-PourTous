@@ -7,13 +7,13 @@ frappe.listview_settings['Payment Entry'] = {
                 callback: (r) => {
                     if (r.message) {
                         if (r.message.length >0) {
-                            console.log("r.message: ", r.message);
+                            /* console.log("r.message: ", r.message);
                             console.log("contact: ", r.message[0]["contact"]);
                             console.log("customer: ", r.message[0]["customer"]);
                             console.log("custom_in_kind_scheme: ", r.message[0]["custom_in_kind_scheme"]);
                             console.log("custom_lunch_scheme: ", r.message[0]["custom_lunch_scheme"]);
                             console.log("custom_monthly_contribution: ", r.message[0]["custom_monthly_contribution"]);
-                            console.log("custom_ptdc_maintenance: ", r.message[0]["custom_ptdc_maintenance"]);
+                            console.log("custom_ptdc_maintenance: ", r.message[0]["custom_ptdc_maintenance"]); */
                             const length = r.message.length;
                             console.log("Processing Balances for " + length + " Participants");
                             let balances = 0;
@@ -33,6 +33,8 @@ frappe.listview_settings['Payment Entry'] = {
                                     }).then(r => {
                                         if (r.message == "OK")
                                             balances++;
+                                        else if (r.message = "EXISTS")
+                                            frappe.throw("Payment Exists for this month");
                                     }).then(r => {
                                         // placing this statement block here as it does not work outside of the main frappe.call block
                                         // though it prints on console for each loop iteration (comes in only one line, with the loop count),
@@ -61,10 +63,10 @@ frappe.listview_settings['Payment Entry'] = {
                 callback: (r) => {
                     if (r.message) {
                         if (r.message.length >0) {
-                            console.log("r.message: ", r.message);
+                            /* console.log("r.message: ", r.message);
                             console.log("contact: ", r.message[0]["contact"]);
                             console.log("customer: ", r.message[0]["customer"]);
-                            console.log("custom_extra_contribution: ", r.message[0]["custom_extra_contribution"]);
+                            console.log("custom_extra_contribution: ", r.message[0]["custom_extra_contribution"]); */
                             const length = r.message.length;
                             console.log("Processing Extra Contributions for " + length + " Participants");
                             let extra_contributions = 0;
