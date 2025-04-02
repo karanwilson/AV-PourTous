@@ -1,5 +1,5 @@
 {
- "add_total_row": 0,
+ "add_total_row": 1,
  "columns": [],
  "creation": "2025-01-05 18:13:39.234611",
  "disable_prepared_report": 0,
@@ -7,9 +7,9 @@
  "docstatus": 0,
  "doctype": "Report",
  "filters": [],
- "idx": 0,
+ "idx": 11,
  "is_standard": "Yes",
- "modified": "2025-01-05 18:13:39.234611",
+ "modified": "2025-03-30 08:55:53.112665",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zero Stock Report",

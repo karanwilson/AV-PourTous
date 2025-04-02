@@ -146,6 +146,9 @@ doc_events = {
 	"Purchase Receipt": {
 		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
 	},
+	"Stock Entry": {
+		"on_submit": "pourtous.api.opening_stock_update_price_lists", # Add the 'Item Price'
+	},
     "Batch": {
         "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
     },
@@ -318,6 +321,9 @@ fixtures = [
                     "Purchase Order Item-custom_comments", # for putting custom UOM (like bag, etc.) in Purchase Orders
 
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
+
+                    "Stock Entry Detail-custom_buying_price", # for opening stock
+                    "Stock Entry Detail-custom_selling_price", # for opening stock
 
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
 
