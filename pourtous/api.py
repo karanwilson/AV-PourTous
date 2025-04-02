@@ -238,24 +238,25 @@ def update_old_so_item_batch(sales_order_name):
 
 # Sales Order before_cancel hook
 def cancel_stock_reservation(doc, method):
-	if doc.custom_fs_transfer_status == "OK":
-		payment_entry_name = frappe.get_value("Payment Entry Reference", {"reference_name": doc.name, "docstatus": 1}, "parent")
-		if payment_entry_name:
-			message = "Cannot Modify this document, as Payment Entry " + payment_entry_name + " has been received"
-			frappe.throw(message)
+	if frappe.defaults.get_user_default("company") != 'Pour Tous Distribution Center':
+		if doc.custom_fs_transfer_status == "OK":
+			payment_entry_name = frappe.get_value("Payment Entry Reference", {"reference_name": doc.name, "docstatus": 1}, "parent")
+			if payment_entry_name:
+				message = "Cannot Modify this document, as Payment Entry " + payment_entry_name + " has been received"
+				frappe.throw(message)
 
-	stock_entry_id = frappe.get_value("Stock Entry", {"remarks": doc.name}, "name")
+		stock_entry_id = frappe.get_value("Stock Entry", {"remarks": doc.name}, "name")
 
-	if stock_entry_id:
-		stock_entry = frappe.get_doc("Stock Entry", stock_entry_id)
-		stock_entry.cancel()
-		frappe.db.commit()
+		if stock_entry_id:
+			stock_entry = frappe.get_doc("Stock Entry", stock_entry_id)
+			stock_entry.cancel()
+			frappe.db.commit()
 
 
 # Sales Order before_submit hook
 def make_stock_reservation(doc, method):
 	# trigger the stock reservation hook, only if it is a modified doc
-	if doc.amended_from:
+	if doc.amended_from and frappe.defaults.get_user_default("company") != 'Pour Tous Distribution Center':
 		stock_entry = frappe.new_doc("Stock Entry")
 
 		stock_entry.company = doc.company
