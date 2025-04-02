@@ -515,6 +515,32 @@ def update_price_lists(doc, method):
 				item_price.insert()
 
 
+def opening_stock_update_price_lists(doc, method):
+	if doc.stock_entry_type == "Material Receipt":
+		for item in doc.items:
+
+			if item.batch_no:
+				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
+				frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.custom_buying_price)
+				frappe.db.commit()
+
+			else:
+				existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
+				if existing_item_price_entry:
+					frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
+					frappe.db.commit()
+
+				else:
+					item_price = frappe.get_doc({
+						"doctype": "Item Price",
+						"item_code": item.item_code,
+						"uom": item.uom,
+						"price_list": "Standard Selling",
+						"price_list_rate": item.custom_selling_price,
+					})
+					item_price.insert()
+
+
 # creates credit vouchers for returns at PTDC (for pre-paid member accounts)
 # called from hooks.py when "Sales Invoice" documents are submitted
 def payment_entry_for_return(doc, method):
