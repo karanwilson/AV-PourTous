@@ -73,9 +73,9 @@ def get_data(filters):
 		FROM `tabSales Invoice`
 		WHERE docstatus = 1 AND status IN
 		("Unpaid", "Unpaid and Discounted", "Partly Paid", "Partly Paid and Discounted", "Overdue", "Overdue and Discounted")
-		AND custom_fs_transfer_status = "Insufficient Funds"
 		""",
 		as_dict=True
+		#AND custom_fs_transfer_status = "Insufficient Funds"
 	)
 
 	return query
