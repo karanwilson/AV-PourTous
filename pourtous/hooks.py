@@ -323,8 +323,8 @@ fixtures = [
 
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
 
-                    "Stock Entry Detail-custom_buying_price", # for opening stock
-                    "Stock Entry Detail-custom_selling_price", # for opening stock
+                    #"Stock Entry Detail-custom_buying_price", # for opening stock
+                    #"Stock Entry Detail-custom_selling_price", # for opening stock
 
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
 

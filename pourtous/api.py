@@ -484,7 +484,11 @@ def update_price_lists(doc, method):
 	for item in doc.items:
 
 		if item.batch_no:
-			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
+			if item.custom_selling_price > 0:
+				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
+			else:
+				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.price_list_rate)
+
 			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
 			frappe.db.commit()
 			""" item_price = frappe.get_doc({
