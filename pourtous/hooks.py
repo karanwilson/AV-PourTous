@@ -305,6 +305,7 @@ fixtures = [
                     "Contact-custom_monthly_contribution", # for PTDC Monthly Balance
                     "Contact-custom_ptdc_maintenance", # PTDC
                     "Contact-custom_extra_contribution", # for PTDC Monthly Balance
+                    "Contact-custom_tos", # for PTDC Monthly Balance
 
                     "Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
 
@@ -322,8 +323,8 @@ fixtures = [
 
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
 
-                    "Stock Entry Detail-custom_buying_price", # for opening stock
-                    "Stock Entry Detail-custom_selling_price", # for opening stock
+                    #"Stock Entry Detail-custom_buying_price", # for opening stock
+                    #"Stock Entry Detail-custom_selling_price", # for opening stock
 
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
 
