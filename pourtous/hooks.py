@@ -153,8 +153,8 @@ doc_events = {
         "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
     },
     "Sales Order": {
-        "before_cancel": "pourtous.api.cancel_stock_reservation", # removes the associated Sales Order Stock Reservation
-        "before_submit": "pourtous.api.make_stock_reservation" # adds stock reservation for the Sales Order
+        #"before_cancel": "pourtous.api.cancel_stock_reservation", # removes the associated Sales Order Stock Reservation
+        #"before_submit": "pourtous.api.make_stock_reservation" # adds stock reservation for the Sales Order
     },
 # 	"*": {
 # 		"on_update": "method",
@@ -285,6 +285,8 @@ fixtures = [
 
                     "Sales Order-custom_fs_account_number", # to Identify Sales Order based on FS Account number
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions
+                    "Sales Order-custom_remarks",
+
                     "Sales Order Item-custom_batch_no", # for SO Stock reservations
 
                     "Customer-custom_fs_account_number", # for FS Transactions

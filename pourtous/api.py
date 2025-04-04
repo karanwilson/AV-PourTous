@@ -238,7 +238,7 @@ def update_old_so_item_batch(sales_order_name):
 
 # Sales Order before_cancel hook
 def cancel_stock_reservation(doc, method):
-	if frappe.defaults.get_user_default("company") != 'Pour Tous Distribution Center':
+	if frappe.defaults.get_user_default("company") == 'Pour Tous Purchasing Service':
 		if doc.custom_fs_transfer_status == "OK":
 			payment_entry_name = frappe.get_value("Payment Entry Reference", {"reference_name": doc.name, "docstatus": 1}, "parent")
 			if payment_entry_name:
@@ -256,7 +256,7 @@ def cancel_stock_reservation(doc, method):
 # Sales Order before_submit hook
 def make_stock_reservation(doc, method):
 	# trigger the stock reservation hook, only if it is a modified doc
-	if doc.amended_from and frappe.defaults.get_user_default("company") != 'Pour Tous Distribution Center':
+	if doc.amended_from and frappe.defaults.get_user_default("company") == 'Pour Tous Purchasing Service':
 		stock_entry = frappe.new_doc("Stock Entry")
 
 		stock_entry.company = doc.company
