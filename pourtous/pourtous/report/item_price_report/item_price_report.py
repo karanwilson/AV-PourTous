@@ -189,9 +189,10 @@ def get_data(filters):
 				AND batch_no = tabBatch.name
 			) != 0
 			)
-			GROUP BY `tabStock Ledger Entry`.batch_no
+			GROUP BY `tabStock Ledger Entry`.item_code
 			""".format("Stores%", "Stall%", "Sales Order Reserve%"),
 			as_dict=True
+			# GROUP BY `tabStock Ledger Entry`.batch_no
 			# GROUP BY `tabStock Ledger Entry`.item_code
 		)
 
