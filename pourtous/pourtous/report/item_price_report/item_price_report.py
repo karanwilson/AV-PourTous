@@ -189,9 +189,10 @@ def get_data(filters):
 				AND batch_no = tabBatch.name
 			) != 0
 			)
-			GROUP BY `tabStock Ledger Entry`.batch_no
+			GROUP BY `tabStock Ledger Entry`.item_code
 			""".format("Stores%", "Stall%", "Sales Order Reserve%"),
 			as_dict=True
+			# GROUP BY `tabStock Ledger Entry`.batch_no
 			# GROUP BY `tabStock Ledger Entry`.item_code
 		)
 
@@ -224,11 +225,13 @@ def get_data(filters):
 				SELECT price_list_rate FROM `tabItem Price`
 				WHERE `tabItem Price`.item_code = tabItem.item_code
 				AND price_list = "Standard Buying"
+				limit 1
 			) AS buying_price,
 			(
 				SELECT price_list_rate FROM `tabItem Price`
 				WHERE `tabItem Price`.item_code = tabItem.item_code
 				AND price_list = "Standard Selling"
+				limit 1
 			) AS selling_price
 			FROM tabItem, `tabItem Supplier`
 			WHERE tabItem.item_code = `tabItem Supplier`.parent
