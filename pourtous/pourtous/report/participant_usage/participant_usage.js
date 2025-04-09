@@ -4,6 +4,12 @@
 
 frappe.query_reports["Participant Usage"] = {
 	"filters": [
-
+		{
+			"fieldname": "name",
+			"label": __("Participant"),
+			"fieldtype": "Link",
+			"options": "Customer",
+			"width": "60px",
+		},
 	]
 };
