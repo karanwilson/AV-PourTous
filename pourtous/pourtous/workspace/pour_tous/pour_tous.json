@@ -154,10 +154,20 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "PTDC",
-   "link_count": 3,
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "PT Participant Records",
+   "link_count": 0,
+   "link_to": "PT Participant Records",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   },
   {
    "hidden": 0,
@@ -190,8 +200,8 @@
    "type": "Link"
   }
  ],
- "modified": "2025-04-08 18:50:15.372867",
- "modified_by": "karan.wilson@auroville.org.in",
+ "modified": "2025-04-10 14:19:08.382817",
+ "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Pour Tous",
  "number_cards": [],
