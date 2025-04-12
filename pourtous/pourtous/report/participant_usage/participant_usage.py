@@ -6,8 +6,8 @@ from frappe import _, msgprint
 
 
 def execute(filters=None):
-	if not (filters.from_date and filters.to_date): # don't execute until filters are set
-		return [], []
+	#if not (filters.from_date and filters.to_date): # don't execute until filters are set
+	#	return [], []
 
 	columns, data = [], []
 
@@ -22,9 +22,15 @@ def execute(filters=None):
 
 
 def get_columns(filters):
-	if filters.pt_account and not filters.show_individuals:
-		# Customer/Family account Payment Entries
+	if filters.show_breakup and not filters.pt_account:
+		# All Customer/Family account Payment Entries
 		return [
+			{
+				"fieldname": "customer_name",
+				"label": "Family Name",
+				"fieldtype": "Data",
+				"width": "200"
+			},
 			{
 				"fieldname": "customer",
 				"label": "Family Account",
@@ -39,11 +45,10 @@ def get_columns(filters):
 				"width": "100"
 			},
 			{
-				"fieldname": "address",
+				"fieldname": "address_title",
 				"label": "Community",
-				"fieldtype": "Link",
-				"options": "Address",
-				"width": "100"
+				"fieldtype": "Data",
+				"width": "150"
 			},
 			{
 				"fieldname": "voucher_name",
@@ -53,10 +58,60 @@ def get_columns(filters):
 				"width": "135"
 			},
 			{
+				"fieldname": "contribution",
+				"label": "Contribution",
+				"fieldtype": "Currency",
+				"width": "100",
+			},
+			{
 				"fieldname": "posting_date",
 				"label": "Date",
 				"fieldtype": "Date",
 				"width": "100",
+			}
+		]
+		""" {
+			"fieldname": "extra_contribution",
+			"label": "Extra Contribution",
+			"fieldtype": "Currency",
+			"width": "100",
+		}, """
+
+
+	elif filters.show_breakup and filters.pt_account:
+		# Specific Customer/Family account Payment Entries
+		return [
+			{
+				"fieldname": "customer_name",
+				"label": "Family Name",
+				"fieldtype": "Data",
+				"width": "200"
+			},
+			{
+				"fieldname": "customer",
+				"label": "Family Account",
+				"fieldtype": "Link",
+				"options": "Customer",
+				"width": "100"
+			},
+			{
+				"fieldname": "custom_fs_account_number",
+				"label": "PT Account",
+				"fieldtype": "Data",
+				"width": "100"
+			},
+			{
+				"fieldname": "address_title",
+				"label": "Community",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+			{
+				"fieldname": "voucher_name",
+				"label": "Voucher ID",
+				"fieldtype": "Link",
+				"options": "Payment Entry",
+				"width": "135"
 			},
 			{
 				"fieldname": "contribution",
@@ -65,12 +120,18 @@ def get_columns(filters):
 				"width": "100",
 			},
 			{
-				"fieldname": "extra_contribution",
-				"label": "Extra Contribution",
-				"fieldtype": "Currency",
+				"fieldname": "posting_date",
+				"label": "Date",
+				"fieldtype": "Date",
 				"width": "100",
-			},
+			}
 		]
+		""" {
+			"fieldname": "extra_contribution",
+			"label": "Extra Contribution",
+			"fieldtype": "Currency",
+			"width": "100",
+		}, """
 
 
 	else:
@@ -90,7 +151,7 @@ def get_columns(filters):
 				"width": "100"
 			},
 			{
-				"fieldname": "address",
+				"fieldname": "address_title",
 				"label": "Community",
 				"fieldtype": "Link",
 				"options": "Address",
@@ -112,10 +173,39 @@ def get_columns(filters):
 
 
 def get_data(filters):
-	if filters.pt_account and not filters.show_individuals:
+	if filters.show_breakup and not filters.pt_account:
 		# Customer/Family account Payment Entries
-		pass
+		query = frappe.db.sql(
+			"""
+			SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
+			a.address_title, pe.paid_amount AS contribution, pe.posting_date
+			FROM `tabPayment Entry` pe
+			JOIN tabCustomer c ON pe.party = c.name
+			LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
+			JOIN tabAddress a ON dl.parent = a.name
+			""",
+			as_dict=True
+		)
+		return query
+
+
+	elif filters.show_breakup and filters.pt_account:
+		# Customer/Family account Payment Entries
+		query = frappe.db.sql(
+			"""
+			SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
+			a.address_title, pe.paid_amount AS contribution, pe.posting_date
+			FROM `tabPayment Entry` pe
+			JOIN tabCustomer c ON pe.party = c.name AND c.custom_fs_account_number = '{0}'
+			LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
+			JOIN tabAddress a ON dl.parent = a.name
+			""".format(filters.pt_account),
+			as_dict=True
+		)
+		return query
 
 
 	else:
 		pass
+
+	#return query
