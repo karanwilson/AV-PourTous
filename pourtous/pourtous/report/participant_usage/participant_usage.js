@@ -18,8 +18,8 @@ frappe.query_reports["Participant Usage"] = {
 			"width": "60px",
 		},
 		{
-			"fieldname": "show_individuals",
-			"label": __("Individual/Breakup Details"),
+			"fieldname": "show_breakup",
+			"label": __("Show Breakup"),
 			"fieldtype": "Check",
 			"width": "60px",
 		},
@@ -34,6 +34,6 @@ frappe.query_reports["Participant Usage"] = {
 			"label": __("To Date*"),
 			"fieldtype": "Date",
 			"width": "60px",
-		},
+		}
 	]
 };
