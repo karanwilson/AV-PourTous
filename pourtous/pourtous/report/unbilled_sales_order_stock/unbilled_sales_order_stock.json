@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2025-04-13 21:02:54.422951",
+ "modified": "2025-04-14 04:47:37.295539",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Unbilled Sales Order Stock",
@@ -18,5 +18,27 @@
  "ref_doctype": "Sales Order",
  "report_name": "Unbilled Sales Order Stock",
  "report_type": "Script Report",
- "roles": []
+ "roles": [
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Stock Manager"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Item Manager"
+  },
+  {
+   "role": "Purchase Manager"
+  },
+  {
+   "role": "Report Manager"
+  },
+  {
+   "role": "System Manager"
+  }
+ ]
 }
