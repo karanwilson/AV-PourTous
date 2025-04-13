@@ -1,7 +1,52 @@
 import frappe
 from frappe import _
-from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 from frappe.utils import nowdate, get_first_day #, flt
+
+from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
+from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+
+
+@frappe.whitelist(allow_guest=True)
+def fetch_orders_to_invoice():
+	return frappe.db.sql(
+		"""
+		SELECT name FROM `tabSales Order`
+		WHERE
+			docstatus = 1
+			AND status not in ("Closed", "On Hold")
+			AND per_billed < 99.99
+			AND grand_total = advance_paid
+			AND company = '{0}'
+		ORDER BY
+			customer
+		""".format(frappe.defaults.get_user_default("company")),
+		#as_dict=1,
+	)
+
+	""" filters = {
+		"docstatus": 1,
+		"status": ["not in", ["Closed", "On Hold"]],
+		"per_billed": ["<", 99.99],
+		"grand_total": ["=", "advance_paid"],
+		"company": frappe.defaults.get_user_default("company")
+	}
+	orders_list = frappe.get_list(
+		"Sales Order",
+		filters=filters,
+		fields=["name"],
+		limit_page_length=0,
+		order_by="customer",
+	)
+	return orders_list """
+
+
+@frappe.whitelist(allow_guest=True)
+def process_orders_to_invoice(order):
+
+	si = make_sales_invoice(self.reference_name, ignore_permissions=True)
+	si.allocate_advances_automatically = True
+	si = si.insert(ignore_permissions=True)
+	si.submit()
 
 
 # PTDC
