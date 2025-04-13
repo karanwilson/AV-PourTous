@@ -247,8 +247,6 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Stock Taking Stock Report",
-   "link_to": "Zero Stock Report",
    "label": "Unbilled Sales Order Stock",
    "link_to": "Unbilled Sales Order Stock",
    "type": "Report"
