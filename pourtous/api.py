@@ -8,6 +8,8 @@ from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 
 @frappe.whitelist(allow_guest=True)
 def tax_exception_fetch_orders_to_invoice():
+	frappe.db.delete("Order Invoice Map Err") # deletes the old logs (used in the process_orders_to_invoice method below)
+
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		return frappe.db.sql(
 			"""
@@ -75,6 +77,8 @@ def tax_exception_process_orders_to_invoice(order):
 
 @frappe.whitelist(allow_guest=True)
 def fetch_orders_to_invoice():
+	frappe.db.delete("Order Invoice Map Err") # deletes the old logs (used in the process_orders_to_invoice method below)
+
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		return frappe.db.sql(
 			"""
