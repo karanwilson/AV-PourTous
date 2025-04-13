@@ -28,13 +28,13 @@ frappe.listview_settings['Customer'] = {
                                 }).then(r => {
                                     if (r.message == "NEW")
                                         added++;
-                                    if (r.message == "UPDATED")
+                                    else if (r.message == "UPDATED")
                                         updated++;
                                 }).then(r => {
                                     // placing this statement block here as it does not work outside of the main frappe.call block
                                     // though it prints on console for each loop iteration (comes in only one line, with the loop count),
                                     // it shows an accurate result in the end. This design works.
-                                    console.log("Added ", added, " Accounts");
+                                    console.log("Added ", added, " Accounts; Updated ", updated, " Accounts");
                                     console.log("Updated ", updated, " Accounts");
                                 });
                                 const count = i+1; // i starts from 0, but length counts from 1

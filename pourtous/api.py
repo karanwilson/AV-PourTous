@@ -7,6 +7,73 @@ from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 
 
 @frappe.whitelist(allow_guest=True)
+def tax_exception_fetch_orders_to_invoice():
+	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
+		return frappe.db.sql(
+			"""
+			SELECT name FROM `tabSales Order`
+			WHERE
+				docstatus = 1
+				AND status not in ("Closed", "On Hold")
+				AND per_billed < 99.99
+				AND transaction_date BETWEEN "2025-04-04" AND "2025-04-05"
+				AND company = '{0}'
+			ORDER BY
+				customer
+			""".format(frappe.defaults.get_user_default("company")),
+			#as_dict=1,
+		)
+
+	else:
+		# "AND grand_total = advance_paid" is needed to only match Order for which payments have been processed by the script
+		return frappe.db.sql(
+			"""
+			SELECT name FROM `tabSales Order`
+			WHERE
+				docstatus = 1
+				AND status not in ("Closed", "On Hold")
+				AND per_billed < 99.99
+				AND grand_total = advance_paid
+				AND transaction_date BETWEEN "2025-04-04" AND "2025-04-05"
+				AND company = '{0}'
+			ORDER BY
+				customer
+			""".format(frappe.defaults.get_user_default("company")),
+			#as_dict=1,
+		)
+
+
+@frappe.whitelist(allow_guest=True)
+def tax_exception_process_orders_to_invoice(order):
+
+	si = make_sales_invoice(order, ignore_permissions=True)
+	si.allocate_advances_automatically = True
+	si.update_stock = 1
+
+	if si.get("taxes"):
+		for tax in si.taxes:
+			tax.included_in_print_rate = 1
+
+	try:
+		si = si.insert(ignore_permissions=True)
+		si.submit()
+
+	except Exception as err:
+		error_log = frappe.new_doc("Order Invoice Map Err")
+		error_log.sales_order = order
+		error_log.error = str(err)
+		error_log.insert()
+
+		if si.docstatus == 1:
+			return "DONE"
+		else:
+			return "ERROR"
+
+	else:
+		return "DONE"
+
+
+@frappe.whitelist(allow_guest=True)
 def fetch_orders_to_invoice():
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		return frappe.db.sql(
@@ -16,6 +83,7 @@ def fetch_orders_to_invoice():
 				docstatus = 1
 				AND status not in ("Closed", "On Hold")
 				AND per_billed < 99.99
+				AND transaction_date > "2025-04-05"
 				AND company = '{0}'
 			ORDER BY
 				customer
@@ -24,6 +92,7 @@ def fetch_orders_to_invoice():
 		)
 
 	else:
+		# "AND grand_total = advance_paid" is needed to only match Order for which payments have been processed by the script
 		return frappe.db.sql(
 			"""
 			SELECT name FROM `tabSales Order`
@@ -32,6 +101,7 @@ def fetch_orders_to_invoice():
 				AND status not in ("Closed", "On Hold")
 				AND per_billed < 99.99
 				AND grand_total = advance_paid
+				AND transaction_date > "2025-04-05"
 				AND company = '{0}'
 			ORDER BY
 				customer
@@ -39,30 +109,31 @@ def fetch_orders_to_invoice():
 			#as_dict=1,
 		)
 
-	""" filters = {
-		"docstatus": 1,
-		"status": ["not in", ["Closed", "On Hold"]],
-		"per_billed": ["<", 99.99],
-		"grand_total": ["=", "advance_paid"],
-		"company": frappe.defaults.get_user_default("company")
-	}
-	orders_list = frappe.get_list(
-		"Sales Order",
-		filters=filters,
-		fields=["name"],
-		limit_page_length=0,
-		order_by="customer",
-	)
-	return orders_list """
-
 
 @frappe.whitelist(allow_guest=True)
 def process_orders_to_invoice(order):
 
-	si = make_sales_invoice(self.reference_name, ignore_permissions=True)
+	si = make_sales_invoice(order, ignore_permissions=True)
 	si.allocate_advances_automatically = True
-	si = si.insert(ignore_permissions=True)
-	si.submit()
+	si.update_stock = 1
+
+	try:
+		si = si.insert(ignore_permissions=True)
+		si.submit()
+
+	except Exception as err:
+		error_log = frappe.new_doc("Order Invoice Map Err")
+		error_log.sales_order = order
+		error_log.error = str(err)
+		error_log.insert()
+
+		if si.docstatus == 1:
+			return "DONE"
+		else:
+			return "ERROR"
+
+	else:
+		return "DONE"
 
 
 # PTDC
