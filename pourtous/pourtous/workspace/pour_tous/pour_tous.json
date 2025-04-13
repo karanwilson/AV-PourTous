@@ -154,10 +154,20 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "PTDC",
-   "link_count": 3,
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "PT Participant Records",
+   "link_count": 0,
+   "link_to": "PT Participant Records",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   },
   {
    "hidden": 0,
@@ -190,8 +200,8 @@
    "type": "Link"
   }
  ],
- "modified": "2025-04-12 15:17:28.335718",
- "modified_by": "karan.wilson@auroville.org.in",
+ "modified": "2025-04-13 21:03:26.227795",
+ "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Pour Tous",
  "number_cards": [],
@@ -239,13 +249,15 @@
    "doc_view": "List",
    "label": "Stock Taking Stock Report",
    "link_to": "Zero Stock Report",
+   "label": "Unbilled Sales Order Stock",
+   "link_to": "Unbilled Sales Order Stock",
    "type": "Report"
   },
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "PT Participant Records",
-   "link_to": "PT Participant Records",
+   "label": "Stock Taking Stock Report",
+   "link_to": "Zero Stock Report",
    "type": "Report"
   },
   {
@@ -275,13 +287,6 @@
    "doc_view": "List",
    "label": "HSN-wise GST Sales Report",
    "link_to": "HSN-wise GST Sales Report",
-   "type": "Report"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Negative Batch Report",
-   "link_to": "Negative Batch Report",
    "type": "Report"
   },
   {
@@ -338,13 +343,6 @@
    "doc_view": "List",
    "label": "Per Item Stock Balance",
    "link_to": "Current Stock Balance",
-   "type": "Report"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Negative Stock Report",
-   "link_to": "Negative Stock Report",
    "type": "Report"
   },
   {
