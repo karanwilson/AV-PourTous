@@ -205,7 +205,7 @@ def get_data(filters):
 			IF ((table1.order_qty > table1.stall_qty), (table1.order_qty - table1.stall_qty), 0) AS qty_needed
 
 			FROM
-			(SELECT s.name AS sales_order i.item_code, i.item_name, i.stock_uom, i.stock_qty AS order_qty,
+			(SELECT s.name AS sales_order, i.item_code, i.item_name, i.stock_uom, i.stock_qty AS order_qty,
 			(
 				SELECT `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 				WHERE (`tabStock Ledger Entry`.item_code = i.item_code) AND `tabStock Ledger Entry`.is_cancelled=0
