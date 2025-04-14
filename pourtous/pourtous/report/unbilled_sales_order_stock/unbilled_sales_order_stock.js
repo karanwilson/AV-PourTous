@@ -4,6 +4,11 @@
 
 frappe.query_reports["Unbilled Sales Order Stock"] = {
 	"filters": [
-
+		{
+			"fieldname": "show_details",
+			"label": __("Show details"),
+			"fieldtype": "Check",
+			"width": "60px",
+		},
 	]
 };
