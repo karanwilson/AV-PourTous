@@ -286,6 +286,7 @@ fixtures = [
                     "Sales Order-custom_fs_account_number", # to Identify Sales Order based on FS Account number
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions
                     "Sales Order-custom_remarks",
+                    "Sales Order-custom_pos_profile",
 
                     "Sales Order Item-custom_batch_no", # for SO Stock reservations
 

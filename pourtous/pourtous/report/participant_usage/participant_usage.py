@@ -136,7 +136,6 @@ def get_data(filters):
 			""",
 			as_dict=True
 		)
-		return query
 
 	else:
 		# Customer/Family-account Payment Entries, summed per customer/family-account
@@ -153,6 +152,5 @@ def get_data(filters):
 			""",
 			as_dict=True
 		)
-		return query
 
-	#return query
+	return query
