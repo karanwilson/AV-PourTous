@@ -10,7 +10,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         console.log("Number of SO to process: ", length);
 						console.log("Sales Orders to Invoice: ", r.message);
                         console.log("r.message[0][0]: ", r.message[0][0]);
-                        /* let done = 0, error = 0;
+                        let done = 0, error = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
@@ -32,7 +32,7 @@ frappe.listview_settings['Sales Invoice'] = {
                                 const message = "Loading "+count+" of "+length;
                                 frappe.show_progress("Processing Sales Orders to Invoices", count, length, message);
                             }, 0);
-                        } */
+                        }
                     }
                 }
             });
@@ -49,7 +49,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         console.log("Number of SO to process: ", length);
 						console.log("Sales Orders to Invoice: ", r.message);
                         console.log("r.message[0][0]: ", r.message[0][0]);
-                        /* let done = 0, error = 0;
+                        let done = 0, error = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
@@ -71,7 +71,7 @@ frappe.listview_settings['Sales Invoice'] = {
                                 const message = "Loading "+count+" of "+length;
                                 frappe.show_progress("Processing Sales Orders to Invoices", count, length, message);
                             }, 0);
-                        } */
+                        }
                     }
                 }
             });
