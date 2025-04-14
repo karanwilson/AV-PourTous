@@ -12,12 +12,6 @@ frappe.query_reports["Participant Usage"] = {
 			"width": "60px",
 		}, */
 		{
-			"fieldname": "pt_account",
-			"label": __("PT Account"),
-			"fieldtype": "Data",
-			"width": "60px",
-		},
-		{
 			"fieldname": "show_breakup",
 			"label": __("Show Breakup"),
 			"fieldtype": "Check",

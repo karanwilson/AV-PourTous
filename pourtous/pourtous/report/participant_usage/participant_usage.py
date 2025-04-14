@@ -22,7 +22,7 @@ def execute(filters=None):
 
 
 def get_columns(filters):
-	if filters.show_breakup and not filters.pt_account:
+	if filters.show_breakup:
 		# All Customer/Family account Payment Entries
 		return [
 			{
@@ -36,7 +36,7 @@ def get_columns(filters):
 				"label": "Family Account",
 				"fieldtype": "Link",
 				"options": "Customer",
-				"width": "100"
+				"width": "120"
 			},
 			{
 				"fieldname": "custom_fs_account_number",
@@ -61,63 +61,7 @@ def get_columns(filters):
 				"fieldname": "contribution",
 				"label": "Contribution",
 				"fieldtype": "Currency",
-				"width": "100",
-			},
-			{
-				"fieldname": "posting_date",
-				"label": "Date",
-				"fieldtype": "Date",
-				"width": "100",
-			}
-		]
-		""" {
-			"fieldname": "extra_contribution",
-			"label": "Extra Contribution",
-			"fieldtype": "Currency",
-			"width": "100",
-		}, """
-
-
-	elif filters.show_breakup and filters.pt_account:
-		# Specific Customer/Family account Payment Entries
-		return [
-			{
-				"fieldname": "customer_name",
-				"label": "Family Name",
-				"fieldtype": "Data",
-				"width": "200"
-			},
-			{
-				"fieldname": "customer",
-				"label": "Family Account",
-				"fieldtype": "Link",
-				"options": "Customer",
-				"width": "100"
-			},
-			{
-				"fieldname": "custom_fs_account_number",
-				"label": "PT Account",
-				"fieldtype": "Data",
-				"width": "100"
-			},
-			{
-				"fieldname": "address_title",
-				"label": "Community",
-				"fieldtype": "Data",
-				"width": "150"
-			},
-			{
-				"fieldname": "voucher_name",
-				"label": "Voucher ID",
-				"fieldtype": "Link",
-				"options": "Payment Entry",
-				"width": "135"
-			},
-			{
-				"fieldname": "contribution",
-				"label": "Contribution",
-				"fieldtype": "Currency",
-				"width": "100",
+				"width": "130",
 			},
 			{
 				"fieldname": "posting_date",
@@ -138,11 +82,17 @@ def get_columns(filters):
 		# Monthly Total Contributions and Usage
 		return [
 			{
+				"fieldname": "customer_name",
+				"label": "Family Name",
+				"fieldtype": "Data",
+				"width": "200"
+			},
+			{
 				"fieldname": "customer",
 				"label": "Family Account",
 				"fieldtype": "Link",
 				"options": "Customer",
-				"width": "100"
+				"width": "120"
 			},
 			{
 				"fieldname": "custom_fs_account_number",
@@ -161,7 +111,7 @@ def get_columns(filters):
 				"fieldname": "total_contribution",
 				"label": "Contribution",
 				"fieldtype": "Currency",
-				"width": "100"
+				"width": "130"
 			},
 			{
 				"fieldname": "balance_available",
@@ -173,8 +123,8 @@ def get_columns(filters):
 
 
 def get_data(filters):
-	if filters.show_breakup and not filters.pt_account:
-		# Customer/Family account Payment Entries
+	if filters.show_breakup:
+		# Customer/Family account Payment Entries breakup
 		query = frappe.db.sql(
 			"""
 			SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
@@ -188,24 +138,21 @@ def get_data(filters):
 		)
 		return query
 
-
-	elif filters.show_breakup and filters.pt_account:
-		# Customer/Family account Payment Entries
+	else:
+		# Customer/Family-account Payment Entries, summed per customer/family-account
 		query = frappe.db.sql(
 			"""
-			SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
-			a.address_title, pe.paid_amount AS contribution, pe.posting_date
+			SELECT customer_name, c.name AS customer, c.custom_fs_account_number, a.address_title,
+			SUM(pe.paid_amount) AS total_contribution
 			FROM `tabPayment Entry` pe
-			JOIN tabCustomer c ON pe.party = c.name AND c.custom_fs_account_number = '{0}'
+			JOIN tabCustomer c ON pe.party = c.name
 			LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
 			JOIN tabAddress a ON dl.parent = a.name
-			""".format(filters.pt_account),
+
+			GROUP BY c.name
+			""",
 			as_dict=True
 		)
 		return query
-
-
-	else:
-		pass
 
 	#return query
