@@ -34,11 +34,17 @@ def get_columns(filters):
 					"width": "200"
 				},
 				{
+					"fieldname": "customer_group",
+					"label": "Category",
+					"fieldtype": "Data",
+					"width": "100"
+				},
+				{
 					"fieldname": "customer",
-					"label": "Family Account",
+					"label": "Family Acc",
 					"fieldtype": "Link",
 					"options": "Customer",
-					"width": "120"
+					"width": "100"
 				},
 				{
 					"fieldname": "custom_fs_account_number",
@@ -50,20 +56,20 @@ def get_columns(filters):
 					"fieldname": "address_title",
 					"label": "Community",
 					"fieldtype": "Data",
-					"width": "150"
+					"width": "100"
 				},
 				{
 					"fieldname": "voucher_name",
 					"label": "Voucher ID",
 					"fieldtype": "Link",
 					"options": "Payment Entry",
-					"width": "150"
+					"width": "180"
 				},
 				{
 					"fieldname": "contribution",
 					"label": "Contribution",
 					"fieldtype": "Currency",
-					"width": "130",
+					"width": "120",
 				},
 				{
 					"fieldname": "posting_date",
@@ -84,11 +90,17 @@ def get_columns(filters):
 					"width": "200"
 				},
 				{
+					"fieldname": "customer_group",
+					"label": "Category",
+					"fieldtype": "Data",
+					"width": "100"
+				},
+				{
 					"fieldname": "customer",
-					"label": "Family Account",
+					"label": "Family Acc",
 					"fieldtype": "Link",
 					"options": "Customer",
-					"width": "120"
+					"width": "100"
 				},
 				{
 					"fieldname": "custom_fs_account_number",
@@ -101,31 +113,31 @@ def get_columns(filters):
 					"label": "Community",
 					"fieldtype": "Link",
 					"options": "Address",
-					"width": "100"
+					"width": "110"
 				},
 				{
 					"fieldname": "total_contribution",
 					"label": "Contribution",
 					"fieldtype": "Currency",
-					"width": "130"
+					"width": "110"
 				},
 				{
 					"fieldname": "returns_credit",
-					"label": "Returns Credit",
+					"label": "Return Credit",
 					"fieldtype": "Currency",
-					"width": "130"
+					"width": "110"
 				},
 				{
 					"fieldname": "usage_invoice",
 					"label": "Usage-Invoice",
 					"fieldtype": "Currency",
-					"width": "130"
+					"width": "115"
 				},
 				{
 					"fieldname": "usage_order",
 					"label": "Usage-Order",
 					"fieldtype": "Currency",
-					"width": "130"
+					"width": "110"
 				},
 				{
 					"fieldname": "balance",
@@ -203,19 +215,19 @@ def get_columns(filters):
 					"width": "100"
 				},
 				{
-					"fieldname": "total_payments",
+					"fieldname": "total_contribution",
 					"label": "Payments",
 					"fieldtype": "Currency",
 					"width": "130"
 				},
 				{
-					"fieldname": "invoice_amounts",
+					"fieldname": "usage_invoice",
 					"label": "Invoice Amounts",
 					"fieldtype": "Currency",
 					"width": "130"
 				},
 				{
-					"fieldname": "order_amounts",
+					"fieldname": "usage_order",
 					"label": "Order Amounts",
 					"fieldtype": "Currency",
 					"width": "130"
@@ -235,13 +247,13 @@ def get_data(filters):
 			# Customer/Family account Payment Entries breakup
 			query = frappe.db.sql(
 				"""
-				SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
-				a.address_title, pe.paid_amount AS payments, pe.posting_date
+				SELECT customer_name, c.customer_group, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
+				a.address_title, pe.paid_amount AS contribution, pe.posting_date
 
 				FROM `tabPayment Entry` pe
 				JOIN tabCustomer c ON pe.party = c.name
 				LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
-				JOIN tabAddress a ON dl.parent = a.name
+				LEFT JOIN tabAddress a ON dl.parent = a.name
 
 				WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
 				""".format(filters.from_date, filters.to_date),
@@ -253,33 +265,43 @@ def get_data(filters):
 			query = frappe.db.sql(
 				"""
 				SELECT table1.*,
-				(table1.total_contribution + IF((table1.returns_credit IS NULL), 0, table1.returns_credit) - IF((table1.usage_invoice IS NULL), 0, table1.usage_invoice) - IF((table1.usage_order IS NULL), 0, table1.usage_order))
+				(IF((table1.total_contribution IS NULL), 0, table1.total_contribution) + IF((table1.returns_credit IS NULL), 0, table1.returns_credit) - IF((table1.usage_invoice IS NULL), 0, table1.usage_invoice) - IF((table1.usage_order IS NULL), 0, table1.usage_order))
 				AS balance
 
 				FROM
-				(SELECT customer_name, c.name AS customer, c.custom_fs_account_number,
+				(SELECT c.customer_name, c.customer_group, c.name AS customer, c.custom_fs_account_number, a.address_title,
 				(
 					SELECT SUM(sub1_pe.paid_amount) FROM `tabPayment Entry` sub1_pe
-					WHERE sub1_pe.docstatus = 1 AND sub1_pe.mode_of_payment = "FS"
-					AND sub1_pe.party = pe.party
-				) AS total_payments,
+					WHERE sub1_pe.docstatus = 1
+					AND sub1_pe.mode_of_payment = "FS"
+					AND sub1_pe.posting_date between '{0}' and '{1}'
+					AND sub1_pe.party = c.name
+				) AS total_contribution,
 				(
-					SELECT SUM(grand_total) FROM `tabSales Invoice`
-					WHERE docstatus = 1 AND `tabSales Invoice`.customer = pe.party
+					SELECT SUM(sub2_pe.paid_amount) FROM `tabPayment Entry` sub2_pe
+					WHERE sub2_pe.docstatus = 1
+					AND sub2_pe.mode_of_payment IS NULL
+					AND sub2_pe.posting_date between '{0}' and '{1}'
+					AND sub2_pe.party = c.name
+				) AS returns_credit,
+				(
+					SELECT SUM(si.grand_total) FROM `tabSales Invoice` si
+					WHERE docstatus = 1
+					AND si.customer = c.name
+					AND si.posting_date between '{0}' and '{1}'
 				) AS usage_invoice,
 				(
 					SELECT SUM(so.grand_total) FROM `tabSales Order` so
 					WHERE so.docstatus = 1
 					AND so.status NOT IN ("Closed", "On Hold")
 					AND so.per_billed < 99.99
-					AND so.customer = pe.party
+					AND so.customer = c.name
+					AND so.transaction_date between '{0}' and '{1}'
 				) AS usage_order
-				FROM `tabPayment Entry` pe
-				JOIN tabCustomer c ON pe.party = c.name
+				FROM tabCustomer c
 				LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
-				JOIN tabAddress a ON dl.parent = a.name
+				LEFT JOIN tabAddress a ON dl.parent = a.name
 
-				WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
 				GROUP BY c.name) table1
 				""".format(filters.from_date, filters.to_date),
 				as_dict=True
@@ -306,31 +328,34 @@ def get_data(filters):
 			query = frappe.db.sql(
 				"""
 				SELECT table1.*,
-				(table1.total_payments - IF((table1.invoice_amounts IS NULL), 0, table1.invoice_amounts) - IF((table1.order_amounts IS NULL), 0, table1.order_amounts))
+				(IF((table1.total_contribution IS NULL), 0, table1.total_contribution) - IF((table1.usage_invoice IS NULL), 0, table1.usage_invoice) - IF((table1.usage_order IS NULL), 0, table1.usage_order))
 				AS balance
 
 				FROM
-				(SELECT customer_name, c.name AS customer, c.custom_fs_account_number,
+				(SELECT c.customer_name, c.customer_group, c.name AS customer, c.custom_fs_account_number,
 				(
 					SELECT SUM(sub1_pe.paid_amount) FROM `tabPayment Entry` sub1_pe
-					WHERE sub1_pe.docstatus = 1 AND sub1_pe.mode_of_payment = "FS"
-					AND sub1_pe.party = pe.party
-				) AS total_payments,
+					WHERE sub1_pe.docstatus = 1
+					AND sub1_pe.mode_of_payment = "FS"
+					AND sub1_pe.posting_date between '{0}' and '{1}'
+					AND sub1_pe.party = c.name
+				) AS total_contribution,
 				(
-					SELECT SUM(grand_total) FROM `tabSales Invoice`
-					WHERE docstatus = 1 AND `tabSales Invoice`.customer = pe.party
-				) AS invoice_amounts,
+					SELECT SUM(si.grand_total) FROM `tabSales Invoice` si
+					WHERE docstatus = 1
+					AND si.customer = c.name
+					AND si.posting_date between '{0}' and '{1}'
+				) AS usage_invoice,
 				(
 					SELECT SUM(so.grand_total) FROM `tabSales Order` so
 					WHERE so.docstatus = 1
 					AND so.status NOT IN ("Closed", "On Hold")
 					AND so.per_billed < 99.99
-					AND so.customer = pe.party
-				) AS order_amounts
-				FROM `tabPayment Entry` pe
-				JOIN tabCustomer c ON pe.party = c.name
+					AND so.customer = c.name
+					AND so.transaction_date between '{0}' and '{1}'
+				) AS usage_order
+				FROM tabCustomer c
 
-				WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
 				GROUP BY c.name) table1
 				""".format(filters.from_date, filters.to_date),
 				as_dict=True
