@@ -23,182 +23,317 @@ def execute(filters=None):
 
 
 def get_columns(filters):
-	if filters.show_breakup:
-		# All Customer/Family account Payment Entries
-		return [
-			{
-				"fieldname": "customer_name",
-				"label": "Family Name",
-				"fieldtype": "Data",
-				"width": "200"
-			},
-			{
-				"fieldname": "customer",
-				"label": "Family Account",
-				"fieldtype": "Link",
-				"options": "Customer",
-				"width": "120"
-			},
-			{
-				"fieldname": "custom_fs_account_number",
-				"label": "PT Account",
-				"fieldtype": "Data",
-				"width": "100"
-			},
-			{
-				"fieldname": "address_title",
-				"label": "Community",
-				"fieldtype": "Data",
-				"width": "150"
-			},
-			{
-				"fieldname": "voucher_name",
-				"label": "Voucher ID",
-				"fieldtype": "Link",
-				"options": "Payment Entry",
-				"width": "150"
-			},
-			{
-				"fieldname": "contribution",
-				"label": "Contribution",
-				"fieldtype": "Currency",
-				"width": "130",
-			},
-			{
-				"fieldname": "posting_date",
-				"label": "Date",
-				"fieldtype": "Date",
-				"width": "100",
-			}
-		]
-		""" {
-			"fieldname": "extra_contribution",
-			"label": "Extra Contribution",
-			"fieldtype": "Currency",
-			"width": "100",
-		}, """
+	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+		if filters.show_breakup:
+			# All Customer/Family account Payment Entries
+			return [
+				{
+					"fieldname": "customer_name",
+					"label": "Family Name",
+					"fieldtype": "Data",
+					"width": "200"
+				},
+				{
+					"fieldname": "customer",
+					"label": "Family Account",
+					"fieldtype": "Link",
+					"options": "Customer",
+					"width": "120"
+				},
+				{
+					"fieldname": "custom_fs_account_number",
+					"label": "PT Account",
+					"fieldtype": "Data",
+					"width": "100"
+				},
+				{
+					"fieldname": "address_title",
+					"label": "Community",
+					"fieldtype": "Data",
+					"width": "150"
+				},
+				{
+					"fieldname": "voucher_name",
+					"label": "Voucher ID",
+					"fieldtype": "Link",
+					"options": "Payment Entry",
+					"width": "150"
+				},
+				{
+					"fieldname": "contribution",
+					"label": "Contribution",
+					"fieldtype": "Currency",
+					"width": "130",
+				},
+				{
+					"fieldname": "posting_date",
+					"label": "Date",
+					"fieldtype": "Date",
+					"width": "100",
+				}
+			]
 
+
+		else:
+			# Monthly Total Contributions and Usage
+			return [
+				{
+					"fieldname": "customer_name",
+					"label": "Family Name",
+					"fieldtype": "Data",
+					"width": "200"
+				},
+				{
+					"fieldname": "customer",
+					"label": "Family Account",
+					"fieldtype": "Link",
+					"options": "Customer",
+					"width": "120"
+				},
+				{
+					"fieldname": "custom_fs_account_number",
+					"label": "PT Account",
+					"fieldtype": "Data",
+					"width": "100"
+				},
+				{
+					"fieldname": "address_title",
+					"label": "Community",
+					"fieldtype": "Link",
+					"options": "Address",
+					"width": "100"
+				},
+				{
+					"fieldname": "total_contribution",
+					"label": "Contribution",
+					"fieldtype": "Currency",
+					"width": "130"
+				},
+				{
+					"fieldname": "returns_credit",
+					"label": "Returns Credit",
+					"fieldtype": "Currency",
+					"width": "130"
+				},
+				{
+					"fieldname": "usage_invoice",
+					"label": "Usage-Invoice",
+					"fieldtype": "Currency",
+					"width": "130"
+				},
+				{
+					"fieldname": "usage_order",
+					"label": "Usage-Order",
+					"fieldtype": "Currency",
+					"width": "130"
+				},
+				{
+					"fieldname": "balance",
+					"label": "Balance",
+					"fieldtype": "Currency",
+					"width": "100"
+				},
+			]
 
 	else:
-		# Monthly Total Contributions and Usage
-		return [
-			{
-				"fieldname": "customer_name",
-				"label": "Family Name",
-				"fieldtype": "Data",
-				"width": "200"
-			},
-			{
-				"fieldname": "customer",
-				"label": "Family Account",
-				"fieldtype": "Link",
-				"options": "Customer",
-				"width": "120"
-			},
-			{
-				"fieldname": "custom_fs_account_number",
-				"label": "PT Account",
-				"fieldtype": "Data",
-				"width": "100"
-			},
-			{
-				"fieldname": "address_title",
-				"label": "Community",
-				"fieldtype": "Link",
-				"options": "Address",
-				"width": "100"
-			},
-			{
-				"fieldname": "total_contribution",
-				"label": "Contribution",
-				"fieldtype": "Currency",
-				"width": "130"
-			},
-			{
-				"fieldname": "returns_credit",
-				"label": "Returns Credit",
-				"fieldtype": "Currency",
-				"width": "130"
-			},
-			{
-				"fieldname": "usage_invoice",
-				"label": "Usage-Invoice",
-				"fieldtype": "Currency",
-				"width": "130"
-			},
-			{
-				"fieldname": "usage_order",
-				"label": "Usage-Order",
-				"fieldtype": "Currency",
-				"width": "130"
-			},
-			{
-				"fieldname": "balance_available",
-				"label": "Balance",
-				"fieldtype": "Currency",
-				"width": "100"
-			},
-		]
+		if filters.show_breakup:
+			# Customer Payment Entry Details
+			return [
+				{
+					"fieldname": "customer_name",
+					"label": "Customer Name",
+					"fieldtype": "Data",
+					"width": "200"
+				},
+				{
+					"fieldname": "customer",
+					"label": "Customer",
+					"fieldtype": "Link",
+					"options": "Customer",
+					"width": "120"
+				},
+				{
+					"fieldname": "custom_fs_account_number",
+					"label": "FS Account",
+					"fieldtype": "Data",
+					"width": "100"
+				},
+				{
+					"fieldname": "voucher_name",
+					"label": "Voucher ID",
+					"fieldtype": "Link",
+					"options": "Payment Entry",
+					"width": "150"
+				},
+				{
+					"fieldname": "payments",
+					"label": "Payments",
+					"fieldtype": "Currency",
+					"width": "130",
+				},
+				{
+					"fieldname": "posting_date",
+					"label": "Date",
+					"fieldtype": "Date",
+					"width": "100",
+				}
+			]
+
+
+		else:
+			# Monthly Payments and Usage
+			return [
+				{
+					"fieldname": "customer_name",
+					"label": "Customer Name",
+					"fieldtype": "Data",
+					"width": "200"
+				},
+				{
+					"fieldname": "customer",
+					"label": "Customer",
+					"fieldtype": "Link",
+					"options": "Customer",
+					"width": "120"
+				},
+				{
+					"fieldname": "custom_fs_account_number",
+					"label": "FS Account",
+					"fieldtype": "Data",
+					"width": "100"
+				},
+				{
+					"fieldname": "total_payments",
+					"label": "Payments",
+					"fieldtype": "Currency",
+					"width": "130"
+				},
+				{
+					"fieldname": "invoice_amounts",
+					"label": "Invoice Amounts",
+					"fieldtype": "Currency",
+					"width": "130"
+				},
+				{
+					"fieldname": "order_amounts",
+					"label": "Order Amounts",
+					"fieldtype": "Currency",
+					"width": "130"
+				},
+				{
+					"fieldname": "balance",
+					"label": "Balance",
+					"fieldtype": "Currency",
+					"width": "100"
+				},
+			]
 
 
 def get_data(filters):
-	if filters.show_breakup and filters.from_date and filters.to_date:
-		# Customer/Family account Payment Entries breakup
-		query = frappe.db.sql(
-			"""
-			SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
-			a.address_title, pe.paid_amount AS contribution, pe.posting_date
+	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+		if filters.show_breakup and filters.from_date and filters.to_date:
+			# Customer/Family account Payment Entries breakup
+			query = frappe.db.sql(
+				"""
+				SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
+				a.address_title, pe.paid_amount AS payments, pe.posting_date
 
-			FROM `tabPayment Entry` pe
-			JOIN tabCustomer c ON pe.party = c.name
-			LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
-			JOIN tabAddress a ON dl.parent = a.name
+				FROM `tabPayment Entry` pe
+				JOIN tabCustomer c ON pe.party = c.name
+				LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
+				JOIN tabAddress a ON dl.parent = a.name
 
-			WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
-			""".format(filters.from_date, filters.to_date),
-			as_dict=True
-		)
+				WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
+				""".format(filters.from_date, filters.to_date),
+				as_dict=True
+			)
 
-	elif filters.from_date and filters.to_date:
-		# Customer/Family-account Payment Entries, summed per customer/family-account
-		query = frappe.db.sql(
-			"""
-			SELECT table1.*,
-			(table1.total_contribution + IF((table1.returns_credit IS NULL), 0, table1.returns_credit) - IF((table1.usage_invoice IS NULL), 0, table1.usage_invoice) - IF((table1.usage_order IS NULL), 0, table1.usage_order))
-			AS balance_available
+		elif filters.from_date and filters.to_date:
+			# Customer/Family-account Payment Entries, summed per customer/family-account
+			query = frappe.db.sql(
+				"""
+				SELECT table1.*,
+				(table1.total_contribution + IF((table1.returns_credit IS NULL), 0, table1.returns_credit) - IF((table1.usage_invoice IS NULL), 0, table1.usage_invoice) - IF((table1.usage_order IS NULL), 0, table1.usage_order))
+				AS balance
 
-			FROM
-			(SELECT customer_name, c.name AS customer, c.custom_fs_account_number, a.address_title,
-			(
-				SELECT SUM(sub1_pe.paid_amount) FROM `tabPayment Entry` sub1_pe
-				WHERE sub1_pe.docstatus = 1 AND sub1_pe.mode_of_payment = "FS"
-				AND sub1_pe.party = pe.party
-			) AS total_contribution,
-			(
-				SELECT SUM(sub2_pe.paid_amount) FROM `tabPayment Entry` sub2_pe
-				WHERE sub2_pe.docstatus = 1 AND sub2_pe.mode_of_payment IS NULL
-				AND sub2_pe.party = pe.party
-			) AS returns_credit,
-			(
-				SELECT SUM(grand_total) FROM `tabSales Invoice`
-				WHERE docstatus = 1 AND `tabSales Invoice`.customer = pe.party
-			) AS usage_invoice,
-			(
-				SELECT SUM(so.grand_total) FROM `tabSales Order` so
-				WHERE so.docstatus = 1
-				AND so.status NOT IN ("Closed", "On Hold")
-				AND so.per_billed < 99.99
-				AND so.customer = pe.party
-			) AS usage_order
-			FROM `tabPayment Entry` pe
-			JOIN tabCustomer c ON pe.party = c.name
-			LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
-			JOIN tabAddress a ON dl.parent = a.name
+				FROM
+				(SELECT customer_name, c.name AS customer, c.custom_fs_account_number,
+				(
+					SELECT SUM(sub1_pe.paid_amount) FROM `tabPayment Entry` sub1_pe
+					WHERE sub1_pe.docstatus = 1 AND sub1_pe.mode_of_payment = "FS"
+					AND sub1_pe.party = pe.party
+				) AS total_payments,
+				(
+					SELECT SUM(grand_total) FROM `tabSales Invoice`
+					WHERE docstatus = 1 AND `tabSales Invoice`.customer = pe.party
+				) AS usage_invoice,
+				(
+					SELECT SUM(so.grand_total) FROM `tabSales Order` so
+					WHERE so.docstatus = 1
+					AND so.status NOT IN ("Closed", "On Hold")
+					AND so.per_billed < 99.99
+					AND so.customer = pe.party
+				) AS usage_order
+				FROM `tabPayment Entry` pe
+				JOIN tabCustomer c ON pe.party = c.name
+				LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
+				JOIN tabAddress a ON dl.parent = a.name
 
-			WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
-			GROUP BY c.name) table1
-			""".format(filters.from_date, filters.to_date),
-			as_dict=True
-		)
+				WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
+				GROUP BY c.name) table1
+				""".format(filters.from_date, filters.to_date),
+				as_dict=True
+			)
+
+	else:
+		if filters.show_breakup and filters.from_date and filters.to_date:
+			# Customer/Family account Payment Entries breakup
+			query = frappe.db.sql(
+				"""
+				SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
+				pe.paid_amount AS payments, pe.posting_date
+
+				FROM `tabPayment Entry` pe
+				JOIN tabCustomer c ON pe.party = c.name
+
+				WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
+				""".format(filters.from_date, filters.to_date),
+				as_dict=True
+			)
+
+		elif filters.from_date and filters.to_date:
+			# Customer/Family-account Payment Entries, summed per customer/family-account
+			query = frappe.db.sql(
+				"""
+				SELECT table1.*,
+				(table1.total_payments - IF((table1.invoice_amounts IS NULL), 0, table1.invoice_amounts) - IF((table1.order_amounts IS NULL), 0, table1.order_amounts))
+				AS balance
+
+				FROM
+				(SELECT customer_name, c.name AS customer, c.custom_fs_account_number,
+				(
+					SELECT SUM(sub1_pe.paid_amount) FROM `tabPayment Entry` sub1_pe
+					WHERE sub1_pe.docstatus = 1 AND sub1_pe.mode_of_payment = "FS"
+					AND sub1_pe.party = pe.party
+				) AS total_payments,
+				(
+					SELECT SUM(grand_total) FROM `tabSales Invoice`
+					WHERE docstatus = 1 AND `tabSales Invoice`.customer = pe.party
+				) AS invoice_amounts,
+				(
+					SELECT SUM(so.grand_total) FROM `tabSales Order` so
+					WHERE so.docstatus = 1
+					AND so.status NOT IN ("Closed", "On Hold")
+					AND so.per_billed < 99.99
+					AND so.customer = pe.party
+				) AS order_amounts
+				FROM `tabPayment Entry` pe
+				JOIN tabCustomer c ON pe.party = c.name
+
+				WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
+				GROUP BY c.name) table1
+				""".format(filters.from_date, filters.to_date),
+				as_dict=True
+			)
 
 	return query
