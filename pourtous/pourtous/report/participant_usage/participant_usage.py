@@ -56,7 +56,7 @@ def get_columns(filters):
 					"fieldname": "address_title",
 					"label": "Community",
 					"fieldtype": "Data",
-					"width": "100"
+					"width": "150"
 				},
 				{
 					"fieldname": "voucher_name",
