@@ -384,10 +384,18 @@ def delete_contact_in_zoho(doc, method):
 def update_supplier_contact_in_zoho(doc, method):
 	api_controller = frappe.get_doc("Zoho Books API")
 
+	gst_treatment = {
+		"Registered Regular": "business_gst",
+		"Unregistered": "business_none",
+		"Overseas": "overseas"
+	}
+
 	data = {
 		"contact_name": doc.supplier_name,
 		"contact_type": "vendor",
-		"customer_sub_type": "business"
+		"customer_sub_type": "business",
+		"gst_no": doc.gstin,
+		"gst_treatment": gst_treatment[doc.gst_category]
 	}
 
 	if doc.custom_zoho_contact_id == None:

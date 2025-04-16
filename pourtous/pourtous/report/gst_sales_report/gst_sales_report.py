@@ -61,6 +61,13 @@ def get_columns():
 		},
 
 		{
+			"fieldname": "sales_3",
+			"label": "Sales - 3%",
+			"fieldtype": "Currency",
+			"width": "100"
+		},
+
+		{
 			"fieldname": "sales_5",
 			"label": "Sales - 5%",
 			"fieldtype": "Currency",
@@ -137,8 +144,8 @@ def get_data(filters):
 	if filters.customer:
 		gst_sales_query = frappe.db.sql(
 			"""
-			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
-			table1.sales_exempted, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
+			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date, table1.sales_exempted,
+			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
 			table1.cgst_amount, table1.sgst_amount, table1.cess_amount,
 			IF((table1.cess_amount IS NULL), (table1.cgst_amount + table1.sgst_amount), (table1.cgst_amount + table1.sgst_amount + table1.cess_amount)) AS total_tax,
 			table1.grand_total
@@ -152,6 +159,10 @@ def get_data(filters):
 			WHERE parent = `tabSales Invoice`.name
 			AND (item_tax_template like "Nil-Rated%" OR item_tax_template like "Non-GST%" OR item_tax_template like "Exempted%"))
 			AS sales_exempted,
+
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 3_ -%")
+			AS sales_3,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
 			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 5_ -%")
@@ -199,8 +210,8 @@ def get_data(filters):
 	else:
 		gst_sales_query = frappe.db.sql(
 			"""
-			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
-			table1.sales_exempted, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
+			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date, table1.sales_exempted,
+			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
 			table1.cgst_amount, table1.sgst_amount, table1.cess_amount,
 			IF((table1.cess_amount IS NULL), (table1.cgst_amount + table1.sgst_amount), (table1.cgst_amount + table1.sgst_amount + table1.cess_amount)) AS total_tax,
 			table1.grand_total
@@ -215,6 +226,10 @@ def get_data(filters):
 			AND (item_tax_template like "Nil-Rated%" OR item_tax_template like "Non-GST%" OR item_tax_template like "Exempted%"))
 			AS sales_exempted,
 
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
+			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 3_ -%")
+			AS sales_3,
+			
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
 			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 5_ -%")
 			AS sales_5,

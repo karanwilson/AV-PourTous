@@ -122,12 +122,6 @@ def get_columns(filters):
 					"width": "110"
 				},
 				{
-					"fieldname": "returns_credit",
-					"label": "Return Credit",
-					"fieldtype": "Currency",
-					"width": "110"
-				},
-				{
 					"fieldname": "usage_invoice",
 					"label": "Usage-Invoice",
 					"fieldtype": "Currency",
@@ -146,6 +140,12 @@ def get_columns(filters):
 					"width": "100"
 				},
 			]
+			""" {
+				"fieldname": "returns_credit",
+				"label": "Return Credit",
+				"fieldtype": "Currency",
+				"width": "110"
+			}, """
 
 	else:
 		if filters.show_breakup:
@@ -178,7 +178,7 @@ def get_columns(filters):
 					"width": "150"
 				},
 				{
-					"fieldname": "payments",
+					"fieldname": "contribution",
 					"label": "Payments",
 					"fieldtype": "Currency",
 					"width": "130",
@@ -216,7 +216,7 @@ def get_columns(filters):
 				},
 				{
 					"fieldname": "total_contribution",
-					"label": "Payments",
+					"label": "Post Payments",
 					"fieldtype": "Currency",
 					"width": "130"
 				},
@@ -265,7 +265,7 @@ def get_data(filters):
 			query = frappe.db.sql(
 				"""
 				SELECT table1.*,
-				(IF((table1.total_contribution IS NULL), 0, table1.total_contribution) + IF((table1.returns_credit IS NULL), 0, table1.returns_credit) - IF((table1.usage_invoice IS NULL), 0, table1.usage_invoice) - IF((table1.usage_order IS NULL), 0, table1.usage_order))
+				(IF((table1.total_contribution IS NULL), 0, table1.total_contribution) - IF((table1.usage_invoice IS NULL), 0, table1.usage_invoice) - IF((table1.usage_order IS NULL), 0, table1.usage_order))
 				AS balance
 
 				FROM
@@ -277,13 +277,6 @@ def get_data(filters):
 					AND sub1_pe.posting_date between '{0}' and '{1}'
 					AND sub1_pe.party = c.name
 				) AS total_contribution,
-				(
-					SELECT SUM(sub2_pe.paid_amount) FROM `tabPayment Entry` sub2_pe
-					WHERE sub2_pe.docstatus = 1
-					AND sub2_pe.mode_of_payment IS NULL
-					AND sub2_pe.posting_date between '{0}' and '{1}'
-					AND sub2_pe.party = c.name
-				) AS returns_credit,
 				(
 					SELECT SUM(si.grand_total) FROM `tabSales Invoice` si
 					WHERE docstatus = 1
@@ -306,6 +299,13 @@ def get_data(filters):
 				""".format(filters.from_date, filters.to_date),
 				as_dict=True
 			)
+			""" (
+				SELECT SUM(sub2_pe.paid_amount) FROM `tabPayment Entry` sub2_pe
+				WHERE sub2_pe.docstatus = 1
+				AND sub2_pe.mode_of_payment IS NULL
+				AND sub2_pe.posting_date between '{0}' and '{1}'
+				AND sub2_pe.party = c.name
+			) AS returns_credit, """
 
 	else:
 		if filters.show_breakup and filters.from_date and filters.to_date:
@@ -313,7 +313,7 @@ def get_data(filters):
 			query = frappe.db.sql(
 				"""
 				SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
-				pe.paid_amount AS payments, pe.posting_date
+				pe.paid_amount AS contribution, pe.posting_date
 
 				FROM `tabPayment Entry` pe
 				JOIN tabCustomer c ON pe.party = c.name

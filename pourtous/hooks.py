@@ -131,16 +131,16 @@ doc_events = {
 	#},
 	"Item": {
 		"before_insert": "pourtous.api.verify_tax_template", # verifies whether a tax template was added
-        #"before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho", # update Zoho Books
-        #"on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_item_in_zoho" # update Zoho Books
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho", # update Zoho Books
+        "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_item_in_zoho" # update Zoho Books
 	},
 	"Customer": {
-        #"before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_contact_in_zoho",
-        #"on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_contact_in_zoho",
+        "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
 	},
 	"Supplier": {
-        #"before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_supplier_contact_in_zoho",
-        #"on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_supplier_contact_in_zoho",
+        "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
 	},
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
@@ -152,10 +152,10 @@ doc_events = {
     "Batch": {
         "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
     },
-    "Sales Order": {
+    #"Sales Order": {
         #"before_cancel": "pourtous.api.cancel_stock_reservation", # removes the associated Sales Order Stock Reservation
         #"before_submit": "pourtous.api.make_stock_reservation" # adds stock reservation for the Sales Order
-    },
+    #},
 # 	"*": {
 # 		"on_update": "method",
 # 		"on_cancel": "method",
