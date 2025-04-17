@@ -32,6 +32,8 @@ class ZohoBooksAPI(Document):
 
 	@frappe.whitelist(allow_guest=True)
 	def request_access_token(self, scope):
+		
+
 		soid = 'ZohoBooks.' + self.organization_id
 		token_url = 'https://accounts.zoho.in/oauth/v2/token?'
 
