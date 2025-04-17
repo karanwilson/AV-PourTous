@@ -287,6 +287,7 @@ fixtures = [
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions
                     "Sales Order-custom_remarks",
                     "Sales Order-custom_pos_profile",
+                    "Sales Order-custom_posting_time",
 
                     "Sales Order Item-custom_batch_no", # for SO Stock reservations
 
