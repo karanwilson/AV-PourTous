@@ -280,6 +280,9 @@ class ZohoBooksAPI(Document):
 
 
 def update_item_in_zoho(doc, method):
+	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+		return
+
 	api_controller = frappe.get_doc("Zoho Books API")
 
 	if doc.is_stock_item == 1:
@@ -333,6 +336,9 @@ def update_item_in_zoho(doc, method):
 
 
 def delete_item_in_zoho(doc, method):
+	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+		return
+
 	if doc.custom_zoho_item_id:
 		api_controller = frappe.get_doc("Zoho Books API")
 		res = api_controller.delete_item(doc.custom_zoho_item_id)
@@ -341,6 +347,9 @@ def delete_item_in_zoho(doc, method):
 
 
 def update_contact_in_zoho(doc, method):
+	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+		return
+
 	if doc.custom_update_zoho_contact == 0:
 		return
 
@@ -376,6 +385,9 @@ def update_contact_in_zoho(doc, method):
 
 
 def delete_contact_in_zoho(doc, method):
+	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+		return
+
 	if doc.custom_zoho_contact_id:
 		api_controller = frappe.get_doc("Zoho Books API")
 		res = api_controller.delete_contact(doc.custom_zoho_contact_id)
@@ -384,6 +396,9 @@ def delete_contact_in_zoho(doc, method):
 
 
 def update_supplier_contact_in_zoho(doc, method):
+	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+		return
+
 	api_controller = frappe.get_doc("Zoho Books API")
 
 	gst_treatment = {
