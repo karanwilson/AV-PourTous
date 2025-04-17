@@ -18,7 +18,8 @@
   "last_token_date",
   "last_token_time",
   "token_received_at",
-  "expires_in",
+  "token_validity",
+  "token_valid_till",
   "test"
  ],
  "fields": [
@@ -52,13 +53,6 @@
    "fieldname": "last_token_time",
    "fieldtype": "Time",
    "label": "Last Token Time",
-   "read_only": 1
-  },
-  {
-   "description": "Minutes",
-   "fieldname": "expires_in",
-   "fieldtype": "Data",
-   "label": "Expires in",
    "read_only": 1
   },
   {
@@ -104,12 +98,25 @@
    "fieldname": "test",
    "fieldtype": "Check",
    "label": "Test"
+  },
+  {
+   "description": "Minutes",
+   "fieldname": "token_validity",
+   "fieldtype": "Int",
+   "label": "Token validity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "token_valid_till",
+   "fieldtype": "Datetime",
+   "label": "Token valid till",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-03-12 23:55:33.261694",
+ "modified": "2025-04-17 19:35:08.187418",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",

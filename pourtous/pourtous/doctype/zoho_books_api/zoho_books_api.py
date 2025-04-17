@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import today, nowtime, nowdate
+from frappe.utils import nowtime, nowdate
 from datetime import datetime, timedelta
 
 import requests, json
@@ -11,10 +11,15 @@ import requests, json
 
 
 class ZohoBooksAPI(Document):
+	DATE_FORMAT = "%Y-%m-%d"
+	TIME_FORMAT = "%H:%M:%S.%f"
+	DATETIME_FORMAT = f"{DATE_FORMAT} {TIME_FORMAT}"
+
+	scope = 'ZohoBooks.invoices.CREATE,ZohoBooks.invoices.READ,ZohoBooks.invoices.UPDATE,ZohoBooks.invoices.DELETE'
+
 	def	validate(self):
 		if self.client_id and self.client_secret and self.user_id and self.organization_id:
-			scope = 'ZohoBooks.invoices.CREATE,ZohoBooks.invoices.READ,ZohoBooks.invoices.UPDATE,ZohoBooks.invoices.DELETE'
-			self.validate_zoho_api_params(scope)
+			self.validate_zoho_api_params(self.scope)
 
 	def validate_zoho_api_params(self, scope):
 		r = self.request_access_token(scope)
@@ -24,16 +29,18 @@ class ZohoBooksAPI(Document):
 			self.token_scope = r.json().get('scope')
 			self.api_domain = r.json().get('api_domain')
 			self.token_type = r.json().get('token_type')
-			self.last_token_date = today()
+			self.last_token_date = nowdate()
 			self.last_token_time = nowtime()
-			self.token_received_at = nowdate()
-			self.expires_in = r.json().get('expires_in') / 60
+			self.token_received_at = datetime.now()
+			self.token_validity = r.json().get('expires_in') / 60
+			self.token_valid_till = self.token_received_at + timedelta(minutes=(self.token_validity - 5))
+			# reducing 5 mins from the provided validity, to keep a safe margin from the token expiry time.
+
+			#self.token_valid_till = datetime.strptime(self.token_received_at, self.DATETIME_FORMAT) + timedelta(minutes=55)
 
 
-	@frappe.whitelist(allow_guest=True)
+	#@frappe.whitelist(allow_guest=True)
 	def request_access_token(self, scope):
-		
-
 		soid = 'ZohoBooks.' + self.organization_id
 		token_url = 'https://accounts.zoho.in/oauth/v2/token?'
 
@@ -51,11 +58,19 @@ class ZohoBooksAPI(Document):
 
 			return r
 
-			""" start_time = datetime.strptime(, '%H:%M:%S')
-			if self.token_received_at < nowtime() + timedelta(minutes=60):
-				return "Token Valid"
-			else:
-				return "Token Expired" """
+
+	""" def get_zb_access_token(self, scope):
+		zb_api_token = frappe.get_doc("Zoho Books API Token")
+
+		#if datetime.strptime(self.token_valid_till, self.DATETIME_FORMAT) > datetime.now():
+		if zb_api_token.token_valid_till > datetime.now():
+			return zb_api_token.token
+
+		else:
+			r = self.request_access_token(scope)
+			if r.json().get('access_token'):
+				zb_api_token.token = r.json().get('access_token') """
+				
 
 
 	def post_invoice(self, invoice):
@@ -112,11 +127,59 @@ class ZohoBooksAPI(Document):
 				return custom_zoho_contact_id
 
 
+	def update_token_doc(self, token_doc, token, token_validity):
+		token_doc.token = token
+		token_doc.token_received_at = datetime.now()
+		token_doc.token_validity = token_validity
+		token_doc.token_valid_till = token_doc.token_received_at + timedelta(minutes=(token_validity - 5))
+		token_doc.save()
+
+	def create_token_doc(self, master, scope, token, token_validity):
+		new_token_doc = frappe.new_doc("Zoho Books API Token")
+		new_token_doc.master = master
+		new_token_doc.scope = scope
+		new_token_doc.token = token
+		new_token_doc.token_received_at = datetime.now()
+		new_token_doc.token_validity = token_validity
+		new_token_doc.token_valid_till = new_token_doc.token_received_at + timedelta(minutes=(token_validity - 5))
+		new_token_doc.save()
+
+
+	def query_stored_tokens(self, master, scope):
+		existing_token_id = frappe.get_value("Zoho Books API Token", {"master": master, "scope": scope}, "name")
+		if existing_token_id:
+			existing_token_doc = frappe.get_doc("Zoho Books API Token", existing_token_id)
+
+			#if datetime.strptime(self.token_valid_till, self.DATETIME_FORMAT) > datetime.now():
+			if existing_token_doc.token_valid_till > datetime.now():
+				token_to_use = existing_token_doc.token
+			else:
+				r = self.request_access_token(scope)
+				if r.json().get('access_token'):
+					token_to_use = r.json().get('access_token')
+					token_validity = r.json().get('expires_in') / 60
+					self.update_token_doc(existing_token_doc, token_to_use, token_validity)
+
+		else:
+			r = self.request_access_token(scope)
+			if r.json().get('access_token'):
+				token_to_use = r.json().get('access_token')
+				self.create_token_doc(master, scope, token_to_use)
+
+		return token_to_use
+
+
 	def post_contact(self, data):
+		master = "contacts"
+		scope='ZohoBooks.contacts.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
 		api_url = 'https://www.zohoapis.in/books/v3/contacts?'
 
-		r = self.request_access_token(scope='ZohoBooks.contacts.CREATE')
-		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		#r = self.request_access_token(scope='ZohoBooks.contacts.CREATE')
+		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		authorization = 'Zoho-oauthtoken ' + token_to_use
 
 		with requests.Session() as s:
 			s.params = {
@@ -144,10 +207,16 @@ class ZohoBooksAPI(Document):
 
 
 	def put_contact(self, contact_id, data):
+		master = "contacts"
+		scope='ZohoBooks.contacts.UPDATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
 		api_url = 'https://www.zohoapis.in/books/v3/contacts/' + contact_id + '?'
 
-		r = self.request_access_token(scope='ZohoBooks.contacts.UPDATE')
-		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		#r = self.request_access_token(scope='ZohoBooks.contacts.UPDATE')
+		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		authorization = 'Zoho-oauthtoken ' + token_to_use
 
 		with requests.Session() as s:
 			s.params = {
@@ -170,10 +239,16 @@ class ZohoBooksAPI(Document):
 
 
 	def delete_contact(self, contact_id):
+		master = "contacts"
+		scope='ZohoBooks.contacts.DELETE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
 		api_url = 'https://www.zohoapis.in/books/v3/contacts/' + contact_id + '?'
 
-		r = self.request_access_token('ZohoBooks.contacts.DELETE')
-		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		#r = self.request_access_token('ZohoBooks.contacts.DELETE')
+		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		authorization = 'Zoho-oauthtoken ' + token_to_use
 
 		with requests.Session() as s:
 			s.params = {
@@ -196,11 +271,16 @@ class ZohoBooksAPI(Document):
 
 
 	def post_item(self, data):
+		master = "items"
+		scope='ZohoBooks.settings.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
 		api_url = 'https://www.zohoapis.in/books/v3/items?'
 
-		r = self.request_access_token('ZohoBooks.settings.CREATE')
-
-		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		#r = self.request_access_token('ZohoBooks.settings.CREATE')
+		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		authorization = 'Zoho-oauthtoken ' + token_to_use
 
 		with requests.Session() as s:
 			s.params = {
@@ -228,10 +308,16 @@ class ZohoBooksAPI(Document):
 
 
 	def put_item(self, item_id, data):
+		master = "items"
+		scope='ZohoBooks.settings.UPDATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
 		api_url = 'https://www.zohoapis.in/books/v3/items/' + item_id + '?'
 
-		r = self.request_access_token('ZohoBooks.settings.UPDATE')
-		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		#r = self.request_access_token('ZohoBooks.settings.UPDATE')
+		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		authorization = 'Zoho-oauthtoken ' + token_to_use
 
 		with requests.Session() as s:
 			s.params = {
@@ -254,10 +340,16 @@ class ZohoBooksAPI(Document):
 
 
 	def delete_item(self, item_id):
+		master = "items"
+		scope='ZohoBooks.settings.DELETE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
 		api_url = 'https://www.zohoapis.in/books/v3/items/' + item_id + '?'
 
-		r = self.request_access_token('ZohoBooks.settings.DELETE')
-		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		#r = self.request_access_token('ZohoBooks.settings.DELETE')
+		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+		authorization = 'Zoho-oauthtoken ' + token_to_use
 
 		with requests.Session() as s:
 			s.params = {
