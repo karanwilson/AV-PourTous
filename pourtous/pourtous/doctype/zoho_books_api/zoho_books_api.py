@@ -54,26 +54,265 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.post(token_url)
-			r.raise_for_status()
 
-			return r
+			if r.json().get('access_token'):
+				return r
+			else:
+				r.raise_for_status()
 
 
-	""" def get_zb_access_token(self, scope):
-		zb_api_token = frappe.get_doc("Zoho Books API Token")
+	def update_token_doc(self, token_doc, token, token_validity):
+		token_doc.token = token
+		token_doc.token_received_at = datetime.now()
+		token_doc.token_validity = token_validity
+		token_doc.token_valid_till = token_doc.token_received_at + timedelta(minutes=(token_validity - 5))
+		token_doc.save()
 
-		#if datetime.strptime(self.token_valid_till, self.DATETIME_FORMAT) > datetime.now():
-		if zb_api_token.token_valid_till > datetime.now():
-			return zb_api_token.token
+	def create_token_doc(self, master, scope, token, token_validity):
+		new_token_doc = frappe.new_doc("Zoho Books API Token")
+		new_token_doc.master = master
+		new_token_doc.scope = scope
+		new_token_doc.token = token
+		new_token_doc.token_received_at = datetime.now()
+		new_token_doc.token_validity = token_validity
+		new_token_doc.token_valid_till = new_token_doc.token_received_at + timedelta(minutes=(token_validity - 5))
+		new_token_doc.save()
+
+	def query_stored_tokens(self, master, scope):
+		existing_token_id = frappe.get_value("Zoho Books API Token", {"master": master, "scope": scope}, "name")
+		if existing_token_id:
+			existing_token_doc = frappe.get_doc("Zoho Books API Token", existing_token_id)
+
+			#if datetime.strptime(self.token_valid_till, self.DATETIME_FORMAT) > datetime.now():
+			if existing_token_doc.token_valid_till > datetime.now():
+				token_to_use = existing_token_doc.token
+			else:
+				r = self.request_access_token(scope)
+				token_to_use = r.json().get('access_token')
+				token_validity = r.json().get('expires_in') / 60
+				self.update_token_doc(existing_token_doc, token_to_use, token_validity)
 
 		else:
 			r = self.request_access_token(scope)
-			if r.json().get('access_token'):
-				zb_api_token.token = r.json().get('access_token') """
-				
+			token_to_use = r.json().get('access_token')
+			token_validity = r.json().get('expires_in') / 60
+			self.create_token_doc(master, scope, token_to_use, token_validity)
+
+		return token_to_use
 
 
-	def post_invoice(self, invoice):
+
+	def post_contact(self, data):
+		master = "contacts"
+		scope='ZohoBooks.contacts.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/contacts?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url, data=json.dumps(data))
+
+			if r.json().get('message') == 'The contact has been added.':
+				return {
+					"custom_zoho_contact_id": r.json().get('contact').get('contact_id'),
+				}
+			else:
+				r.raise_for_status()
+
+
+	def put_contact(self, contact_id, data):
+		master = "contacts"
+		scope='ZohoBooks.contacts.UPDATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/contacts/' + contact_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.put(api_url, data=json.dumps(data))
+
+			if r.json().get('message') == "Contact does not exist.":
+				return self.post_contact(data)
+
+			else:
+				r.raise_for_status()
+				return {
+					"message": r.json().get('message')
+				}
+
+
+	def delete_contact(self, contact_id):
+		master = "contacts"
+		scope='ZohoBooks.contacts.DELETE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/contacts/' + contact_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.delete(api_url)
+
+			r.raise_for_status()
+			return r.json().get('message')
+
+
+	def get_contacts(self):
+		master = "contacts"
+		scope='ZohoBooks.contacts.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/contacts?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			r.raise_for_status()
+			if r.json().get('message') == 'success':
+				return r.json().get('contacts')
+
+
+	def post_item(self, data):
+		master = "items"
+		scope='ZohoBooks.settings.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/items?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url, data=json.dumps(data))
+			try:
+				r.raise_for_status()
+			except Exception as err:
+				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
+				raise err
+
+			if r.json().get('message') == 'The item has been added.':
+				custom_zoho_item_id = r.json().get('item').get('item_id')
+				return custom_zoho_item_id
+
+			else:
+				frappe.msgprint(r.json().get('message'))
+
+
+	def put_item(self, item_id, data):
+		master = "items"
+		scope='ZohoBooks.settings.UPDATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/items/' + item_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.put(api_url, data=json.dumps(data))
+			try:
+				r.raise_for_status()
+			except Exception as err:
+				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
+				raise err
+
+			return r.json().get('message')
+
+
+	def delete_item(self, item_id):
+		master = "items"
+		scope='ZohoBooks.settings.DELETE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/items/' + item_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.delete(api_url)
+			try:
+				r.raise_for_status()
+			except Exception as err:
+				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
+				raise err
+
+			return r.json().get('message')
+
+
+	""" def post_invoice(self, invoice):
 		api_url = 'https://www.zohoapis.in/books/v3/invoices?'
 
 		r = self.request_access_token(scope='ZohoBooks.invoices.CREATE')
@@ -124,255 +363,12 @@ class ZohoBooksAPI(Document):
 
 			if r.json().get('message') == 'The invoice has been added.':
 				custom_zoho_contact_id = r.json().get('invoice').get('invoice_id')
-				return custom_zoho_contact_id
+				return custom_zoho_contact_id """
 
-
-	def update_token_doc(self, token_doc, token, token_validity):
-		token_doc.token = token
-		token_doc.token_received_at = datetime.now()
-		token_doc.token_validity = token_validity
-		token_doc.token_valid_till = token_doc.token_received_at + timedelta(minutes=(token_validity - 5))
-		token_doc.save()
-
-	def create_token_doc(self, master, scope, token, token_validity):
-		new_token_doc = frappe.new_doc("Zoho Books API Token")
-		new_token_doc.master = master
-		new_token_doc.scope = scope
-		new_token_doc.token = token
-		new_token_doc.token_received_at = datetime.now()
-		new_token_doc.token_validity = token_validity
-		new_token_doc.token_valid_till = new_token_doc.token_received_at + timedelta(minutes=(token_validity - 5))
-		new_token_doc.save()
-
-
-	def query_stored_tokens(self, master, scope):
-		existing_token_id = frappe.get_value("Zoho Books API Token", {"master": master, "scope": scope}, "name")
-		if existing_token_id:
-			existing_token_doc = frappe.get_doc("Zoho Books API Token", existing_token_id)
-
-			#if datetime.strptime(self.token_valid_till, self.DATETIME_FORMAT) > datetime.now():
-			if existing_token_doc.token_valid_till > datetime.now():
-				token_to_use = existing_token_doc.token
-			else:
-				r = self.request_access_token(scope)
-				if r.json().get('access_token'):
-					token_to_use = r.json().get('access_token')
-					token_validity = r.json().get('expires_in') / 60
-					self.update_token_doc(existing_token_doc, token_to_use, token_validity)
-
-		else:
-			r = self.request_access_token(scope)
-			if r.json().get('access_token'):
-				token_to_use = r.json().get('access_token')
-				self.create_token_doc(master, scope, token_to_use)
-
-		return token_to_use
-
-
-	def post_contact(self, data):
-		master = "contacts"
-		scope='ZohoBooks.contacts.CREATE'
-
-		token_to_use = self.query_stored_tokens(master, scope)
-
-		api_url = 'https://www.zohoapis.in/books/v3/contacts?'
-
-		#r = self.request_access_token(scope='ZohoBooks.contacts.CREATE')
-		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
-		authorization = 'Zoho-oauthtoken ' + token_to_use
-
-		with requests.Session() as s:
-			s.params = {
-				'organization_id': self.organization_id
-			}
-
-			s.headers = {
-				'Authorization': authorization,
-				'content-type': 'application/json'
-				}
-
-			r = s.post(api_url, data=json.dumps(data))
-			try:
-				r.raise_for_status()
-			except Exception as err:
-				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
-				raise err
-
-			if r.json().get('message') == 'The contact has been added.':
-				custom_zoho_contact_id = r.json().get('contact').get('contact_id')
-				return custom_zoho_contact_id
-
-			else:
-				frappe.msgprint(r.json().get('message'))
-
-
-	def put_contact(self, contact_id, data):
-		master = "contacts"
-		scope='ZohoBooks.contacts.UPDATE'
-
-		token_to_use = self.query_stored_tokens(master, scope)
-
-		api_url = 'https://www.zohoapis.in/books/v3/contacts/' + contact_id + '?'
-
-		#r = self.request_access_token(scope='ZohoBooks.contacts.UPDATE')
-		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
-		authorization = 'Zoho-oauthtoken ' + token_to_use
-
-		with requests.Session() as s:
-			s.params = {
-				'organization_id': self.organization_id
-			}
-
-			s.headers = {
-				'Authorization': authorization,
-				'content-type': 'application/json'
-				}
-
-			r = s.put(api_url, data=json.dumps(data))
-			try:
-				r.raise_for_status()
-			except Exception as err:
-				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
-				raise err
-
-			return r.json().get('message') 
-
-
-	def delete_contact(self, contact_id):
-		master = "contacts"
-		scope='ZohoBooks.contacts.DELETE'
-
-		token_to_use = self.query_stored_tokens(master, scope)
-
-		api_url = 'https://www.zohoapis.in/books/v3/contacts/' + contact_id + '?'
-
-		#r = self.request_access_token('ZohoBooks.contacts.DELETE')
-		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
-		authorization = 'Zoho-oauthtoken ' + token_to_use
-
-		with requests.Session() as s:
-			s.params = {
-				'organization_id': self.organization_id
-			}
-
-			s.headers = {
-				'Authorization': authorization,
-				'content-type': 'application/json'
-				}
-
-			r = s.delete(api_url)
-			try:
-				r.raise_for_status()
-			except Exception as err:
-				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
-				raise err
-
-			return r.json().get('message')
-
-
-	def post_item(self, data):
-		master = "items"
-		scope='ZohoBooks.settings.CREATE'
-
-		token_to_use = self.query_stored_tokens(master, scope)
-
-		api_url = 'https://www.zohoapis.in/books/v3/items?'
-
-		#r = self.request_access_token('ZohoBooks.settings.CREATE')
-		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
-		authorization = 'Zoho-oauthtoken ' + token_to_use
-
-		with requests.Session() as s:
-			s.params = {
-				'organization_id': self.organization_id
-			}
-
-			s.headers = {
-				'Authorization': authorization,
-				'content-type': 'application/json'
-				}
-
-			r = s.post(api_url, data=json.dumps(data))
-			try:
-				r.raise_for_status()
-			except Exception as err:
-				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
-				raise err
-
-			if r.json().get('message') == 'The item has been added.':
-				custom_zoho_item_id = r.json().get('item').get('item_id')
-				return custom_zoho_item_id
-
-			else:
-				frappe.msgprint(r.json().get('message'))
-
-
-	def put_item(self, item_id, data):
-		master = "items"
-		scope='ZohoBooks.settings.UPDATE'
-
-		token_to_use = self.query_stored_tokens(master, scope)
-
-		api_url = 'https://www.zohoapis.in/books/v3/items/' + item_id + '?'
-
-		#r = self.request_access_token('ZohoBooks.settings.UPDATE')
-		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
-		authorization = 'Zoho-oauthtoken ' + token_to_use
-
-		with requests.Session() as s:
-			s.params = {
-				'organization_id': self.organization_id
-			}
-
-			s.headers = {
-				'Authorization': authorization,
-				'content-type': 'application/json'
-				}
-
-			r = s.put(api_url, data=json.dumps(data))
-			try:
-				r.raise_for_status()
-			except Exception as err:
-				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
-				raise err
-
-			return r.json().get('message')
-
-
-	def delete_item(self, item_id):
-		master = "items"
-		scope='ZohoBooks.settings.DELETE'
-
-		token_to_use = self.query_stored_tokens(master, scope)
-
-		api_url = 'https://www.zohoapis.in/books/v3/items/' + item_id + '?'
-
-		#r = self.request_access_token('ZohoBooks.settings.DELETE')
-		#authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
-		authorization = 'Zoho-oauthtoken ' + token_to_use
-
-		with requests.Session() as s:
-			s.params = {
-				'organization_id': self.organization_id
-			}
-
-			s.headers = {
-				'Authorization': authorization,
-				'content-type': 'application/json'
-				}
-
-			r = s.delete(api_url)
-			try:
-				r.raise_for_status()
-			except Exception as err:
-				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
-				raise err
-
-			return r.json().get('message')
 
 
 def update_item_in_zoho(doc, method):
-	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 		return
 
 	api_controller = frappe.get_doc("Zoho Books API")
@@ -428,7 +424,7 @@ def update_item_in_zoho(doc, method):
 
 
 def delete_item_in_zoho(doc, method):
-	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 		return
 
 	if doc.custom_zoho_item_id:
@@ -439,7 +435,7 @@ def delete_item_in_zoho(doc, method):
 
 
 def update_contact_in_zoho(doc, method):
-	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 		return
 
 	if doc.custom_update_zoho_contact == 0:
@@ -477,7 +473,7 @@ def update_contact_in_zoho(doc, method):
 
 
 def delete_contact_in_zoho(doc, method):
-	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 		return
 
 	if doc.custom_zoho_contact_id:
@@ -488,7 +484,7 @@ def delete_contact_in_zoho(doc, method):
 
 
 def update_supplier_contact_in_zoho(doc, method):
-	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 		return
 
 	api_controller = frappe.get_doc("Zoho Books API")
@@ -509,13 +505,67 @@ def update_supplier_contact_in_zoho(doc, method):
 
 	if doc.custom_zoho_contact_id == None:
 		res = api_controller.post_contact(data)
-		if res:
-			doc.custom_zoho_contact_id = res
+		if res.get("custom_zoho_contact_id"):
+			doc.custom_zoho_contact_id = res.get("custom_zoho_contact_id")
+			return doc.custom_zoho_contact_id
+			# returning this value for the add_supplier_to_zb function below (for bulk Supplier additions to Zoho)
 
 	else:
 		# put/update existing Contact
 		res = api_controller.put_contact(doc.custom_zoho_contact_id, data)
-		frappe.msgprint("Zoho Books API Response: " + res)
+		if res.get("custom_zoho_contact_id"):
+			# checks if the API controller handled a non-existing contact,
+			# in case of wrong/old Zoho Contact IDs stored in the ERP supplier record, by calling post instead
+			doc.custom_zoho_contact_id = res.get("custom_zoho_contact_id")
+			#return { "ADDED" }
+
+		else: # put/update response
+			frappe.msgprint("Zoho Books Response: " + res.get("message"))
+			#return { "UPDATED" }
+
+
+
+@frappe.whitelist(allow_guest=True)
+def fetch_erp_supplier_list():
+	#return frappe.get_all('Supplier', filters = {"disabled": 0})
+	return frappe.db.sql(
+		"""
+		SELECT name FROM tabSupplier
+		WHERE disabled = 0
+		AND custom_zoho_contact_id IS NULL
+		""",
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def add_supplier_to_zb(supplier):
+	doc = frappe.get_doc("Supplier", supplier)
+	custom_zoho_contact_id = update_supplier_contact_in_zoho(doc, method=None)
+	if custom_zoho_contact_id:
+		doc.custom_zoho_contact_id = custom_zoho_contact_id
+		doc.save()
+		return { "ADDED" }
+
+
+@frappe.whitelist(allow_guest=True)
+def get_zb_contacts_list():
+	api_controller = frappe.get_doc("Zoho Books API")
+	return api_controller.get_contacts()
+
+@frappe.whitelist(allow_guest=True)
+def sync_zb_contact_id_with_erp(contact_id, contact_name, contact_type):
+	if contact_type != "vendor":
+		return { "NOT VENDOR" }
+
+	if frappe.get_value("Supplier", contact_name, "name"):
+		if frappe.get_value("Supplier", contact_name, "custom_zoho_contact_id") != contact_id:
+			existing_supplier_doc = frappe.get_doc("Supplier", contact_name)
+			existing_supplier_doc.custom_zoho_contact_id = contact_id
+			existing_supplier_doc.save()
+			return { "UPDATED" }
+
+		return { "ERP" }
+
 
 
 """ def fetch_unsynced_sales_invoice_list():
@@ -527,22 +577,4 @@ def update_supplier_contact_in_zoho(doc, method):
 	)
 
 def sync_with_zoho_books(invoice):
-	pass
-
-@frappe.whitelist(allow_guest=True)
-def generate_grant_token():
-	url = ''
-	headers = {
-		'scope': '',
-		'client_id': '',
-		'state': 'testing',
-		'response_type': 'code',
-		'redirect_uri': '',
-		#'prompt': 'Consent'
-	}
-
-	#response = requests.get(url, data=data)
-	response = requests.request("GET", url, headers=headers)
-
-
-	return response """
+	pass """
