@@ -217,6 +217,33 @@ class ZohoBooksAPI(Document):
 				return r.json().get('contacts')
 
 
+	def get_taxes(self):
+		master = "settings"
+		scope='ZohoBooks.settings.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/settings/taxes?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			r.raise_for_status()
+			if r.json().get('message') == 'success':
+				return r.json().get('taxes')
+
+
 	def post_item(self, data):
 		master = "items"
 		scope='ZohoBooks.settings.CREATE'
@@ -378,20 +405,23 @@ def update_item_in_zoho(doc, method):
 	else:
 		product_type = "service"
 
-	uom = {
-		"Bag": "pcs",
-		"Bott": "pcs",
-		"Box": "box",
-		"Jar": "pcs",
-		"Kg": "kg",
-		"Litre": "litre",
-		"Nos": "pcs",
-		"Packet": "pcs",
-		"Set": "pcs",
-		"Slab": "pcs",
-		"Tin": "pcs",
-		"Tube": "pcs"
-	}
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchase Service":
+		uom = {
+			"Bag": "pcs",
+			"Bott": "pcs",
+			"Box": "box",
+			"Jar": "pcs",
+			"Kg": "kg",
+			"Litre": "litre",
+			"Nos": "pcs",
+			"Packet": "pcs",
+			"Set": "pcs",
+			"Slab": "pcs",
+			"Tin": "pcs",
+			"Tube": "pcs"
+		}
+	else:
+		frappe.throw("Please configure the UOM for this Company")
 
 	data = {
 		"name": doc.name,
@@ -462,14 +492,20 @@ def update_contact_in_zoho(doc, method):
 	if doc.custom_zoho_contact_id == None:
 		# post new Contact
 		res = api_controller.post_contact(data)
-		if res:
-			doc.custom_zoho_contact_id = res
+		if res.get("custom_zoho_contact_id"):
+			doc.custom_zoho_contact_id = res.get("custom_zoho_contact_id")
 
 	else:
 		# put/update existing Contact
 		res = api_controller.put_contact(doc.custom_zoho_contact_id, put_data)
-		msg = "Zoho Books API Response: " + res
-		frappe.msgprint(msg)
+		if res.get("custom_zoho_contact_id"):
+			# checks if the API controller handled a non-existing contact,
+			# in case of wrong/old Zoho Contact IDs stored in the ERP supplier record, by calling post instead
+			doc.custom_zoho_contact_id = res.get("custom_zoho_contact_id")
+		else:
+			# put/update response
+			frappe.msgprint("Zoho Books Response: " + res.get("message"))
+			#return { "UPDATED" }
 
 
 def delete_contact_in_zoho(doc, method):
