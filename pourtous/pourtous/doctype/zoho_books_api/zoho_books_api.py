@@ -420,9 +420,7 @@ class ZohoBooksAPI(Document):
 			r = s.get(api_url)
 
 			if r.json().get('message') == 'success':
-				return {
-					"custom_zoho_contact_id": r.json().get('tax_group'),
-				}
+				return r.json().get('tax_group')
 			else:
 				r.raise_for_status()
 
