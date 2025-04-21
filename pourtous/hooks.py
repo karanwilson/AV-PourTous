@@ -134,6 +134,10 @@ doc_events = {
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho", # update Zoho Books
         "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_item_in_zoho" # update Zoho Books
 	},
+    #"Item Tax Template": {
+    #    "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_tax_in_zoho", # update Zoho Books
+    #    "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_tax_in_zoho" # update Zoho Books
+    #},
 	#"Customer": {
         #"before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_contact_in_zoho",
         #"on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
@@ -327,13 +331,13 @@ fixtures = [
 
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
 
-                    #"Stock Entry Detail-custom_buying_price", # for opening stock
-                    #"Stock Entry Detail-custom_selling_price", # for opening stock
-
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
 
                     "Batch-custom_barcode", # for adding a batch barcode
                     "Batch-custom_buying_price", # for recording batch wise buying price
+
+                    "Item Tax Template-custom_zoho_tax_group_id",
+                    "Item Tax Template-custom_zoho_tax_igst_id"
 				)
 			]
 		]

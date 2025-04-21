@@ -6,7 +6,7 @@ from frappe.model.document import Document
 from frappe.utils import nowtime, nowdate
 from datetime import datetime, timedelta
 
-import requests, json
+import requests, json, re
 #import urllib
 
 
@@ -217,6 +217,245 @@ class ZohoBooksAPI(Document):
 				return r.json().get('contacts')
 
 
+	def post_tax(self, data):
+		master = "settings"
+		scope='ZohoBooks.settings.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/settings/taxes?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url, data=json.dumps(data))
+
+			if r.json().get('message') == 'The tax has been added.':
+				return {
+					"tax_id": r.json().get('tax').get('tax_id'),
+				}
+			elif r.json().get('message') == 'Tax or tax group already exists with this name.':
+				return {
+					"message": r.json().get('message'),
+				}
+			else:
+				r.raise_for_status()
+
+
+	def put_tax(self, tax_id, data):
+		master = "settings"
+		scope='ZohoBooks.settings.UPDATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/settings/taxes/' + tax_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.put(api_url, data=json.dumps(data))
+
+			if r.json().get('message') == 'The tax has been updated.':
+				return {
+					"custom_zoho_contact_id": r.json().get('tax').get('tax_id'),
+				}
+			else:
+				r.raise_for_status()
+
+			#{'code': 100017, 'message': 'Tax or tax group already exists with this name.'}
+
+
+	def get_a_tax(self, tax_id, data):
+		master = "settings"
+		scope='ZohoBooks.settings.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/settings/taxes/' + tax_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.put(api_url, data=json.dumps(data))
+
+			""" if r.json().get('message') == 'The contact has been added.':
+				return {
+					"custom_zoho_contact_id": r.json().get('contact').get('contact_id'),
+				}
+			else:
+				r.raise_for_status() """
+
+
+	def delete_tax(self, tax_id):
+		master = "settings"
+		scope='ZohoBooks.settings.DELETE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/settings/taxes/' + tax_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.delete(api_url)
+
+			r.raise_for_status()
+			return r.json().get('message')
+
+
+	def post_tax_group(self, data):
+		master = "settings"
+		scope='ZohoBooks.settings.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/settings/taxgroups?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url, data=json.dumps(data))
+
+			if r.json().get('message') == 'success':
+				return r.json().get('tax_group')
+			else:
+				r.raise_for_status()
+
+
+	def put_tax_group(self, tax_id, data):
+		master = "settings"
+		scope='ZohoBooks.settings.UPDATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/settings/taxgroups/' + tax_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.put(api_url, data=json.dumps(data))
+
+			""" if r.json().get('message') == 'The contact has been added.':
+				return {
+					"custom_zoho_contact_id": r.json().get('contact').get('contact_id'),
+				}
+			else:
+				r.raise_for_status() """
+
+
+	def get_a_tax_group(self, tax_id):
+		master = "settings"
+		scope='ZohoBooks.settings.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/settings/taxgroups/' + tax_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get('message') == 'success':
+				return {
+					"custom_zoho_contact_id": r.json().get('tax_group'),
+				}
+			else:
+				r.raise_for_status()
+
+
+	def delete_tax_group(self, tax_id):
+		master = "settings"
+		scope='ZohoBooks.settings.DELETE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/settings/taxgroups/' + tax_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.delete(api_url)
+
+			r.raise_for_status()
+			return r.json().get('message')
+			# {'code': 0, 'message': 'The tax group has been deleted.'}
+			# {'code': 100019,
+ 			# 'message': 'This tax cannot be deleted because it has been used in transactions.'}
+
+
 	def get_taxes(self):
 		master = "settings"
 		scope='ZohoBooks.settings.READ'
@@ -405,7 +644,7 @@ def update_item_in_zoho(doc, method):
 	else:
 		product_type = "service"
 
-	if frappe.defaults.get_user_default("company") == "Pour Tous Purchase Service":
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
 		uom = {
 			"Bag": "pcs",
 			"Bott": "pcs",
@@ -422,6 +661,9 @@ def update_item_in_zoho(doc, method):
 		}
 	else:
 		frappe.throw("Please configure the UOM for this Company")
+
+	#tax_doc = frappe.get_doc("Item Tax Template", doc.taxes[0].item_tax_template)
+	# tax_doc.gst_rate
 
 	data = {
 		"name": doc.name,
@@ -602,6 +844,157 @@ def sync_zb_contact_id_with_erp(contact_id, contact_name, contact_type):
 
 		return { "ERP" }
 
+
+@frappe.whitelist(allow_guest=True)
+def get_zb_tax_list():
+	api_controller = frappe.get_doc("Zoho Books API")
+	return api_controller.get_taxes()
+
+
+@frappe.whitelist(allow_guest=True)
+def sync_zb_tax_id_with_erp(tax_id, tax_name, tax_percentage, tax_type, tax_specific_type):
+	if tax_type == "tax_group" and re.search("CESS", tax_name):
+		# Match for GST-CESS Tax Groups
+
+		api_controller = frappe.get_doc("Zoho Books API")
+		zb_tax_group = api_controller.get_a_tax_group(tax_id)
+
+		# extracting GST rate from GST-CESS group
+		gst_rate = 0
+		for tax in zb_tax_group.get('taxes'):
+			if tax.get("tax_specific_type") != 'cess':
+				gst_rate += tax.get("tax_percentage")
+
+		existing_erp_tax_template = frappe.db.sql(
+			"""
+			SELECT name FROM `tabItem Tax Template`
+			WHERE disabled = 0 AND name like "%CESS%"
+			AND gst_rate = '{0}'
+			""".format(gst_rate),
+			as_dict=True
+			# AND custom_zoho_tax_group_id != '{2}'
+		)
+		if existing_erp_tax_template:
+			frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_group_id", tax_id)
+			return { "UPDATED" }
+
+
+	if tax_type == "tax_group" and not re.search("CESS", tax_name):
+		# Match for Non-CESS GST Tax Groups
+		existing_erp_tax_template = frappe.db.sql(
+			"""
+			SELECT name FROM `tabItem Tax Template`
+			WHERE disabled = 0 AND name not like "%CESS%"
+			AND gst_rate = '{0}'
+			""".format(tax_percentage),
+			as_dict=True
+			# AND custom_zoho_tax_group_id != '{2}'
+		)
+		if existing_erp_tax_template:
+			frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_group_id", tax_id)
+			return { "UPDATED" }
+
+
+	elif tax_type == "tax" and tax_specific_type == "igst":
+		existing_erp_tax_template = frappe.db.sql(
+			"""
+			SELECT name FROM `tabItem Tax Template`
+			WHERE disabled = 0
+			AND gst_rate = '{0}'
+			""".format(tax_percentage),
+			as_dict=True
+			# AND custom_zoho_tax_group_id != '{2}'
+		)
+		if existing_erp_tax_template:
+			frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_igst_id", tax_id)
+			return { "UPDATED" }
+
+	else:
+		return { "NO-MATCH" }
+
+
+@frappe.whitelist(allow_guest=True)
+def fetch_erp_tax_list():
+	return frappe.get_all('Item Tax Template', filters = {"disabled": 0})
+
+
+@frappe.whitelist(allow_guest=True)
+def sync_erp_taxes_to_zoho(erp_tax):
+	erp_tax_doc = frappe.get_doc("Item Tax Template", erp_tax)
+
+	zb_taxes = get_zb_tax_list()
+
+	#frappe.throw(str(zb_taxes))
+
+	for tax in zb_taxes:
+		# matching for Zoho Tax Groups
+		if tax.get("tax_type") == "tax_group" and tax.get("tax_percentage") == erp_tax_doc.gst_rate:
+			# The ERP Tax template has a corresponding Tax group on ZB
+			return
+
+	# The ERP Tax template does not have a corresponding Tax group on ZB; create it.
+	taxes = []
+
+	frappe.throw(str(zb_taxes[0]))
+
+	zb_default_taxes = {"0", "5", "12", "18", "28"}
+	# ZB default tax rates cannot be added via API
+
+	if erp_tax_doc.gst_rate in zb_default_taxes:
+		frappe.throw("Please Add the Defualt Tax Groups Manually in Zoho Books, as they cannot be created via API;" \
+		"However, please replicate the ERP Item Tax template names with the tax group names in Zoho Books, for an accurate Item-Tax mapping")
+
+	else:
+		# create the tax elements and group (GST 3%, etc.)
+		api_controller = frappe.get_doc("Zoho Books API")
+
+		cgst_rate = sgst_rate = float(erp_tax_doc.gst_rate) / 2
+
+		data1 = {
+			"tax_name": "SGST"+sgst_rate,
+			"tax_percentage": sgst_rate,
+			"tax_type": "tax",
+			"tax_specific_type": "sgst",
+			"tax_specification": "intra"
+		}
+
+		res1 = api_controller.post_tax(data1)
+		if res1.get("tax_id"):
+			taxes.append(res1.get("tax_id"))
+		elif res1.get("message") == 'Tax or tax group already exists with this name.':
+			for tax in zb_taxes:
+				if tax.get("tax_percentage") == erp_tax_doc.gst_rate:
+					taxes.append(tax.get("tax_id"))
+
+		data2 = {
+			"tax_name": "CGST"+cgst_rate,
+			"tax_percentage": cgst_rate,
+			"tax_type": "tax",
+			"tax_specific_type": "sgst",
+			"tax_specification": "intra"
+		}
+
+		res2 = api_controller.post_tax(data2)
+		if res2.get("tax_id"):
+			taxes.append(res2.get("tax_id"))
+		elif res2.get("message") == 'Tax or tax group already exists with this name.':
+			for tax in zb_taxes:
+				if tax.get("tax_percentage") == erp_tax_doc.gst_rate:
+					taxes.append(tax.get("tax_id"))
+
+		tax_group_data = {
+			"tax_name": erp_tax_doc.title,
+			"tax_percentage": erp_tax_doc.gst_rate,
+			"tax_type": "tax_group",
+			"tax_specification": "intra",
+			"taxes": taxes
+		}
+
+		res3 = api_controller.post_tax_group(tax_group_data)
+		if res3.get("tax_group"):
+			erp_tax_doc.custom_zoho_tax_group_id = res3.get("tax_group").get("tax_group_id")
+
+		erp_tax_doc.save()
 
 
 """ def fetch_unsynced_sales_invoice_list():
