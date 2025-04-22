@@ -47,7 +47,7 @@ frappe.listview_settings['Item Tax Template'] = {
         });
 
 
-        /* listview.page.add_inner_button("Sync ERP taxes with ZB", () => {
+        listview.page.add_inner_button("Sync ERP taxes with ZB", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_erp_tax_list',
                 async: false,
@@ -87,7 +87,7 @@ frappe.listview_settings['Item Tax Template'] = {
                     }
                 }
             });
-        }); */
+        });
 
     },
 };

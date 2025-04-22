@@ -659,6 +659,13 @@ def update_item_in_zoho(doc, method):
 		}
 	else:
 		frappe.throw("Please configure the UOM for this Company")
+	
+	""" item_tax_preferences = [
+		{
+			"tax_id": ,
+			"tax_specification": "intra"
+		}
+	] """
 
 	#tax_doc = frappe.get_doc("Item Tax Template", doc.taxes[0].item_tax_template)
 	# tax_doc.gst_rate
@@ -922,6 +929,22 @@ def sync_erp_taxes_to_zoho(erp_tax):
 
 	zb_taxes = get_zb_tax_list()
 
+	zb_default_taxes = {0, 5, 12, 18, 28}
+	# ZB default tax rates cannot be added via API
+
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	if erp_tax_doc.gst_rate not in zb_default_taxes:
+		# IGST tax for the above default taxes rates are generated in Zoho Books directly
+		data= {
+			"tax_name": "IGST"+str(int(erp_tax_doc.gst_rate)), # first remove the decimal, then convert to str
+			"tax_percentage": erp_tax_doc.gst_rate,
+			"tax_type": "tax",
+			"tax_specific_type": "igst",
+			"tax_specification": "inter"
+		}
+		api_controller.post_tax(data)
+
 	#frappe.throw(str(zb_taxes))
 
 	for tax in zb_taxes:
@@ -931,12 +954,9 @@ def sync_erp_taxes_to_zoho(erp_tax):
 			return
 
 	# The ERP Tax template does not have a corresponding Tax group on ZB; create it.
-	taxes = []
+	taxes = ""
 
-	frappe.throw(str(zb_taxes[0]))
-
-	zb_default_taxes = {"0", "5", "12", "18", "28"}
-	# ZB default tax rates cannot be added via API
+	#frappe.throw(str(zb_taxes[0]))
 
 	if erp_tax_doc.gst_rate in zb_default_taxes:
 		frappe.throw("Please Add the Defualt Tax Groups Manually in Zoho Books, as they cannot be created via API;" \
@@ -944,12 +964,11 @@ def sync_erp_taxes_to_zoho(erp_tax):
 
 	else:
 		# create the tax elements and group (GST 3%, etc.)
-		api_controller = frappe.get_doc("Zoho Books API")
 
 		cgst_rate = sgst_rate = float(erp_tax_doc.gst_rate) / 2
 
 		data1 = {
-			"tax_name": "SGST"+sgst_rate,
+			"tax_name": "SGST"+str(sgst_rate),
 			"tax_percentage": sgst_rate,
 			"tax_type": "tax",
 			"tax_specific_type": "sgst",
@@ -958,41 +977,46 @@ def sync_erp_taxes_to_zoho(erp_tax):
 
 		res1 = api_controller.post_tax(data1)
 		if res1.get("tax_id"):
-			taxes.append(res1.get("tax_id"))
+			#taxes.append(res1.get("tax_id"))
+			taxes += res1.get("tax_id")
 		elif res1.get("message") == 'Tax or tax group already exists with this name.':
 			for tax in zb_taxes:
-				if tax.get("tax_percentage") == erp_tax_doc.gst_rate:
-					taxes.append(tax.get("tax_id"))
+				#if tax.get("tax_percentage") == erp_tax_doc.gst_rate:
+					#taxes.append(tax.get("tax_id"))
+				if (tax.get("tax_percentage") == float(erp_tax_doc.gst_rate) / 2) and (tax.get("tax_name") == "SGST"+str(sgst_rate)):
+					taxes += tax.get("tax_id")
 
 		data2 = {
-			"tax_name": "CGST"+cgst_rate,
+			"tax_name": "CGST"+str(cgst_rate),
 			"tax_percentage": cgst_rate,
 			"tax_type": "tax",
-			"tax_specific_type": "sgst",
+			"tax_specific_type": "cgst",
 			"tax_specification": "intra"
 		}
 
 		res2 = api_controller.post_tax(data2)
 		if res2.get("tax_id"):
-			taxes.append(res2.get("tax_id"))
+			#taxes.append(res2.get("tax_id"))
+			taxes += ","+res2.get("tax_id")
 		elif res2.get("message") == 'Tax or tax group already exists with this name.':
 			for tax in zb_taxes:
-				if tax.get("tax_percentage") == erp_tax_doc.gst_rate:
-					taxes.append(tax.get("tax_id"))
+				#if tax.get("tax_percentage") == erp_tax_doc.gst_rate:
+					#taxes.append(tax.get("tax_id"))
+				if (tax.get("tax_percentage") == float(erp_tax_doc.gst_rate) / 2) and (tax.get("tax_name") == "CGST"+str(cgst_rate)):
+					taxes += ","+tax.get("tax_id")
 
 		tax_group_data = {
-			"tax_name": erp_tax_doc.title,
-			"tax_percentage": erp_tax_doc.gst_rate,
-			"tax_type": "tax_group",
-			"tax_specification": "intra",
+			"tax_group_name": erp_tax_doc.title,
 			"taxes": taxes
 		}
 
-		res3 = api_controller.post_tax_group(tax_group_data)
-		if res3.get("tax_group"):
-			erp_tax_doc.custom_zoho_tax_group_id = res3.get("tax_group").get("tax_group_id")
+		#frappe.throw(str(tax_group_data))
+		res4 = api_controller.post_tax_group(tax_group_data)
+		if res4:
+			erp_tax_doc.custom_zoho_tax_group_id = res4.get("tax_group_id")
+			erp_tax_doc.save()
+		
 
-		erp_tax_doc.save()
 
 
 """ def fetch_unsynced_sales_invoice_list():
