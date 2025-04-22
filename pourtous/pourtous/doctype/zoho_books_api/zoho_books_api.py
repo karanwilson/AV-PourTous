@@ -660,21 +660,24 @@ def update_item_in_zoho(doc, method):
 	else:
 		frappe.throw("Please configure the UOM for this Company")
 	
-	""" item_tax_preferences = [
-		{
-			"tax_id": ,
-			"tax_specification": "intra"
-		}
-	] """
-
-	#tax_doc = frappe.get_doc("Item Tax Template", doc.taxes[0].item_tax_template)
-	# tax_doc.gst_rate
+	zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+	zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 
 	data = {
 		"name": doc.name,
 		"description": doc.item_name,
 		"unit": uom[doc.stock_uom],
 		"product_type": product_type,
+		"item_tax_preferences": [
+			{
+				"tax_id": zb_intra_tax_id,
+				"tax_specification": "intra",
+			},
+			{
+				"tax_id": zb_inter_tax_id,
+				"tax_specification": "inter",
+			},
+		],
 		"hsn_or_sac": doc.gst_hsn_code,
 		"rate": 0
 	}
