@@ -502,11 +502,7 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.post(api_url, data=json.dumps(data))
-			try:
-				r.raise_for_status()
-			except Exception as err:
-				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
-				raise err
+			r.raise_for_status()
 
 			if r.json().get('message') == 'The item has been added.':
 				custom_zoho_item_id = r.json().get('item').get('item_id')
@@ -537,12 +533,7 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.put(api_url, data=json.dumps(data))
-			try:
-				r.raise_for_status()
-			except Exception as err:
-				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
-				raise err
-
+			r.raise_for_status()
 			return r.json().get('message')
 
 
@@ -567,13 +558,36 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.delete(api_url)
-			try:
-				r.raise_for_status()
-			except Exception as err:
-				frappe.msgprint("Zoho Books Response: " + r.json().get('message'))
-				raise err
+			r.raise_for_status()
 
 			return r.json().get('message')
+
+
+	def get_items(self):
+		master = "items"
+		scope='ZohoBooks.settings.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/items?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			r.raise_for_status()
+			if r.json().get('message') == 'success':
+				return r.json().get('items')
 
 
 	""" def post_invoice(self, invoice):
@@ -629,89 +643,6 @@ class ZohoBooksAPI(Document):
 				custom_zoho_contact_id = r.json().get('invoice').get('invoice_id')
 				return custom_zoho_contact_id """
 
-
-
-def update_item_in_zoho(doc, method):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
-		return
-
-	api_controller = frappe.get_doc("Zoho Books API")
-
-	if doc.is_stock_item == 1:
-		product_type = "goods"
-	else:
-		product_type = "service"
-
-	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
-		uom = {
-			"Bag": "pcs",
-			"Bott": "pcs",
-			"Box": "box",
-			"Jar": "pcs",
-			"Kg": "kg",
-			"Litre": "litre",
-			"Nos": "pcs",
-			"Packet": "pcs",
-			"Set": "pcs",
-			"Slab": "pcs",
-			"Tin": "pcs",
-			"Tube": "pcs"
-		}
-	else:
-		frappe.throw("Please configure the UOM for this Company")
-	
-	zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
-	zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
-
-	data = {
-		"name": doc.name,
-		"description": doc.item_name,
-		"unit": uom[doc.stock_uom],
-		"product_type": product_type,
-		"item_tax_preferences": [
-			{
-				"tax_id": zb_intra_tax_id,
-				"tax_specification": "intra",
-			},
-			{
-				"tax_id": zb_inter_tax_id,
-				"tax_specification": "inter",
-			},
-		],
-		"hsn_or_sac": doc.gst_hsn_code,
-		"rate": 0
-	}
-
-	put_data = {
-		"description": doc.item_name,
-		"unit": uom[doc.stock_uom],
-		"product_type": product_type,
-		"hsn_or_sac": doc.gst_hsn_code,
-		"rate": 0
-	}
-
-	if doc.custom_zoho_item_id == None:
-		# post new Item
-		res = api_controller.post_item(data)
-		if res:
-			doc.custom_zoho_item_id = res
-
-	else:
-		# put/update existing Item
-		res = api_controller.put_item(doc.custom_zoho_item_id, put_data)
-		msg = "Zoho Books API Response: " + res
-		frappe.msgprint(msg)
-
-
-def delete_item_in_zoho(doc, method):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
-		return
-
-	if doc.custom_zoho_item_id:
-		api_controller = frappe.get_doc("Zoho Books API")
-		res = api_controller.delete_item(doc.custom_zoho_item_id)
-		msg = "Zoho Books Response: " + res
-		frappe.msgprint(msg)
 
 
 def update_contact_in_zoho(doc, method):
@@ -947,6 +878,7 @@ def sync_erp_taxes_to_zoho(erp_tax):
 			"tax_specification": "inter"
 		}
 		api_controller.post_tax(data)
+		return { "UPDATED" }
 
 	#frappe.throw(str(zb_taxes))
 
@@ -1018,8 +950,140 @@ def sync_erp_taxes_to_zoho(erp_tax):
 		if res4:
 			erp_tax_doc.custom_zoho_tax_group_id = res4.get("tax_group_id")
 			erp_tax_doc.save()
-		
+			return { "UPDATED" }
 
+
+
+def update_item_in_zoho(doc, method):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
+		return
+
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	if doc.is_stock_item == 1:
+		product_type = "goods"
+	else:
+		product_type = "service"
+
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		uom = {
+			"Bag": "pcs",
+			"Bott": "pcs",
+			"Box": "box",
+			"Jar": "pcs",
+			"Kg": "kg",
+			"Litre": "litre",
+			"Nos": "pcs",
+			"Packet": "pcs",
+			"Set": "pcs",
+			"Slab": "pcs",
+			"Tin": "pcs",
+			"Tube": "pcs"
+		}
+	else:
+		frappe.throw("Please configure the UOM for this Company")
+	
+	zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+	zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+
+	data = {
+		"name": doc.name,
+		"description": doc.item_name,
+		"unit": uom[doc.stock_uom],
+		"product_type": product_type,
+		"item_tax_preferences": [
+			{
+				"tax_id": zb_intra_tax_id,
+				"tax_specification": "intra",
+			},
+			{
+				"tax_id": zb_inter_tax_id,
+				"tax_specification": "inter",
+			},
+		],
+		"hsn_or_sac": doc.gst_hsn_code,
+		"rate": 0
+	}
+
+	put_data = {
+		"description": doc.item_name,
+		"unit": uom[doc.stock_uom],
+		"product_type": product_type,
+		"item_tax_preferences": [
+			{
+				"tax_id": zb_intra_tax_id,
+				"tax_specification": "intra",
+			},
+			{
+				"tax_id": zb_inter_tax_id,
+				"tax_specification": "inter",
+			},
+		],
+		"hsn_or_sac": doc.gst_hsn_code,
+		"rate": 0
+	}
+
+	if doc.custom_zoho_item_id == None:
+		# post new Item
+		res = api_controller.post_item(data)
+		if res:
+			doc.custom_zoho_item_id = res
+			return doc.custom_zoho_item_id
+			# returning this value for the add_item_to_zb function below (for bulk Items additions to Zoho)
+
+	else:
+		# put/update existing Item
+		res = api_controller.put_item(doc.custom_zoho_item_id, put_data)
+		msg = "Zoho Books API Response: " + res
+		frappe.msgprint(msg)
+
+
+def delete_item_in_zoho(doc, method):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
+		return
+
+	if doc.custom_zoho_item_id:
+		api_controller = frappe.get_doc("Zoho Books API")
+		res = api_controller.delete_item(doc.custom_zoho_item_id)
+		msg = "Zoho Books Response: " + res
+		frappe.msgprint(msg)
+
+
+@frappe.whitelist(allow_guest=True)
+def fetch_erp_items_list():
+	#return frappe.get_all('Supplier', filters = {"disabled": 0})
+	return frappe.db.sql(
+		"""
+		SELECT name FROM tabItem
+		WHERE disabled = 0
+		AND custom_zoho_item_id IS NULL
+		""",
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def add_erp_item_to_zb(erp_item):
+	doc = frappe.get_doc("Item", erp_item)
+	custom_zoho_item_id = update_item_in_zoho(doc, method=None)
+	if custom_zoho_item_id:
+		doc.custom_zoho_item_id = custom_zoho_item_id
+		doc.save()
+		return { "ADDED" }
+
+
+@frappe.whitelist(allow_guest=True)
+def get_zb_item_list():
+	api_controller = frappe.get_doc("Zoho Books API")
+	return api_controller.get_items()
+
+
+@frappe.whitelist(allow_guest=True)
+def sync_zb_item_id_with_erp(item_id, item_name):
+	if frappe.get_value("Item", item_name, "name"):
+		existing_item_doc = frappe.get_doc("Item", item_name)
+		existing_item_doc.custom_zoho_item_id = item_id
+		existing_item_doc.save()
+		return { "UPDATED" }
 
 
 """ def fetch_unsynced_sales_invoice_list():
