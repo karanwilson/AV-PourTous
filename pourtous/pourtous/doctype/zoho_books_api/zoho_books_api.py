@@ -793,29 +793,52 @@ def get_zb_tax_list():
 @frappe.whitelist(allow_guest=True)
 def sync_zb_tax_id_with_erp(tax_id, tax_name, tax_percentage, tax_type, tax_specific_type):
 	if tax_type == "tax_group" and re.search("CESS", tax_name):
-		# Match for GST-CESS Tax Groups
+		# Match for I/GST-CESS Tax Groups
 
 		api_controller = frappe.get_doc("Zoho Books API")
 		zb_tax_group = api_controller.get_a_tax_group(tax_id)
 
-		# extracting GST rate from GST-CESS group
-		gst_rate = 0
+		# extracting GST/IGST rate from the I/GST-CESS groups
+		gst_rate = igst_rate = 0
+		zb_tax_specific_type = ""
 		for tax in zb_tax_group.get('taxes'):
 			if tax.get("tax_specific_type") != 'cess':
-				gst_rate += tax.get("tax_percentage")
+				if tax.get("tax_specific_type") == 'sgst' or tax.get("tax_specific_type") == 'cgst':
+					gst_rate += tax.get("tax_percentage")
+					zb_tax_specific_type = "gst"
+				elif tax.get("tax_specific_type") == 'igst':
+					igst_rate = tax.get("tax_percentage")
+					zb_tax_specific_type = 'igst'
 
-		existing_erp_tax_template = frappe.db.sql(
-			"""
-			SELECT name FROM `tabItem Tax Template`
-			WHERE disabled = 0 AND name like "%CESS%"
-			AND gst_rate = '{0}'
-			""".format(gst_rate),
-			as_dict=True
-			# AND custom_zoho_tax_group_id != '{2}'
-		)
-		if existing_erp_tax_template:
-			frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_group_id", tax_id)
-			return { "UPDATED" }
+		if zb_tax_specific_type == "gst":
+			existing_erp_tax_template = frappe.db.sql(
+				"""
+				SELECT name FROM `tabItem Tax Template`
+				WHERE disabled = 0 AND name like "%CESS%"
+				AND gst_rate = '{0}'
+				""".format(gst_rate),
+				as_dict=True
+				# AND custom_zoho_tax_group_id != '{2}'
+			)
+
+			if existing_erp_tax_template:
+				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_group_id", tax_id)
+				return { "UPDATED" }
+		
+		else:
+			existing_erp_tax_template = frappe.db.sql(
+				"""
+				SELECT name FROM `tabItem Tax Template`
+				WHERE disabled = 0 AND name like "%CESS%"
+				AND gst_rate = '{0}'
+				""".format(igst_rate),
+				as_dict=True
+				# AND custom_zoho_tax_group_id != '{2}'
+			)
+
+			if existing_erp_tax_template:
+				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_igst_id", tax_id)
+				return { "UPDATED" }
 
 
 	if tax_type == "tax_group" and not re.search("CESS", tax_name):
@@ -858,7 +881,7 @@ def fetch_erp_tax_list():
 
 
 @frappe.whitelist(allow_guest=True)
-def sync_erp_taxes_to_zoho(erp_tax):
+def sync_erp_taxes_with_zoho(erp_tax):
 	erp_tax_doc = frappe.get_doc("Item Tax Template", erp_tax)
 
 	zb_taxes = get_zb_tax_list()
@@ -894,7 +917,7 @@ def sync_erp_taxes_to_zoho(erp_tax):
 	#frappe.throw(str(zb_taxes[0]))
 
 	if erp_tax_doc.gst_rate in zb_default_taxes:
-		frappe.throw("Please Add the Defualt Tax Groups Manually in Zoho Books, as they cannot be created via API;" \
+		frappe.throw("Please Add the Defualt Tax Groups Manually in Zoho Books, as they cannot be created via API (Zoho does not list them in a GET Call);" \
 		"However, please replicate the ERP Item Tax template names with the tax group names in Zoho Books, for an accurate Item-Tax mapping")
 
 	else:
@@ -978,50 +1001,57 @@ def update_item_in_zoho(doc, method):
 			"Set": "pcs",
 			"Slab": "pcs",
 			"Tin": "pcs",
-			"Tube": "pcs"
+			"Tube": "pcs",
+			"Pk": "pcs"
 		}
 	else:
 		frappe.throw("Please configure the UOM for this Company")
-	
-	zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
-	zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 
-	data = {
-		"name": doc.name,
-		"description": doc.item_name,
-		"unit": uom[doc.stock_uom],
-		"product_type": product_type,
-		"item_tax_preferences": [
-			{
-				"tax_id": zb_intra_tax_id,
-				"tax_specification": "intra",
-			},
-			{
-				"tax_id": zb_inter_tax_id,
-				"tax_specification": "inter",
-			},
-		],
-		"hsn_or_sac": doc.gst_hsn_code,
-		"rate": 0
-	}
+	try:
+		zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+		zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+	except Exception as err:
+		msg = "Please verify the Tax template for Item Code " + doc.item_code
+		frappe.msgprint(msg)
+		return
 
-	put_data = {
-		"description": doc.item_name,
-		"unit": uom[doc.stock_uom],
-		"product_type": product_type,
-		"item_tax_preferences": [
-			{
-				"tax_id": zb_intra_tax_id,
-				"tax_specification": "intra",
-			},
-			{
-				"tax_id": zb_inter_tax_id,
-				"tax_specification": "inter",
-			},
-		],
-		"hsn_or_sac": doc.gst_hsn_code,
-		"rate": 0
-	}
+	else:
+		data = {
+			"name": doc.name,
+			"description": doc.item_name,
+			"unit": uom[doc.stock_uom],
+			"product_type": product_type,
+			"item_tax_preferences": [
+				{
+					"tax_id": zb_intra_tax_id,
+					"tax_specification": "intra",
+				},
+				{
+					"tax_id": zb_inter_tax_id,
+					"tax_specification": "inter",
+				},
+			],
+			"hsn_or_sac": doc.gst_hsn_code,
+			"rate": 0
+		}
+
+		put_data = {
+			"description": doc.item_name,
+			"unit": uom[doc.stock_uom],
+			"product_type": product_type,
+			"item_tax_preferences": [
+				{
+					"tax_id": zb_intra_tax_id,
+					"tax_specification": "intra",
+				},
+				{
+					"tax_id": zb_inter_tax_id,
+					"tax_specification": "inter",
+				},
+			],
+			"hsn_or_sac": doc.gst_hsn_code,
+			"rate": 0
+		}
 
 	if doc.custom_zoho_item_id == None:
 		# post new Item
@@ -1062,7 +1092,7 @@ def fetch_erp_items_list():
 	)
 
 @frappe.whitelist(allow_guest=True)
-def add_erp_item_to_zb(erp_item):
+def add_erp_item_in_zb(erp_item):
 	doc = frappe.get_doc("Item", erp_item)
 	custom_zoho_item_id = update_item_in_zoho(doc, method=None)
 	if custom_zoho_item_id:

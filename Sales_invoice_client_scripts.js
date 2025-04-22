@@ -9,7 +9,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         const length = r.message.length;
                         console.log("Number of SO to process: ", length);
 						console.log("Sales Orders to Invoice: ", r.message);
-                        console.log("r.message[0][0]: ", r.message[0][0]);
+                        //console.log("r.message[0][0]: ", r.message[0][0]);
                         let done = 0, error = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
@@ -48,7 +48,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         const length = r.message.length;
                         console.log("Number of SO to process: ", length);
 						console.log("Sales Orders to Invoice: ", r.message);
-                        console.log("r.message[0][0]: ", r.message[0][0]);
+                        //console.log("r.message[0][0]: ", r.message[0][0]);
                         let done = 0, error = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {

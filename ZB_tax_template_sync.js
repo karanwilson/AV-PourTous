@@ -63,7 +63,7 @@ frappe.listview_settings['Item Tax Template'] = {
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_erp_taxes_to_zoho',
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_erp_taxes_with_zoho',
                                     args: {
                                         erp_tax: r.message[i]["name"]
                                     },
@@ -81,7 +81,7 @@ frappe.listview_settings['Item Tax Template'] = {
                                 });
                                 const count = i+1;
                                 const message = "Updating "+count+" of "+length;
-                                frappe.show_progress("Syncing Zoho Books Tax IDs with ERP", count, length, message);
+                                frappe.show_progress("Syncing ERP Taxes with Zoho Books", count, length, message);
                             }, 0);
                         }
                     }

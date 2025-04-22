@@ -9,7 +9,6 @@ frappe.listview_settings['Item'] = {
                         const length = r.message.length;
                         console.log("Length of the ZB Item List: ", length);
 						console.log("Item List: ", r.message);
-                        console.log("r.message[0]: ", r.message[0]);
                         let updated = 0, no_match = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
@@ -49,12 +48,13 @@ frappe.listview_settings['Item'] = {
                         const length = r.message.length;
                         console.log("Length of the ERP Items List: ", length);
 						console.log("Items List: ", r.message);
-                        console.log("r.message[0]: ", r.message[0]);
+                        //length = 1000;
+                        //console.log("Limiting Length to: ", length);
                         let added = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.add_erp_item_to_zb',
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.add_erp_item_in_zb',
                                     args: {
                                         erp_item: r.message[i]["name"]
                                     },
@@ -70,7 +70,7 @@ frappe.listview_settings['Item'] = {
                                 });
                                 const count = i+1;
                                 const message = "Updating "+count+" of "+length;
-                                frappe.show_progress("Syncing Zoho Books Tax IDs with ERP", count, length, message);
+                                frappe.show_progress("Adding ERP Items in Zoho Books", count, length, message);
                             }, 0);
                         }
                     }
