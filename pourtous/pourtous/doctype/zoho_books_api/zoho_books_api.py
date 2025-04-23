@@ -590,6 +590,63 @@ class ZohoBooksAPI(Document):
 				return r.json().get('items')
 
 
+
+	def post_invoice(self, invoice):
+			api_url = 'https://www.zohoapis.in/books/v3/bills?'
+
+			r = self.request_access_token(scope='ZohoBooks.bills.CREATE')
+			authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
+
+			data = {
+				'bill_id': '2464766000000103184',
+				'vendor_id': '2464766000000048213',
+				'vendor_name': 'RV Computers',
+				'status': 'overdue',
+				'color_code': '',
+				'current_sub_status_id': '',
+				'current_sub_status': 'overdue',
+				'bill_number': '000142',
+				'reference_number': '',
+				'date': '2025-04-16',
+				'due_date': '2025-04-16',
+				'due_days': 'Overdue by 7 days',
+				'currency_id': '2464766000000000064',
+				'currency_code': 'INR',
+				'price_precision': 2,
+				'exchange_rate': 1.0,
+				'total': 3450.01,
+				'balance': 3450.01,
+				'has_attachment': False,
+				'tags': [],
+				'is_uber_bill': False,
+				'is_tally_bill': False,
+				'entity_type': 'bill',
+				'client_viewed_time': '',
+				'is_viewed_by_client': False,
+				'branch_id': '2464766000000030367',
+				'location_id': '2464766000000030367',
+				'location_name': 'Head Office',
+				'is_bill_reconciliation_violated': False
+			}
+
+			with requests.Session() as s:
+				s.params = {
+					'organization_id': self.organization_id
+				}
+
+				s.headers = {
+					'Authorization': authorization,
+					'content-type': 'application/json'
+					}			
+
+				r = s.post(api_url, data=json.loads(data))
+				r.raise_for_status()
+
+				if r.json().get('message') == 'The invoice has been added.':
+					custom_zoho_contact_id = r.json().get('invoice').get('invoice_id')
+					return custom_zoho_contact_id
+
+
 	""" def post_invoice(self, invoice):
 		api_url = 'https://www.zohoapis.in/books/v3/invoices?'
 
@@ -1005,13 +1062,14 @@ def update_item_in_zoho(doc, method):
 			"Pk": "pcs"
 		}
 	else:
-		frappe.throw("Please configure the UOM for this Company")
+		frappe.throw("Please configure the UOM Mapping for this Company")
 
 	try:
 		zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
 		zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+		zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
 	except Exception as err:
-		msg = "Please verify the Tax template for Item Code " + doc.item_code
+		msg = "Please verify the Tax-template/Supplier for Item Code " + doc.item_code
 		frappe.msgprint(msg)
 		return
 
@@ -1031,6 +1089,12 @@ def update_item_in_zoho(doc, method):
 					"tax_specification": "inter",
 				},
 			],
+			'can_be_purchased': True,
+			'item_type': 'sales_and_purchases',
+			'vendor_id': zb_contact_id,
+			'purchase_account_id': '2464766000000030873',
+			'purchase_account_name': 'Purchases',
+			'purchase_description': doc.item_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -1099,6 +1163,40 @@ def add_erp_item_in_zb(erp_item):
 		doc.custom_zoho_item_id = custom_zoho_item_id
 		doc.save()
 		return { "ADDED" }
+
+
+""" @frappe.whitelist(allow_guest=True)
+def add_erp_item_in_zb(erp_item):
+	doc = frappe.get_doc("Item", erp_item)
+	custom_zoho_item_id = update_item_in_zoho(doc, method=None)
+	if custom_zoho_item_id:
+		doc.custom_zoho_item_id = custom_zoho_item_id
+		doc.save()
+		return { "ADDED" }
+
+	try:
+		zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
+	except Exception as err:
+		msg = "Please verify the Supplier for Item Code " + doc.item_code
+		frappe.msgprint(msg)
+		return
+
+	data = {
+		'can_be_purchased': True,
+		'item_type': 'sales_and_purchases',
+		'vendor_id': zb_contact_id,
+		'purchase_account_id': '2464766000000030873',
+		'purchase_account_name': 'Purchases',
+		'purchase_description': doc.item_name,
+	}
+
+	api_controller = frappe.get_doc("Zoho Books API")
+	res = api_controller.put_item(doc.custom_zoho_item_id, data)
+
+	if res == 'Item details have been saved.':
+		#doc.save()
+		return { "ADDED" } """
+	
 
 
 @frappe.whitelist(allow_guest=True)
