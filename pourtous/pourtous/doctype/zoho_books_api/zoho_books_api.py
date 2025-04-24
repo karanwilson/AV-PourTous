@@ -1113,6 +1113,12 @@ def update_item_in_zoho(doc, method):
 					"tax_specification": "inter",
 				},
 			],
+			'can_be_purchased': True,
+			'item_type': 'sales_and_purchases',
+			'vendor_id': zb_contact_id,
+			'purchase_account_id': '2464766000000030873',
+			'purchase_account_name': 'Purchases',
+			'purchase_description': doc.item_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
