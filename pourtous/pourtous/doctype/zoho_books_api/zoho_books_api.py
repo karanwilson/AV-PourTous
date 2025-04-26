@@ -217,6 +217,33 @@ class ZohoBooksAPI(Document):
 				return r.json().get('contacts')
 
 
+	def get_a_contact(self, contact_id):
+		master = "contacts"
+		scope='ZohoBooks.contacts.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/contacts/' + contact_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			r.raise_for_status()
+			if r.json().get('message') == 'success':
+				return r.json().get('contact')
+
+
 	def post_tax(self, data):
 		master = "settings"
 		scope='ZohoBooks.settings.CREATE'
@@ -588,6 +615,39 @@ class ZohoBooksAPI(Document):
 			r.raise_for_status()
 			if r.json().get('message') == 'success':
 				return r.json().get('items')
+
+
+
+	def post_bill(self, data):
+		master = "bills"
+		scope='ZohoBooks.bills.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/bills?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+			}
+
+			r = s.post(api_url, data=json.dumps(data))
+			r.raise_for_status()
+			#frappe.throw(str(r.json()))
+
+			if r.json().get('message') == 'The bill has been created.':
+				return r.json().get('bill').get('bill_id')
+
+			else:
+				frappe.msgprint(r.json().get('message'))
+
 
 
 	""" def post_invoice(self, invoice):
@@ -1005,13 +1065,14 @@ def update_item_in_zoho(doc, method):
 			"Pk": "pcs"
 		}
 	else:
-		frappe.throw("Please configure the UOM for this Company")
+		frappe.throw("Please configure the UOM Mapping for this Company")
 
 	try:
 		zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
 		zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+		zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
 	except Exception as err:
-		msg = "Please verify the Tax template for Item Code " + doc.item_code
+		msg = "Please verify the Tax-template/Supplier/ZB-tax_id for Item Code " + doc.item_code
 		frappe.msgprint(msg)
 		return
 
@@ -1031,6 +1092,12 @@ def update_item_in_zoho(doc, method):
 					"tax_specification": "inter",
 				},
 			],
+			'can_be_purchased': True,
+			'item_type': 'sales_and_purchases',
+			'vendor_id': zb_contact_id,
+			'purchase_account_id': '2464766000000030873',
+			'purchase_account_name': 'Purchases',
+			'purchase_description': doc.item_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -1049,6 +1116,12 @@ def update_item_in_zoho(doc, method):
 					"tax_specification": "inter",
 				},
 			],
+			'can_be_purchased': True,
+			'item_type': 'sales_and_purchases',
+			'vendor_id': zb_contact_id,
+			'purchase_account_id': '2464766000000030873',
+			'purchase_account_name': 'Purchases',
+			'purchase_description': doc.item_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -1114,6 +1187,112 @@ def sync_zb_item_id_with_erp(item_id, item_name):
 		existing_item_doc.custom_zoho_item_id = item_id
 		existing_item_doc.save()
 		return { "UPDATED" }
+
+
+@frappe.whitelist(allow_guest=True)
+def fetch_erp_bills_list():
+	return frappe.get_all('Purchase Receipt', filters = {
+		"docstatus": 1,
+		"custom_zoho_bill_id": ["is", "not set"]
+	})
+
+
+@frappe.whitelist(allow_guest=True)
+def add_erp_bills_in_zoho(bill):
+	bill_doc = frappe.get_doc("Purchase Receipt", bill)
+
+	# Check if Supplier is Inter/Intra state
+
+	contact_id = frappe.get_value("Supplier", bill_doc.supplier, "custom_zoho_contact_id")
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	try:
+		contact = api_controller.get_a_contact(contact_id)
+		# r2.json().get('contact').get("tax_info_list")[0].get('place_of_supply')
+		if contact.get("tax_info_list")[0].get('place_of_supply') == 'TN':
+			tax_specification = "intra"
+		else:
+			tax_specification = "inter"
+	except Exception as err:
+		frappe.msgprint(str(err))
+		return
+
+	line_items = []
+
+	for item in bill_doc.items:
+		item_doc = frappe.get_doc("Item", item.item_code)
+
+		try:
+			if tax_specification == "intra":
+				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+			else:
+				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+		except Exception as err:
+			frappe.msgprint(str(err))
+			msg = "Please verify the Tax-template/Supplier/ZB-tax_id for Item Code " + item.item_code
+			frappe.msgprint(msg)
+			return
+
+		else:
+			line_item = {
+				"item_id": frappe.get_value("Item", item.item_code, "custom_zoho_item_id"),
+				"rate": item.price_list_rate,
+				"quantity": item.qty,
+				"tax_id": tax_id
+			}
+			line_items.append(line_item)
+
+	date = bill_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+
+	data = {
+		'vendor_id': frappe.get_value("Supplier", bill_doc.supplier, "custom_zoho_contact_id"),
+		'bill_number': bill_doc.name,
+		'date': date,
+		"is_inclusive_tax": False,
+		'price_precision': 2,
+		'location_id': '2464766000000030367',
+		"line_items": line_items
+	}
+
+	res = api_controller.post_bill(data)
+	if res:
+		bill_doc.custom_zoho_bill_id = res
+		bill_doc.save()
+		frappe.db.commit()
+		return { "ADDED" }
+
+
+""" @frappe.whitelist(allow_guest=True)
+def add_erp_item_in_zb(erp_item):
+	doc = frappe.get_doc("Item", erp_item)
+	custom_zoho_item_id = update_item_in_zoho(doc, method=None)
+	if custom_zoho_item_id:
+		doc.custom_zoho_item_id = custom_zoho_item_id
+		doc.save()
+		return { "ADDED" }
+
+	try:
+		zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
+	except Exception as err:
+		msg = "Please verify the Supplier for Item Code " + doc.item_code
+		frappe.msgprint(msg)
+		return
+
+	data = {
+		'can_be_purchased': True,
+		'item_type': 'sales_and_purchases',
+		'vendor_id': zb_contact_id,
+		'purchase_account_id': '2464766000000030873',
+		'purchase_account_name': 'Purchases',
+		'purchase_description': doc.item_name,
+	}
+
+	api_controller = frappe.get_doc("Zoho Books API")
+	res = api_controller.put_item(doc.custom_zoho_item_id, data)
+
+	if res == 'Item details have been saved.':
+		#doc.save()
+		return { "ADDED" } """
 
 
 """ def fetch_unsynced_sales_invoice_list():
