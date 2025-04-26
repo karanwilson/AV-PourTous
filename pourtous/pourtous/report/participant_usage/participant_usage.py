@@ -7,7 +7,6 @@ from frappe import _, msgprint
 
 def execute(filters=None):
 	if not (filters.from_date and filters.to_date): # don't execute until filters are set
-		msgprint(_("Please enter both 'from' and 'to' dates"))
 		return [], []
 
 	columns, data = [], []
