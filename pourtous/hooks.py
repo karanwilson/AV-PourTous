@@ -156,10 +156,11 @@ doc_events = {
     "Batch": {
         "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
     },
-    #"Sales Order": {
+    "Sales Order": {
+        #"before_insert": "pourtous.api.get_sales_tax_template",
         #"before_cancel": "pourtous.api.cancel_stock_reservation", # removes the associated Sales Order Stock Reservation
         #"before_submit": "pourtous.api.make_stock_reservation" # adds stock reservation for the Sales Order
-    #},
+    },
 # 	"*": {
 # 		"on_update": "method",
 # 		"on_cancel": "method",
@@ -285,7 +286,7 @@ fixtures = [
                     "Sales Invoice-custom_fs_account_number", # to Identify Invoice based on FS Account number
                     "Sales Invoice-custom_transaction_date", # in case transaction date is earlier than the posting date
                     "Sales Invoice-custom_staff_member", # in case of accounts shared by a group
-                    "Sales Invoice-custom_zb_sync_status", # for syncing with Zoho Books
+                    "Sales Invoice-custom_zoho_invoice_id", # for syncing with Zoho Books
 
                     "Sales Order-custom_fs_account_number", # to Identify Sales Order based on FS Account number
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions

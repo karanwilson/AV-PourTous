@@ -87,7 +87,7 @@ def fetch_orders_to_invoice():
 				docstatus = 1
 				AND status not in ("Closed", "On Hold")
 				AND per_billed < 99.99
-				AND transaction_date > "2025-04-05"
+				AND transaction_date NOT BETWEEN "2025-04-03" AND "2025-04-05"
 				AND company = '{0}'
 			ORDER BY
 				customer
@@ -476,6 +476,33 @@ def get_tax_template():
 	)
 
 
+@frappe.whitelist(allow_guest=True)
+def get_sales_tax_template(doc, method):
+	tax_template = frappe.get_list(
+		'Sales Taxes and Charges Template',
+		{
+			"company": frappe.defaults.get_user_default("company"),
+			"tax_category": "In-State"
+		},
+		"name"
+	)
+	#frappe.throw("before_insert")
+	#doc.taxes_and_charges = tax_template[0].get("name")
+	tax_doc = frappe.get_doc("Sales Taxes and Charges Template", tax_template[0].get("name"))
+
+	for tax_detail in tax_doc.taxes:
+		found = any(tax.account_head == tax_detail.get("account_head") for tax in doc.taxes)
+		if not found:
+			doc.append("taxes",
+				{
+					"description": tax_detail.get("description"),
+					"charge_type": "On Net Total",
+					"account_head": tax_detail.get("account_head"),
+					"included_in_print_rate": tax_detail.get("included_in_print_rate"),
+				}
+			)
+
+
 def create_barcode(doc, method):
 	from stdnum import ean
 	pre_barcode = '890' + doc.name
@@ -714,6 +741,8 @@ def payment_entry_for_return(doc, method):
                	"paid_amount": -(doc.grand_total),
                	"received_amount": -(doc.grand_total),
                	"company": doc.company,
+				"custom_remarks": 1,
+				"remarks": doc.name
             }
         )
 
