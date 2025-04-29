@@ -1,36 +1,36 @@
 frappe.listview_settings['Sales Invoice'] = {
     refresh(listview) {
-        listview.page.add_inner_button("TaxExc Process Orders to Invoices", () => {
+        listview.page.add_inner_button("Add ERP Invoices in ZB", () => {
             frappe.call({
-                method: 'pourtous.api.tax_exception_fetch_orders_to_invoice',
+                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_invoice_list',
                 async: false,
                 callback: (r) => {
                     if (r.message) {
                         const length = r.message.length;
-                        console.log("Number of SO to process: ", length);
-						console.log("Sales Orders to Invoice: ", r.message);
-                        //console.log("r.message[0][0]: ", r.message[0][0]);
-                        let done = 0, error = 0;
-                        for (let i = 0; i < length; i++) {
+                        console.log("Number of invoices to sync: ", length);
+                        console.log("Invoice List: ", r.message);
+                        //console.log("r.message[0]['name']: ", r.message[0]["name"]);
+                        let added = 0;
+                        for (let i = 0; i < 10; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.api.tax_exception_process_orders_to_invoice',
-                                    args: { order: r.message[i][0] },
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_with_zoho_books',
+                                    args: {
+                                        invoice: r.message[i]["name"],
+                                    },
                                     async: false,
                                 }).then(r => {
-                                    if (r.message == "DONE")
-                                        done++;
-                                    else if (r.message == "ERROR")
-                                        error++;
+                                    if (r.message == "ADDED")
+                                        added++;
                                 }).then(r => {
                                     // placing this statement block here as it does not work outside of the main frappe.call block
                                     // though it prints on console for each loop iteration (comes in only one line, with the loop count),
                                     // it shows an accurate result in the end. This design works.
-                                    console.log("Created Invoices: ", done, "; Error: ", error, "; of total ", length, " Sales Orders");
+                                    console.log("Added ", added, ", of ", length);
                                 });
                                 const count = i+1;
-                                const message = "Loading "+count+" of "+length;
-                                frappe.show_progress("Processing Sales Orders to Invoices", count, length, message);
+                                const message = "Adding "+count+" of "+length;
+                                frappe.show_progress("Pushing Invoices to Zoho Books", count, length, message);
                             }, 0);
                         }
                     }
@@ -111,6 +111,45 @@ frappe.listview_settings['Sales Invoice'] = {
                 }
             });
         });
+
+
+        /* listview.page.add_inner_button("TaxExc Process Orders to Invoices", () => {
+            frappe.call({
+                method: 'pourtous.api.tax_exception_fetch_orders_to_invoice',
+                async: false,
+                callback: (r) => {
+                    if (r.message) {
+                        const length = r.message.length;
+                        console.log("Number of SO to process: ", length);
+						console.log("Sales Orders to Invoice: ", r.message);
+                        //console.log("r.message[0][0]: ", r.message[0][0]);
+                        let done = 0, error = 0;
+                        for (let i = 0; i < length; i++) {
+                            setTimeout(() => {
+                                frappe.call({
+                                    method: 'pourtous.api.tax_exception_process_orders_to_invoice',
+                                    args: { order: r.message[i][0] },
+                                    async: false,
+                                }).then(r => {
+                                    if (r.message == "DONE")
+                                        done++;
+                                    else if (r.message == "ERROR")
+                                        error++;
+                                }).then(r => {
+                                    // placing this statement block here as it does not work outside of the main frappe.call block
+                                    // though it prints on console for each loop iteration (comes in only one line, with the loop count),
+                                    // it shows an accurate result in the end. This design works.
+                                    console.log("Created Invoices: ", done, "; Error: ", error, "; of total ", length, " Sales Orders");
+                                });
+                                const count = i+1;
+                                const message = "Loading "+count+" of "+length;
+                                frappe.show_progress("Processing Sales Orders to Invoices", count, length, message);
+                            }, 0);
+                        }
+                    }
+                }
+            });
+        }); */
 
         /* listview.page.add_inner_button("Sync with Zoho Books", () => {
             frappe.call({

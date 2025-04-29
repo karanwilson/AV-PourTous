@@ -105,12 +105,12 @@ def fetch_orders_to_invoice():
 				AND status not in ("Closed", "On Hold")
 				AND per_billed < 99.99
 				AND grand_total = advance_paid
-				AND transaction_date > "2025-04-05"
 				AND company = '{0}'
 			ORDER BY
 				customer
 			""".format(frappe.defaults.get_user_default("company")),
 			#as_dict=1,
+			# AND transaction_date > "2025-04-05"
 		)
 
 
