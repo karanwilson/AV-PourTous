@@ -535,8 +535,9 @@ class ZohoBooksAPI(Document):
 				return custom_zoho_item_id
 
 			else:
-				frappe.msgprint(r.json().get('message'))
+				#frappe.msgprint(r.json().get('message'))
 				#r.raise_for_status()
+				return r.json().get('message')
 
 
 	def put_item(self, item_id, data):
@@ -560,8 +561,12 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.put(api_url, data=json.dumps(data))
-			r.raise_for_status()
-			return r.json().get('message')
+			#r.raise_for_status()
+			if r.json().get('message') == "This item cannot be edited as it does not exist.":
+				return self.post_item(data)
+
+			else:
+				return r.json().get('message')
 
 
 	def delete_item(self, item_id):
@@ -1082,7 +1087,8 @@ def update_item_in_zoho(doc, method):
 
 	else:
 		data = {
-			"name": doc.name,
+			"sku": doc.item_code,
+			"name": doc.item_name,
 			"description": doc.item_name,
 			"unit": uom[doc.stock_uom],
 			"product_type": product_type,
@@ -1107,6 +1113,8 @@ def update_item_in_zoho(doc, method):
 		}
 
 		put_data = {
+			#"sku": doc.item_code,
+			"name": doc.item_name,
 			"description": doc.item_name,
 			"unit": uom[doc.stock_uom],
 			"product_type": product_type,
@@ -1141,7 +1149,7 @@ def update_item_in_zoho(doc, method):
 	else:
 		# put/update existing Item
 		res = api_controller.put_item(doc.custom_zoho_item_id, put_data)
-		msg = "Zoho Books API Response: " + res
+		msg = "Zoho Books API Response: " + str(res)
 		frappe.msgprint(msg)
 
 
@@ -1176,6 +1184,60 @@ def add_erp_item_in_zb(erp_item):
 		doc.custom_zoho_item_id = custom_zoho_item_id
 		doc.save()
 		return { "ADDED" }
+
+
+@frappe.whitelist(allow_guest=True)
+def custom_fetch_erp_items_list():
+	#return frappe.get_all('Supplier', filters = {"disabled": 0})
+	return frappe.db.sql(
+		"""
+		SELECT custom_zoho_item_id, item_code FROM tabItem
+		WHERE disabled = 0 AND custom_zoho_item_id IN ("2328261000000071001", "2328261000000070002", "2328261000000063003")
+		""",
+		as_dict=True
+	)
+
+
+@frappe.whitelist(allow_guest=True)
+#def custom_add_erp_item_in_zb(erp_item):
+def custom_add_erp_item_in_zb(custom_zoho_item_id, item_code):
+	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
+	
+	""" custom_zoho_item_id = update_item_in_zoho(doc, method=None)
+	if custom_zoho_item_id:
+		doc.custom_zoho_item_id = custom_zoho_item_id
+		doc.save()
+		return { "ADDED" }
+
+	try:
+		zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
+	except Exception as err:
+		msg = "Please verify the Supplier for Item Code " + doc.item_code
+		frappe.msgprint(msg)
+		return
+
+	data = {
+		'can_be_purchased': True,
+		'item_type': 'sales_and_purchases',
+		'vendor_id': zb_contact_id,
+		'purchase_account_id': '2464766000000030873',
+		'purchase_account_name': 'Purchases',
+		'purchase_description': doc.item_name,
+	} """
+
+	if item_code:
+		#doc = frappe.get_doc("Item", item)
+
+		data = {
+			"sku": item_code,
+		}
+
+		api_controller = frappe.get_doc("Zoho Books API")
+		res = api_controller.put_item(custom_zoho_item_id, data)
+
+		if str(res) == 'Item details have been saved.' or 'The item has been added.':
+			#doc.save()
+			return { "ADDED" }
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1266,39 +1328,6 @@ def add_erp_bills_in_zoho(bill):
 		return { "ADDED" }
 
 
-""" @frappe.whitelist(allow_guest=True)
-def add_erp_item_in_zb(erp_item):
-	doc = frappe.get_doc("Item", erp_item)
-	custom_zoho_item_id = update_item_in_zoho(doc, method=None)
-	if custom_zoho_item_id:
-		doc.custom_zoho_item_id = custom_zoho_item_id
-		doc.save()
-		return { "ADDED" }
-
-	try:
-		zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
-	except Exception as err:
-		msg = "Please verify the Supplier for Item Code " + doc.item_code
-		frappe.msgprint(msg)
-		return
-
-	data = {
-		'can_be_purchased': True,
-		'item_type': 'sales_and_purchases',
-		'vendor_id': zb_contact_id,
-		'purchase_account_id': '2464766000000030873',
-		'purchase_account_name': 'Purchases',
-		'purchase_description': doc.item_name,
-	}
-
-	api_controller = frappe.get_doc("Zoho Books API")
-	res = api_controller.put_item(doc.custom_zoho_item_id, data)
-
-	if res == 'Item details have been saved.':
-		#doc.save()
-		return { "ADDED" } """
-
-
 @frappe.whitelist(allow_guest=True)
 def fetch_unsynced_erp_invoice_list():
 	return frappe.db.sql(
@@ -1318,7 +1347,7 @@ def sync_with_zoho_books(invoice):
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
-	if not invoice_doc.custom_zoho_invoice_id:
+	if invoice_doc.custom_zoho_invoice_id == None:
 		line_items = []
 
 		for item in invoice_doc.items:
@@ -1361,7 +1390,7 @@ def sync_with_zoho_books(invoice):
 			frappe.db.commit()
 
 
-	if not invoice_doc.custom_zoho_payment_id:
+	if invoice_doc.custom_zoho_payment_id == None:
 		payment_data = {
 			"customer_id": 2464766000000395217,
 			"payment_mode": 'Bank Transfer',
