@@ -287,6 +287,7 @@ fixtures = [
                     "Sales Invoice-custom_transaction_date", # in case transaction date is earlier than the posting date
                     "Sales Invoice-custom_staff_member", # in case of accounts shared by a group
                     "Sales Invoice-custom_zoho_invoice_id", # for syncing with Zoho Books
+                    "Sales Invoice-custom_zoho_payment_id",
 
                     "Sales Order-custom_fs_account_number", # to Identify Sales Order based on FS Account number
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions

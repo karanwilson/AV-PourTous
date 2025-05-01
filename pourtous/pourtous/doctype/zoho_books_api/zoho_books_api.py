@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import nowtime, nowdate
+from frappe.utils import nowtime, nowdate, flt
 from datetime import datetime, timedelta
 
 import requests, json, re
@@ -529,14 +529,15 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.post(api_url, data=json.dumps(data))
-			r.raise_for_status()
 
 			if r.json().get('message') == 'The item has been added.':
 				custom_zoho_item_id = r.json().get('item').get('item_id')
 				return custom_zoho_item_id
 
 			else:
-				frappe.msgprint(r.json().get('message'))
+				#frappe.msgprint(r.json().get('message'))
+				#r.raise_for_status()
+				return r.json().get('message')
 
 
 	def put_item(self, item_id, data):
@@ -560,8 +561,12 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.put(api_url, data=json.dumps(data))
-			r.raise_for_status()
-			return r.json().get('message')
+			#r.raise_for_status()
+			if r.json().get('message') == "This item cannot be edited as it does not exist.":
+				return self.post_item(data)
+
+			else:
+				return r.json().get('message')
 
 
 	def delete_item(self, item_id):
@@ -649,42 +654,15 @@ class ZohoBooksAPI(Document):
 				frappe.msgprint(r.json().get('message'))
 
 
+	def post_invoice(self, data):
+		master = "invoices"
+		scope='ZohoBooks.invoices.CREATE'
 
-	""" def post_invoice(self, invoice):
+		token_to_use = self.query_stored_tokens(master, scope)
+
 		api_url = 'https://www.zohoapis.in/books/v3/invoices?'
 
-		r = self.request_access_token(scope='ZohoBooks.invoices.CREATE')
-		authorization = 'Zoho-oauthtoken ' + r.json().get('access_token')
-
-		data = {
-			'customer_id': '2289738000000059003',
-			'invoice_number': 'SINV-25-14027-3',
-			'is_inclusive_tax': True,
-			'date': '2025-03-02',
-			'line_items': [
-				{
-					'item_id': '2289738000000064002',
-					'rate': 1514.80,
-					'quantity': 2,
-					'tax_name': 'GST',
-					'tax_percentage': 12
-				},
-				{
-					'item_id': '2289738000000065001',
-					'rate': 280,
-					'quantity': 10,
-					'tax_name': 'GST',
-					'tax_percentage': 12
-				},
-				{
-					'item_id': '2289738000000066001',
-					'rate': 238,
-					'quantity': 10,
-					'tax_name': 'GST',
-					'tax_percentage': 12
-				}
-			]
-		}
+		authorization = 'Zoho-oauthtoken ' + token_to_use
 
 		with requests.Session() as s:
 			s.params = {
@@ -696,13 +674,44 @@ class ZohoBooksAPI(Document):
 				'content-type': 'application/json'
 				}			
 
-			r = s.post(api_url, data=json.loads(data))
-			r.raise_for_status()
+			r = s.post(api_url, data=json.dumps(data))
+			#frappe.throw(str(r.json()))
+			if r.json().get('message') == 'The invoice has been created.':
+				return r.json().get('invoice').get('invoice_id')
+			else :
+				frappe.msgprint(r.json().get('message'))
+				return
+				#r.raise_for_status()
 
-			if r.json().get('message') == 'The invoice has been added.':
-				custom_zoho_contact_id = r.json().get('invoice').get('invoice_id')
-				return custom_zoho_contact_id """
 
+	def post_payment(self, data):
+		master = "payments"
+		scope='ZohoBooks.customerpayments.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/customerpayments?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}			
+
+			r = s.post(api_url, data=json.dumps(data))
+			#frappe.throw(str(r.json()))
+			if r.json().get('message') == 'The payment from the customer has been recorded':
+				return r.json().get('payment').get('payment_id')
+			else :
+				frappe.msgprint(r.json().get('message'))
+				return
+				#r.raise_for_status()
 
 
 def update_contact_in_zoho(doc, method):
@@ -1078,7 +1087,8 @@ def update_item_in_zoho(doc, method):
 
 	else:
 		data = {
-			"name": doc.name,
+			"sku": doc.item_code,
+			"name": doc.item_name,
 			"description": doc.item_name,
 			"unit": uom[doc.stock_uom],
 			"product_type": product_type,
@@ -1095,14 +1105,16 @@ def update_item_in_zoho(doc, method):
 			'can_be_purchased': True,
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
-			'purchase_account_id': '2464766000000030873',
-			'purchase_account_name': 'Purchases',
+			'purchase_account_id': '2464766000000341487',
+			'purchase_account_name': 'Purchase of Goods & Services',
 			'purchase_description': doc.item_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
 
 		put_data = {
+			#"sku": doc.item_code,
+			"name": doc.item_name,
 			"description": doc.item_name,
 			"unit": uom[doc.stock_uom],
 			"product_type": product_type,
@@ -1119,8 +1131,8 @@ def update_item_in_zoho(doc, method):
 			'can_be_purchased': True,
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
-			'purchase_account_id': '2464766000000030873',
-			'purchase_account_name': 'Purchases',
+			'purchase_account_id': '2464766000000341487',
+			'purchase_account_name': 'Purchase of Goods & Services',
 			'purchase_description': doc.item_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
@@ -1137,7 +1149,7 @@ def update_item_in_zoho(doc, method):
 	else:
 		# put/update existing Item
 		res = api_controller.put_item(doc.custom_zoho_item_id, put_data)
-		msg = "Zoho Books API Response: " + res
+		msg = "Zoho Books API Response: " + str(res)
 		frappe.msgprint(msg)
 
 
@@ -1172,6 +1184,60 @@ def add_erp_item_in_zb(erp_item):
 		doc.custom_zoho_item_id = custom_zoho_item_id
 		doc.save()
 		return { "ADDED" }
+
+
+@frappe.whitelist(allow_guest=True)
+def custom_fetch_erp_items_list():
+	#return frappe.get_all('Supplier', filters = {"disabled": 0})
+	return frappe.db.sql(
+		"""
+		SELECT custom_zoho_item_id, item_code FROM tabItem
+		WHERE disabled = 0 AND custom_zoho_item_id IN ("2328261000000071001", "2328261000000070002", "2328261000000063003")
+		""",
+		as_dict=True
+	)
+
+
+@frappe.whitelist(allow_guest=True)
+#def custom_add_erp_item_in_zb(erp_item):
+def custom_add_erp_item_in_zb(custom_zoho_item_id, item_code):
+	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
+	
+	""" custom_zoho_item_id = update_item_in_zoho(doc, method=None)
+	if custom_zoho_item_id:
+		doc.custom_zoho_item_id = custom_zoho_item_id
+		doc.save()
+		return { "ADDED" }
+
+	try:
+		zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
+	except Exception as err:
+		msg = "Please verify the Supplier for Item Code " + doc.item_code
+		frappe.msgprint(msg)
+		return
+
+	data = {
+		'can_be_purchased': True,
+		'item_type': 'sales_and_purchases',
+		'vendor_id': zb_contact_id,
+		'purchase_account_id': '2464766000000030873',
+		'purchase_account_name': 'Purchases',
+		'purchase_description': doc.item_name,
+	} """
+
+	if item_code:
+		#doc = frappe.get_doc("Item", item)
+
+		data = {
+			"sku": item_code,
+		}
+
+		api_controller = frappe.get_doc("Zoho Books API")
+		res = api_controller.put_item(custom_zoho_item_id, data)
+
+		if str(res) == 'Item details have been saved.' or 'The item has been added.':
+			#doc.save()
+			return { "ADDED" }
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1236,8 +1302,8 @@ def add_erp_bills_in_zoho(bill):
 		else:
 			line_item = {
 				"item_id": frappe.get_value("Item", item.item_code, "custom_zoho_item_id"),
-				"rate": item.price_list_rate,
-				"quantity": item.qty,
+				"rate": flt(item.price_list_rate, 2),
+				"quantity": flt(item.qty, 2),
 				"tax_id": tax_id
 			}
 			line_items.append(line_item)
@@ -1262,46 +1328,91 @@ def add_erp_bills_in_zoho(bill):
 		return { "ADDED" }
 
 
-""" @frappe.whitelist(allow_guest=True)
-def add_erp_item_in_zb(erp_item):
-	doc = frappe.get_doc("Item", erp_item)
-	custom_zoho_item_id = update_item_in_zoho(doc, method=None)
-	if custom_zoho_item_id:
-		doc.custom_zoho_item_id = custom_zoho_item_id
-		doc.save()
-		return { "ADDED" }
-
-	try:
-		zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
-	except Exception as err:
-		msg = "Please verify the Supplier for Item Code " + doc.item_code
-		frappe.msgprint(msg)
-		return
-
-	data = {
-		'can_be_purchased': True,
-		'item_type': 'sales_and_purchases',
-		'vendor_id': zb_contact_id,
-		'purchase_account_id': '2464766000000030873',
-		'purchase_account_name': 'Purchases',
-		'purchase_description': doc.item_name,
-	}
-
-	api_controller = frappe.get_doc("Zoho Books API")
-	res = api_controller.put_item(doc.custom_zoho_item_id, data)
-
-	if res == 'Item details have been saved.':
-		#doc.save()
-		return { "ADDED" } """
-
-
-""" def fetch_unsynced_sales_invoice_list():
-	return frappe.get_list('Sales Invoice',
-		filters={
-			'custom_zb_sync_status': ['!=', 'Success']
-		},
-		#as_list=True
+@frappe.whitelist(allow_guest=True)
+def fetch_unsynced_erp_invoice_list():
+	return frappe.db.sql(
+		"""
+		SELECT si.name, sip.mode_of_payment, si.custom_fs_account_number, si.docstatus, si.status, si.posting_date, si.remarks
+		FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
+		WHERE si.docstatus = 1 AND si.status = 'paid' AND sip.mode_of_payment LIKE "FS%"
+		AND (si.custom_zoho_invoice_id IS NULL OR si.custom_zoho_payment_id IS NULL) and sip.parent
+		= si.name and si.posting_date between "2025-04-01" and "2025-04-07"
+		""",
+		as_dict=True
 	)
 
+@frappe.whitelist(allow_guest=True)
 def sync_with_zoho_books(invoice):
-	pass """
+	api_controller = frappe.get_doc("Zoho Books API")
+	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
+	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+
+	if invoice_doc.custom_zoho_invoice_id == None:
+		line_items = []
+
+		for item in invoice_doc.items:
+			item_doc = frappe.get_doc("Item", item.item_code)
+
+			try:
+				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+			except Exception as err:
+				frappe.msgprint(str(err))
+				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
+				frappe.msgprint(msg)
+				return
+
+			else:
+				line_item = {
+					"item_id": item_doc.custom_zoho_item_id,
+					"name": item.item_code,
+					"description": item.item_name,
+					"rate": flt(item.rate, 2),
+					"quantity": flt(item.qty, 2),
+					"tax_id": tax_id
+				}
+				line_items.append(line_item)
+
+		invoice_data = {
+			'customer_id': 2464766000000395217,
+			'invoice_number': invoice,
+			"cf_fs_account_number": invoice_doc.custom_fs_account_number,
+			'date': date,
+			"is_inclusive_tax": True,
+			'price_precision': 2,
+			"line_items": line_items
+		}
+
+		#frappe.throw(str(invoice_data))
+		res = api_controller.post_invoice(invoice_data)
+		if res:
+			invoice_doc.custom_zoho_invoice_id = res
+			invoice_doc.save()
+			frappe.db.commit()
+
+
+	if invoice_doc.custom_zoho_payment_id == None:
+		payment_data = {
+			"customer_id": 2464766000000395217,
+			"payment_mode": 'Bank Transfer',
+			"amount": flt(invoice_doc.grand_total, 2),
+			"date": date,
+			"reference_number": invoice_doc.name,
+			"cf_transaction_id": invoice_doc.remarks[-95:],
+			'account_id': '2464766000000103144',
+			'account_name': 'PT PURCHASING SERVICE',
+			'payment_status': 'paid',
+			"invoices": [
+				{
+					"invoice_id": invoice_doc.custom_zoho_invoice_id,
+					"amount_applied": flt(invoice_doc.grand_total, 2)
+				}
+			]
+		}
+		#frappe.throw(str(payment_data))
+		res = api_controller.post_payment(payment_data)
+		if res:
+			invoice_doc.custom_zoho_payment_id = res
+			invoice_doc.save()
+			frappe.db.commit()
+
+		return { "ADDED" }
