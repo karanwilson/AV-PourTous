@@ -1191,8 +1191,8 @@ def custom_fetch_erp_items_list():
 	#return frappe.get_all('Supplier', filters = {"disabled": 0})
 	return frappe.db.sql(
 		"""
-		SELECT custom_zoho_item_id, item_code FROM tabItem
-		WHERE disabled = 0 AND custom_zoho_item_id IN ("2328261000000071001", "2328261000000070002", "2328261000000063003")
+		SELECT custom_zoho_item_id, item_name FROM tabItem
+		WHERE disabled = 0
 		""",
 		as_dict=True
 	)
@@ -1200,7 +1200,7 @@ def custom_fetch_erp_items_list():
 
 @frappe.whitelist(allow_guest=True)
 #def custom_add_erp_item_in_zb(erp_item):
-def custom_add_erp_item_in_zb(custom_zoho_item_id, item_code):
+def custom_add_erp_item_in_zb(custom_zoho_item_id, item_name):
 	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
 	
 	""" custom_zoho_item_id = update_item_in_zoho(doc, method=None)
@@ -1225,11 +1225,11 @@ def custom_add_erp_item_in_zb(custom_zoho_item_id, item_code):
 		'purchase_description': doc.item_name,
 	} """
 
-	if item_code:
+	if item_name:
 		#doc = frappe.get_doc("Item", item)
 
 		data = {
-			"sku": item_code,
+			"name": item_name,
 		}
 
 		api_controller = frappe.get_doc("Zoho Books API")
@@ -1329,20 +1329,126 @@ def add_erp_bills_in_zoho(bill):
 
 
 @frappe.whitelist(allow_guest=True)
-def fetch_unsynced_erp_invoice_list():
+def fetch_unsynced_erp_fs_invoice_list():
 	return frappe.db.sql(
 		"""
 		SELECT si.name, sip.mode_of_payment, si.custom_fs_account_number, si.docstatus, si.status, si.posting_date, si.remarks
 		FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
 		WHERE si.docstatus = 1 AND si.status = 'paid' AND sip.mode_of_payment LIKE "FS%"
 		AND (si.custom_zoho_invoice_id IS NULL OR si.custom_zoho_payment_id IS NULL) and sip.parent
-		= si.name and si.posting_date between "2025-04-01" and "2025-04-07"
+		= si.name and si.posting_date between "2025-04-15" and "2025-04-21"
 		""",
 		as_dict=True
 	)
 
 @frappe.whitelist(allow_guest=True)
-def sync_with_zoho_books(invoice):
+def sync_fs_inv_with_zoho_books(invoice):
+	api_controller = frappe.get_doc("Zoho Books API")
+	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
+	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+
+	if invoice_doc.custom_zoho_invoice_id == None:
+		line_items = []
+
+		for item in invoice_doc.items:
+			item_doc = frappe.get_doc("Item", item.item_code)
+
+			try:
+				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+			except Exception as err:
+				frappe.msgprint(str(err))
+				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
+				frappe.msgprint(msg)
+				return
+
+			else:
+				line_item = {
+					"item_id": item_doc.custom_zoho_item_id,
+					"name": item.item_code,
+					"description": item.item_name,
+					"rate": flt(item.rate, 2, "Commercial Rounding"),
+					"quantity": flt(item.qty, 2, "Commerial rounding"),
+					"tax_id": tax_id
+				}
+				line_items.append(line_item)
+
+		invoice_data = {
+			'customer_id': 2464766000000395217,
+			'invoice_number': invoice,
+			'date': date,
+			"is_inclusive_tax": True,
+			'price_precision': 2,
+			"custom_fields": [
+				{
+					"index": 1,
+					"label": "cf_fs_account_number",
+					"value": invoice_doc.custom_fs_account_number,
+					"data_type": "text"
+				}
+			],
+			"line_items": line_items
+		}
+
+		#frappe.throw(str(invoice_data))
+		res = api_controller.post_invoice(invoice_data)
+		if res:
+			invoice_doc.custom_zoho_invoice_id = res
+			invoice_doc.save()
+			frappe.db.commit()
+
+
+	if invoice_doc.custom_zoho_payment_id == None:
+		payment_data = {
+			"customer_id": 2464766000000395217,
+			"payment_mode": 'Bank Transfer',
+			"amount": flt(invoice_doc.grand_total, 2, "Commercial Rounding"),
+			"date": date,
+			"reference_number": invoice_doc.name,
+			"cf_transaction_id": invoice_doc.remarks[-95:],
+			'account_id': '2464766000000103144',
+			'account_name': 'PT PURCHASING SERVICE',
+			'payment_status': 'paid',
+			"invoices": [
+				{
+					"invoice_id": invoice_doc.custom_zoho_invoice_id,
+					"amount_applied": flt(invoice_doc.grand_total, 2, "Commercial Rounding")
+				}
+			],
+			"custom_fields": [
+				{
+					"index": 1,
+					"label": "cf_transaction_id",
+					"value": invoice_doc.remarks[-95:],
+					"data_type": "text"
+				}
+			]
+		}
+		#frappe.throw(str(payment_data))
+		res = api_controller.post_payment(payment_data)
+		if res:
+			invoice_doc.custom_zoho_payment_id = res
+			invoice_doc.save()
+			frappe.db.commit()
+
+		return { "ADDED" }
+
+
+
+@frappe.whitelist(allow_guest=True)
+def fetch_unsynced_erp_aurocard_invoice_list():
+	return frappe.db.sql(
+		"""
+		select si.name, sip.mode_of_payment, si.docstatus, si.status, si.posting_date, si.remarks
+		from `tabSales Invoice` si, `tabSales Invoice Payment` sip
+		where si.docstatus = 1 and si.status = 'paid' and sip.mode_of_payment like "Aurocard%"
+		and (si.custom_zoho_invoice_id IS NULL OR si.custom_zoho_payment_id IS NULL) and sip.parent
+		= si.name and si.posting_date between "2025-04-01" and "2025-04-05";
+		""",
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def sync_aurocard_inv_with_zoho_books(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
@@ -1373,12 +1479,11 @@ def sync_with_zoho_books(invoice):
 				line_items.append(line_item)
 
 		invoice_data = {
-			'customer_id': 2464766000000395217,
+			'customer_id': 2464766000000395229,
 			'invoice_number': invoice,
-			"cf_fs_account_number": invoice_doc.custom_fs_account_number,
 			'date': date,
 			"is_inclusive_tax": True,
-			'price_precision': 2,
+			#'price_precision': 2,
 			"line_items": line_items
 		}
 
@@ -1392,7 +1497,7 @@ def sync_with_zoho_books(invoice):
 
 	if invoice_doc.custom_zoho_payment_id == None:
 		payment_data = {
-			"customer_id": 2464766000000395217,
+			"customer_id": 2464766000000395229,
 			"payment_mode": 'Bank Transfer',
 			"amount": flt(invoice_doc.grand_total, 2),
 			"date": date,
@@ -1405,6 +1510,14 @@ def sync_with_zoho_books(invoice):
 				{
 					"invoice_id": invoice_doc.custom_zoho_invoice_id,
 					"amount_applied": flt(invoice_doc.grand_total, 2)
+				}
+			],
+			"custom_fields": [
+				{
+					"index": 1,
+					"label": "cf_transaction_id",
+					"value": invoice_doc.remarks[-95:],
+					"data_type": "text"
 				}
 			]
 		}

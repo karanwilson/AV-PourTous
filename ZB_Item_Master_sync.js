@@ -78,7 +78,7 @@ frappe.listview_settings['Item'] = {
             });
         });
 
-        /* listview.page.add_inner_button("Custom Sync ERP Items with ZB", () => {
+        listview.page.add_inner_button("Custom Sync ERP Items with ZB", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.custom_fetch_erp_items_list',
                 async: false,
@@ -99,7 +99,7 @@ frappe.listview_settings['Item'] = {
                                         //item_name: r.message[i]["item_name"],
                                         //erp_item: r.message[i]["name"]
                                         custom_zoho_item_id: r.message[i]["custom_zoho_item_id"],
-                                        item_code: r.message[i]["item_code"]
+                                        item_name: r.message[i]["item_name"]
                                     },
                                     async: false,
                                 }).then(r => {
@@ -119,7 +119,7 @@ frappe.listview_settings['Item'] = {
                     }
                 }
             });
-        }); */
+        });
 
     },
 };

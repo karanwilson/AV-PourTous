@@ -1,20 +1,20 @@
 frappe.listview_settings['Sales Invoice'] = {
     refresh(listview) {
-        listview.page.add_inner_button("Add ERP Invoices in ZB", () => {
+        /* listview.page.add_inner_button("Add FS ERP Invoices in ZB", () => {
             frappe.call({
-                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_invoice_list',
+                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_fs_invoice_list',
                 async: false,
                 callback: (r) => {
                     if (r.message) {
                         const length = r.message.length;
-                        console.log("Number of invoices to sync: ", length);
+                        console.log("Number of FS invoices to sync: ", length);
                         console.log("Invoice List: ", r.message);
                         //console.log("r.message[0]['name']: ", r.message[0]["name"]);
                         let added = 0;
-                        for (let i = 0; i < 10; i++) {
+                        for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_with_zoho_books',
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_fs_inv_with_zoho_books',
                                     args: {
                                         invoice: r.message[i]["name"],
                                     },
@@ -30,13 +30,51 @@ frappe.listview_settings['Sales Invoice'] = {
                                 });
                                 const count = i+1;
                                 const message = "Adding "+count+" of "+length;
-                                frappe.show_progress("Pushing Invoices to Zoho Books", count, length, message);
+                                frappe.show_progress("Pushing FS Invoices to Zoho Books", count, length, message);
                             }, 0);
                         }
                     }
                 }
             });
-        });
+        }),
+
+        listview.page.add_inner_button("Add Aurocard ERP Invoices in ZB", () => {
+            frappe.call({
+                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_aurocard_invoice_list',
+                async: false,
+                callback: (r) => {
+                    if (r.message) {
+                        const length = r.message.length;
+                        console.log("Number of Aurocard invoices to sync: ", length);
+                        console.log("Invoice List: ", r.message);
+                        //console.log("r.message[0]['name']: ", r.message[0]["name"]);
+                        let added = 0;
+                        for (let i = 0; i < length; i++) {
+                            setTimeout(() => {
+                                frappe.call({
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_aurocard_inv_with_zoho_books',
+                                    args: {
+                                        invoice: r.message[i]["name"],
+                                    },
+                                    async: false,
+                                }).then(r => {
+                                    if (r.message == "ADDED")
+                                        added++;
+                                }).then(r => {
+                                    // placing this statement block here as it does not work outside of the main frappe.call block
+                                    // though it prints on console for each loop iteration (comes in only one line, with the loop count),
+                                    // it shows an accurate result in the end. This design works.
+                                    console.log("Added ", added, ", of ", length);
+                                });
+                                const count = i+1;
+                                const message = "Adding "+count+" of "+length;
+                                frappe.show_progress("Pushing Aurocard Invoices to Zoho Books", count, length, message);
+                            }, 0);
+                        }
+                    }
+                }
+            });
+        }); */
 
 
         listview.page.add_inner_button("Process Orders to Invoices", () => {
