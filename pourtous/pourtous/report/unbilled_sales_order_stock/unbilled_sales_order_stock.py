@@ -214,7 +214,7 @@ def get_data(filters):
 		query = frappe.db.sql(
 			"""
 			SELECT table1.*,
-			IF ((table1.order_qty > table1.stall_qty), (table1.order_qty - table1.stall_qty), 0) AS qty_needed
+			IFNULL(table1.order_qty, 0) - IFNULL(table1.stores_qty, 0) AS qty_needed
 
 			FROM
 			(SELECT s.name AS sales_order, i.item_code, i.item_name, i.stock_uom, i.rate, i.stock_qty AS order_qty,
@@ -233,12 +233,13 @@ def get_data(filters):
 			""".format("Stall%"),
 			as_dict=True
 		)
+		# IF ((table1.order_qty > table1.stall_qty), (table1.order_qty - table1.stall_qty), 0) AS qty_needed
 
 	elif frappe.defaults.get_user_default("company") == 'Pour Tous Purchasing Service' and not filters.show_details:
 		query = frappe.db.sql(
 			"""
 			SELECT table1.*,
-			IF ((table1.order_qty > table1.stall_qty), (table1.order_qty - table1.stall_qty), 0) AS qty_needed
+			IFNULL(table1.order_qty, 0) - IFNULL(table1.stores_qty, 0) AS qty_needed
 
 			FROM
 			(SELECT i.item_code, i.item_name, i.stock_uom, SUM(i.stock_qty) AS order_qty,
@@ -259,12 +260,13 @@ def get_data(filters):
 			""".format("Stall%"),
 			as_dict=True
 		)
+		# IF ((table1.order_qty > table1.stall_qty), (table1.order_qty - table1.stall_qty), 0) AS qty_needed
 
 	elif filters.show_details:
 		query = frappe.db.sql(
 			"""
 			SELECT table1.*,
-			IF ((table1.order_qty > table1.stores_qty), (table1.order_qty - table1.stores_qty), 0) AS qty_needed
+			IFNULL(table1.order_qty, 0) - IFNULL(table1.stores_qty, 0) AS qty_needed
 
 			FROM
 			(SELECT s.name AS sales_order, i.item_code, i.item_name, i.stock_uom, i.rate, i.stock_qty AS order_qty,
@@ -282,12 +284,13 @@ def get_data(filters):
 			""",
 			as_dict=True
 		)
+		# IF ((table1.order_qty > table1.stores_qty), (table1.order_qty - table1.stores_qty), 0) AS qty_needed
 
 	else:
 		query = frappe.db.sql(
 			"""
 			SELECT table1.*,
-			IF ((table1.order_qty > table1.stores_qty), (table1.order_qty - table1.stores_qty), 0) AS qty_needed
+			IFNULL(table1.order_qty, 0) - IFNULL(table1.stores_qty, 0) AS qty_needed
 
 			FROM
 			(SELECT i.item_code, i.item_name, i.stock_uom, SUM(i.stock_qty) AS order_qty,
@@ -307,6 +310,6 @@ def get_data(filters):
 			""",
 			as_dict=True
 		)
-
+		# IF ((table1.order_qty > table1.stores_qty), (table1.order_qty - table1.stores_qty), 0) AS qty_needed
 
 	return query
