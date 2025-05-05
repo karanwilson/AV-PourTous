@@ -1,6 +1,6 @@
 frappe.listview_settings['Item'] = {
     refresh(listview) {
-        listview.page.add_inner_button("Sync ZB ItemIDs with ERP", () => {
+        /* listview.page.add_inner_button("Sync ZB ItemIDs with ERP", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.get_zb_item_list',
                 async: false,
@@ -36,7 +36,7 @@ frappe.listview_settings['Item'] = {
                     }
                 }
             });
-        });
+        }); */
 
 
         listview.page.add_inner_button("Sync ERP Items with ZB", () => {
@@ -78,7 +78,7 @@ frappe.listview_settings['Item'] = {
             });
         });
 
-        listview.page.add_inner_button("Custom Sync ERP Items with ZB", () => {
+        /* listview.page.add_inner_button("Custom Sync ERP Items with ZB", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.custom_fetch_erp_items_list',
                 async: false,
@@ -119,7 +119,7 @@ frappe.listview_settings['Item'] = {
                     }
                 }
             });
-        });
+        }); */
 
     },
 };
