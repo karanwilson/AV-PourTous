@@ -288,7 +288,8 @@ fixtures = [
                     "Sales Invoice-custom_staff_member", # in case of accounts shared by a group
                     "Sales Invoice-custom_zoho_invoice_id", # for syncing with Zoho Books
                     "Sales Invoice-custom_zoho_payment_id",
-                    "Sales Invoice-custom_zb_updated", # used for updates only; to be reset before each bulk update
+                    "Sales Invoice-custom_zb_creditnote_id",
+                    "Sales Invoice-custom_zb_creditnote_refund_id",
 
                     "Sales Order-custom_fs_account_number", # to Identify Sales Order based on FS Account number
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions
