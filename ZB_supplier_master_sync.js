@@ -1,6 +1,6 @@
 frappe.listview_settings['Supplier'] = {
     refresh(listview) {
-        listview.page.add_inner_button("Sync ZB Contact IDs with ERP", () => {
+        /* listview.page.add_inner_button("Sync ZB Contact IDs with ERP", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.get_zb_contacts_list',
                 async: false,
@@ -44,7 +44,7 @@ frappe.listview_settings['Supplier'] = {
                     }
                 }
             });
-        });
+        }); */
 
         listview.page.add_inner_button("Add missing Suppliers in ZB", () => {
             frappe.call({
@@ -55,7 +55,7 @@ frappe.listview_settings['Supplier'] = {
                         const length = r.message.length;
                         console.log("Number of Suppliers to add: ", length);
 						console.log("Supplier List: ", r.message);
-                        console.log("r.message[0]['name']: ", r.message[0]["name"]);
+                        //console.log("r.message[0]['name']: ", r.message[0]["name"]);
                         let added = 0;
                         //let updated = 0;
                         for (let i = 0; i < length; i++) {

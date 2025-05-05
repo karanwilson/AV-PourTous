@@ -972,7 +972,8 @@ def delete_contact_in_zoho(doc, method):
 
 
 def update_supplier_contact_in_zoho(doc, method):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
+	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		return
 
 	api_controller = frappe.get_doc("Zoho Books API")
@@ -1172,7 +1173,7 @@ def sync_erp_taxes_with_zoho(erp_tax):
 			"tax_specification": "inter"
 		}
 		api_controller.post_tax(data)
-		return { "UPDATED" }
+		#return { "UPDATED" }
 
 	#frappe.throw(str(zb_taxes))
 
@@ -1203,6 +1204,7 @@ def sync_erp_taxes_with_zoho(erp_tax):
 			"tax_specific_type": "sgst",
 			"tax_specification": "intra"
 		}
+		#frappe.throw(str(data1))
 
 		res1 = api_controller.post_tax(data1)
 		if res1.get("tax_id"):
@@ -1222,6 +1224,7 @@ def sync_erp_taxes_with_zoho(erp_tax):
 			"tax_specific_type": "cgst",
 			"tax_specification": "intra"
 		}
+		#frappe.throw(str(data2))
 
 		res2 = api_controller.post_tax(data2)
 		if res2.get("tax_id"):
@@ -1238,8 +1241,8 @@ def sync_erp_taxes_with_zoho(erp_tax):
 			"tax_group_name": erp_tax_doc.title,
 			"taxes": taxes
 		}
-
 		#frappe.throw(str(tax_group_data))
+
 		res4 = api_controller.post_tax_group(tax_group_data)
 		if res4:
 			erp_tax_doc.custom_zoho_tax_group_id = res4.get("tax_group_id")
