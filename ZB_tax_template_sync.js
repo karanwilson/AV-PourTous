@@ -9,9 +9,9 @@ frappe.listview_settings['Item Tax Template'] = {
                         const length = r.message.length;
                         console.log("Length of the ZB tax List: ", length);
 						console.log("Tax List: ", r.message);
-                        console.log("r.message[0]: ", r.message[0]);
-                        console.log("r.message[0]['tax_id']: ", r.message[0]["tax_id"]);
-                        console.log("r.message[0]['tax_name']: ", r.message[0]["tax_name"]);
+                        //console.log("r.message[0]: ", r.message[0]);
+                        //console.log("r.message[0]['tax_id']: ", r.message[0]["tax_id"]);
+                        //console.log("r.message[0]['tax_name']: ", r.message[0]["tax_name"]);
                         let updated = 0, no_match = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
@@ -56,7 +56,7 @@ frappe.listview_settings['Item Tax Template'] = {
                         const length = r.message.length;
                         console.log("Length of the ERP tax List: ", length);
 						console.log("Tax List: ", r.message);
-                        console.log("r.message[0]: ", r.message[0]);
+                        //console.log("r.message[0]: ", r.message[0]);
                         //console.log("r.message[0]['tax_id']: ", r.message[0]["tax_id"]);
                         //console.log("r.message[0]['tax_name']: ", r.message[0]["tax_name"]);
                         let updated = 0, no_match = 0;
