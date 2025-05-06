@@ -121,6 +121,10 @@ def process_orders_to_invoice(order):
 	si.allocate_advances_automatically = True
 	si.update_stock = 1
 
+	if si.get("taxes"):
+		for tax in si.taxes:
+			tax.included_in_print_rate = 1
+
 	try:
 		si = si.insert(ignore_permissions=True)
 		si.submit()
