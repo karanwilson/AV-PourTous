@@ -633,7 +633,6 @@ class ZohoBooksAPI(Document):
 			}
 
 			r = s.post(api_url, data=json.dumps(data))
-			r.raise_for_status()
 			#frappe.throw(str(r.json()))
 
 			#if r.json().get('message') == 'The bill has been created.':
@@ -643,6 +642,9 @@ class ZohoBooksAPI(Document):
 
 			else:
 				frappe.msgprint(r.json().get('message'))
+				#with open('tax_info_list_exception_err.txt', 'w') as file:
+				#	file.write(r.json().get('message'))
+				# r.raise_for_status()
 
 
 	def post_invoice(self, data):
@@ -1463,15 +1465,17 @@ def sync_zb_item_id_with_erp(item_id, item_name):
 
 @frappe.whitelist(allow_guest=True)
 def fetch_erp_bills_list():
+	return frappe.db.sql(
+		"""
+		SELECT name FROM `tabPurchase Receipt` WHERE NOT (owner = "Administrator" AND posting_date = "2025-04-02")
+		AND docstatus = 1 AND custom_zoho_bill_id IS NULL
+		""",
+		as_dict=True
+	)
 	""" return frappe.get_all('Purchase Receipt', filters = {
 		"docstatus": 1,
 		"custom_zoho_bill_id": ["is", "not set"]
 	}) """
-	return frappe.get_all('Purchase Receipt', filters = {
-		"docstatus": 1,
-		"custom_zoho_bill_id": ["is", "not set"],
-		"owner": ["!=", "karan@pourtous-av.in"]
-	})
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1481,16 +1485,36 @@ def add_erp_bills_in_zoho(bill):
 	# Check if Supplier is Inter/Intra state
 
 	contact_id = frappe.get_value("Supplier", bill_doc.supplier, "custom_zoho_contact_id")
+	is_reverse_charge_applied = False # default value initialised here (context: GST-unregistered Vendors)
+
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		is_inclusive_tax = False
+	else:
+		is_inclusive_tax = True
+
 	api_controller = frappe.get_doc("Zoho Books API")
 
 	try:
 		contact = api_controller.get_a_contact(contact_id)
 		# r2.json().get('contact').get("tax_info_list")[0].get('place_of_supply')
-		if contact.get("tax_info_list")[0].get('place_of_supply') == 'TN':
-			tax_specification = "intra"
+
+		# check if tax info is available, i.e. whether the supplier GSTIN is updated
+		if len(contact.get("tax_info_list")) > 0 in contact:
+			if contact.get("tax_info_list")[0].get('place_of_supply') == 'TN':
+				tax_specification = "intra"
+			else:
+				tax_specification = "inter"
+
+		# in case tax info is not available, i.e. in case the GSTIN of supplier is not updated:-
 		else:
-			tax_specification = "inter"
+			with open('tax_info_list_empty.txt', 'w') as file:
+				file.write(str(contact.get("tax_info_list")))
+			tax_specification = "intra"
+			is_reverse_charge_applied = True
+
 	except Exception as err:
+		#with open('tax_info_list_exception_err.txt', 'w') as file:
+		#	file.write(str(contact.get("tax_info_list")))
 		frappe.msgprint(str(err))
 		return
 
@@ -1525,9 +1549,10 @@ def add_erp_bills_in_zoho(bill):
 		'vendor_id': frappe.get_value("Supplier", bill_doc.supplier, "custom_zoho_contact_id"),
 		'bill_number': bill_doc.name,
 		'date': date,
-		"is_inclusive_tax": False,
+		"is_inclusive_tax": is_inclusive_tax,
+		"is_reverse_charge_applied": is_reverse_charge_applied,
 		#'price_precision': 2,
-		'location_id': '2464766000000030367',
+		#'location_id': '2464766000000030367',
 		"line_items": line_items
 	}
 

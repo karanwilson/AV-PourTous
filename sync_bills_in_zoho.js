@@ -9,7 +9,7 @@ frappe.listview_settings['Purchase Receipt'] = {
                         const length = r.message.length;
                         console.log("Number of Contacts to sync: ", length);
 						console.log("Contacts List: ", r.message);
-                        console.log("r.message[0]['name']: ", r.message[0]["name"]);
+                        //console.log("r.message[0]['name']: ", r.message[0]["name"]);
                         let added = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
