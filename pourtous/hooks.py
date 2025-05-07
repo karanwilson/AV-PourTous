@@ -320,6 +320,7 @@ fixtures = [
                     "Contact-custom_tos", # for PTDC Monthly Balance
 
                     "Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
+                    #"Supplier-custom_zoho_gst_is_inter", # whether a supplier is Interstate or Intrastate; for applying C/SGST or IGST
 
                     "Purchase Order-custom_batch_items", # Creates a Tab Break for custom_batch_items_data and custom_add_batch_items
                     "Purchase Order-custom_batch_items_fetch", # Button
