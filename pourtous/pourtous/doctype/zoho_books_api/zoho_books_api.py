@@ -1396,8 +1396,8 @@ def custom_fetch_erp_items_list():
 	#return frappe.get_all('Supplier', filters = {"disabled": 0})
 	return frappe.db.sql(
 		"""
-		SELECT custom_zoho_item_id, item_name FROM tabItem
-		WHERE disabled = 0
+		SELECT name, custom_zoho_item_id, item_name FROM tabItem
+		WHERE disabled = 0 AND custom_zoho_item_updated = 0
 		""",
 		as_dict=True
 	)
@@ -1405,7 +1405,7 @@ def custom_fetch_erp_items_list():
 
 @frappe.whitelist(allow_guest=True)
 #def custom_add_erp_item_in_zb(erp_item):
-def custom_add_erp_item_in_zb(custom_zoho_item_id, item_name):
+def custom_add_erp_item_in_zb(name, custom_zoho_item_id, item_name):
 	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
 	
 	""" custom_zoho_item_id = update_item_in_zoho(doc, method=None)
@@ -1430,19 +1430,20 @@ def custom_add_erp_item_in_zb(custom_zoho_item_id, item_name):
 		'purchase_description': doc.item_name,
 	} """
 
-	if item_name:
+	#if item_name:
 		#doc = frappe.get_doc("Item", item)
 
-		data = {
-			"name": item_name,
-		}
+	data = {
+		"name": item_name,
+	}
 
-		api_controller = frappe.get_doc("Zoho Books API")
-		res = api_controller.put_item(custom_zoho_item_id, data)
+	api_controller = frappe.get_doc("Zoho Books API")
+	res = api_controller.put_item(custom_zoho_item_id, data)
 
-		if str(res) == 'Item details have been saved.' or 'The item has been added.':
-			#doc.save()
-			return { "ADDED" }
+	if str(res) == 'Item details have been saved.' or 'The item has been added.':
+		#doc.save()
+		frappe.set_value("Item", name, "custom_zoho_item_updated", 1)
+		return { "ADDED" }
 
 
 @frappe.whitelist(allow_guest=True)
