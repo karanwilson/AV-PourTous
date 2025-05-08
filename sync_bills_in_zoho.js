@@ -11,7 +11,7 @@ frappe.listview_settings['Purchase Receipt'] = {
 						console.log("Contacts List: ", r.message);
                         //console.log("r.message[0]['name']: ", r.message[0]["name"]);
                         let added = 0;
-                        for (let i = 0; i < 5; i++) {
+                        for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
                                     method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.add_erp_bills_in_zoho',
