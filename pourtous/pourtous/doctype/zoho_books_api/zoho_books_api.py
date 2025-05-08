@@ -491,9 +491,11 @@ class ZohoBooksAPI(Document):
 
 			r = s.get(api_url)
 
-			r.raise_for_status()
 			if r.json().get('message') == 'success':
 				return r.json().get('taxes')
+			else:
+				frappe.msgprint(r.json().get('message'))
+			#r.raise_for_status()
 
 
 	def post_item(self, data):
@@ -641,7 +643,7 @@ class ZohoBooksAPI(Document):
 				return r.json().get('bill').get('bill_id')
 
 			else:
-				frappe.msgprint(r.json().get('message'))
+				frappe.msgprint(str(r.json()))
 				#with open('tax_info_list_exception_err.txt', 'w') as file:
 				#	file.write(r.json().get('message'))
 				# r.raise_for_status()
@@ -1119,12 +1121,16 @@ def sync_zb_tax_id_with_erp(tax_id, tax_name, tax_percentage, tax_type, tax_spec
 			SELECT name FROM `tabItem Tax Template`
 			WHERE disabled = 0 AND name not like "%CESS%"
 			AND gst_rate = '{0}'
-			""".format(tax_percentage),
+			""".format(abs(float(tax_percentage))),
 			as_dict=True
 			# AND custom_zoho_tax_group_id != '{2}'
 		)
 		if existing_erp_tax_template:
-			frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_group_id", tax_id)
+			if float(tax_percentage) > 0:
+				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_group_id", tax_id)
+			else:
+				# for RCM groups (tax_percentage < 0)
+				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_rcm_group_id", tax_id)
 			return { "UPDATED" }
 
 
@@ -1134,12 +1140,15 @@ def sync_zb_tax_id_with_erp(tax_id, tax_name, tax_percentage, tax_type, tax_spec
 			SELECT name FROM `tabItem Tax Template`
 			WHERE disabled = 0
 			AND gst_rate = '{0}'
-			""".format(tax_percentage),
+			""".format(abs(float(tax_percentage))),
 			as_dict=True
 			# AND custom_zoho_tax_group_id != '{2}'
 		)
 		if existing_erp_tax_template:
-			frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_igst_id", tax_id)
+			if float(tax_percentage) > 0:
+				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_igst_id", tax_id)
+			else:
+				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_igst_rcm_id", tax_id)
 			return { "UPDATED" }
 
 	else:
@@ -1160,42 +1169,76 @@ def sync_erp_taxes_with_zoho(erp_tax):
 	zb_default_taxes = {0, 5, 12, 18, 28}
 	# ZB default tax rates cannot be added via API
 
-	api_controller = frappe.get_doc("Zoho Books API")
-
-	if erp_tax_doc.gst_rate not in zb_default_taxes:
-		# IGST tax for the above default taxes rates are generated in Zoho Books directly
-		data= {
-			"tax_name": "IGST"+str(int(erp_tax_doc.gst_rate)), # first remove the decimal, then convert to str
-			"tax_percentage": erp_tax_doc.gst_rate,
-			"tax_type": "tax",
-			"tax_specific_type": "igst",
-			"tax_specification": "inter"
-		}
-		api_controller.post_tax(data)
-		#return { "UPDATED" }
-
-	#frappe.throw(str(zb_taxes))
+	existing_gst = False
+	existing_gst_rcm = False
+	existing_igst = False
+	existing_igst_rcm = False
 
 	for tax in zb_taxes:
 		# matching for Zoho Tax Groups
 		if tax.get("tax_type") == "tax_group" and tax.get("tax_percentage") == erp_tax_doc.gst_rate:
-			# The ERP Tax template has a corresponding Tax group on ZB
-			return
+			existing_gst = True
 
-	# The ERP Tax template does not have a corresponding Tax group on ZB; create it.
+		if tax.get("tax_type") == "tax_group" and tax.get("tax_percentage") == -erp_tax_doc.gst_rate:
+			existing_gst_rcm = True
+
+		if erp_tax_doc.gst_rate in zb_default_taxes or (tax.get("tax_type") == "tax" and tax.get("tax_specific_type") == "igst" and tax.get("tax_percentage") == erp_tax_doc.gst_rate):
+			existing_igst = True
+
+		if tax.get("tax_type") == "tax" and tax.get("tax_specific_type") == "igst" and tax.get("tax_percentage") == -erp_tax_doc.gst_rate:
+			existing_igst_rcm = True
+
+	if existing_gst == True and existing_gst_rcm == True and existing_igst == True and existing_igst_rcm == True:
+		# The ERP Tax template has all it's corresponding Taxes on ZB
+		return
+
+	# The ERP Tax template does not have a corresponding Tax/RCM/group on ZB; create it:
+
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	if erp_tax_doc.gst_rate not in zb_default_taxes:
+		# IGST tax for the above default taxes rates are generated in Zoho Books directly
+
+		if existing_igst == False:
+			data = {
+				"tax_name": "IGST"+str(int(erp_tax_doc.gst_rate)), # first remove the decimal, then convert to str
+				"tax_percentage": erp_tax_doc.gst_rate,
+				"tax_type": "tax",
+				"tax_specific_type": "igst",
+				"tax_specification": "inter"
+			}
+			res = api_controller.post_tax(data)
+			#return { "UPDATED" }
+			if res:
+				erp_tax_doc.custom_zoho_tax_igst_id = res.get("tax_id")
+				erp_tax_doc.save()
+				#return { "UPDATED" }
+
+	#frappe.throw(str(zb_taxes))
+
+	if existing_igst_rcm == False:
+		# IGST RCM Tax
+		data_rcm = {
+			"tax_name": "IGST-RCM-"+str(int(erp_tax_doc.gst_rate)), # first remove the decimal, then convert to str
+			"tax_percentage": -erp_tax_doc.gst_rate,
+			"tax_type": "tax",
+			"tax_specific_type": "igst",
+			"tax_specification": "inter"
+		}
+		res_rcm = api_controller.post_tax(data_rcm)
+		if res_rcm:
+			erp_tax_doc.custom_zoho_igst_rcm_id = res_rcm.get("tax_id")
+			erp_tax_doc.save()
+
 	taxes = ""
+	taxes_rcm = ""
 
 	#frappe.throw(str(zb_taxes[0]))
 
-	if erp_tax_doc.gst_rate in zb_default_taxes:
-		frappe.throw("Please Add the Defualt Tax Groups Manually in Zoho Books, as they cannot be created via API (Zoho does not list them in a GET Call);" \
-		"However, please replicate the ERP Item Tax template names with the tax group names in Zoho Books, for an accurate Item-Tax mapping")
+	# create the tax elements and group (GST 3%, etc.)
+	cgst_rate = sgst_rate = float(erp_tax_doc.gst_rate) / 2
 
-	else:
-		# create the tax elements and group (GST 3%, etc.)
-
-		cgst_rate = sgst_rate = float(erp_tax_doc.gst_rate) / 2
-
+	if erp_tax_doc.gst_rate not in zb_default_taxes and existing_gst == False:
 		data1 = {
 			"tax_name": "SGST"+str(sgst_rate),
 			"tax_percentage": sgst_rate,
@@ -1242,12 +1285,65 @@ def sync_erp_taxes_with_zoho(erp_tax):
 		}
 		#frappe.throw(str(tax_group_data))
 
-		res4 = api_controller.post_tax_group(tax_group_data)
-		if res4:
-			erp_tax_doc.custom_zoho_tax_group_id = res4.get("tax_group_id")
+		res3 = api_controller.post_tax_group(tax_group_data)
+		if res3:
+			erp_tax_doc.custom_zoho_tax_group_id = res3.get("tax_group_id")
 			erp_tax_doc.save()
-			return { "UPDATED" }
+			#return { "UPDATED" }
 
+	if existing_gst_rcm == False:
+		data1_rcm = {
+			"tax_name": "SGST-RCM-"+str(sgst_rate),
+			"tax_percentage": -sgst_rate,
+			"tax_type": "tax",
+			"tax_specific_type": "sgst",
+			"tax_specification": "intra"
+		}
+
+		res1_rcm = api_controller.post_tax(data1_rcm)
+		if res1_rcm.get("tax_id"):
+			#taxes.append(res1.get("tax_id"))
+			taxes_rcm += res1_rcm.get("tax_id")
+		elif res1_rcm.get("message") == 'Tax or tax group already exists with this name.':
+			for tax in zb_taxes:
+				#if tax.get("tax_percentage") == erp_tax_doc.gst_rate:
+					#taxes.append(tax.get("tax_id"))
+				if (tax.get("tax_percentage") == float(erp_tax_doc.gst_rate) / 2) and (tax.get("tax_name") == "SGST"+str(sgst_rate)):
+					taxes_rcm += tax.get("tax_id")
+
+		data2_rcm = {
+			"tax_name": "CGST-RCM-"+str(cgst_rate),
+			"tax_percentage": -cgst_rate,
+			"tax_type": "tax",
+			"tax_specific_type": "cgst",
+			"tax_specification": "intra"
+		}
+
+		res2_rcm = api_controller.post_tax(data2_rcm)
+		if res2_rcm.get("tax_id"):
+			#taxes.append(res2.get("tax_id"))
+			taxes_rcm += ","+res2_rcm.get("tax_id")
+		elif res2_rcm.get("message") == 'Tax or tax group already exists with this name.':
+			for tax in zb_taxes:
+				#if tax.get("tax_percentage") == erp_tax_doc.gst_rate:
+					#taxes.append(tax.get("tax_id"))
+				if (tax.get("tax_percentage") == float(erp_tax_doc.gst_rate) / 2) and (tax.get("tax_name") == "CGST"+str(cgst_rate)):
+					taxes_rcm += ","+tax.get("tax_id")
+
+		tax_group_data_rcm = {
+			"tax_group_name": erp_tax_doc.title + " RCM",
+			"taxes": taxes_rcm
+		}
+
+		res4 = api_controller.post_tax_group(tax_group_data_rcm)
+		if res4:
+			erp_tax_doc.custom_zoho_rcm_group_id = res4.get("tax_group_id")
+			erp_tax_doc.save()
+			#return { "UPDATED" }
+
+	if erp_tax_doc.gst_rate in zb_default_taxes and existing_gst == False:
+		frappe.throw("Please Add the Defualt Tax Groups Manually in Zoho Books, as they cannot be created via API (Zoho does not list them in a GET Call);" \
+		"However, please replicate the ERP Item Tax template names with the tax group names in Zoho Books, for an accurate Item-Tax mapping")
 
 
 def update_item_in_zoho(doc, method):
@@ -1538,7 +1634,8 @@ def add_erp_bills_in_zoho(bill):
 				"item_id": frappe.get_value("Item", item.item_code, "custom_zoho_item_id"),
 				"rate": float(item.price_list_rate),
 				"quantity": float(item.qty),
-				"tax_id": tax_id
+				"tax_id": tax_id,
+				"reverse_charge_tax_id": tax_id
 			}
 			line_items.append(line_item)
 
@@ -1555,6 +1652,7 @@ def add_erp_bills_in_zoho(bill):
 		"line_items": line_items
 	}
 
+	#frappe.throw(str(data))
 	res = api_controller.post_bill(data)
 	if res:
 		bill_doc.custom_zoho_bill_id = res
@@ -2201,6 +2299,17 @@ def fetch_specific_invoices_to_delete():
 		AND custom_zoho_invoice_id IS NOT NULL
 		AND name IN {0}
 		""".format(tuple(del_inv_list)),
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def fetch_invoices_to_delete():
+	return frappe.db.sql(
+		"""
+		select si.name from `tabSales Invoice` si, tabCustomer c
+		where si.customer = c.name and c.customer_type = "Company"
+		and posting_date <= "2025-05-01" and si.docstatus = 1
+		""",
 		as_dict=True
 	)
 

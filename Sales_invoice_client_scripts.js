@@ -37,7 +37,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        });
+        }),
 
         listview.page.add_inner_button("FS Inv to ZB", () => {
             frappe.call({
@@ -75,7 +75,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        });
+        }),
 
 
         listview.page.add_inner_button("Aurocard Inv to ZB", () => {
@@ -114,7 +114,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        });
+        }),
 
 
         listview.page.add_inner_button("UPI Inv to ZB", () => {
@@ -227,9 +227,9 @@ frappe.listview_settings['Sales Invoice'] = {
             });
         });
 
-        /* listview.page.add_inner_button("Delete specific ZB Inv", () => {
+        listview.page.add_inner_button("Delete specific ZB Inv", () => {
             frappe.call({
-                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_specific_invoices_to_delete',
+                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_invoices_to_delete',
                 async: false,
                 callback: (r) => {
                     if (r.message) {
@@ -304,9 +304,9 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        }),
+        })
 
-        listview.page.add_inner_button("Update ERP Invoices in ZB", () => {
+        /* listview.page.add_inner_button("Update ERP Invoices in ZB", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_erp_invoice_list_to_update',
                 async: false,
