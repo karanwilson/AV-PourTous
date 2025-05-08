@@ -39,7 +39,7 @@ frappe.listview_settings['Sales Invoice'] = {
             });
         }),
 
-        /* listview.page.add_inner_button("FS Inv to ZB", () => {
+        listview.page.add_inner_button("FS Inv to ZB", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_fs_invoice_list',
                 async: false,
@@ -56,6 +56,7 @@ frappe.listview_settings['Sales Invoice'] = {
                                     method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_fs_inv_with_zoho_books',
                                     args: {
                                         invoice: r.message[i]["name"],
+                                        customer: r.message[i]["customer"],
                                     },
                                     async: false,
                                 }).then(r => {
@@ -153,7 +154,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        }), */
+        }),
 
         listview.page.add_inner_button("Orders to Invoices", () => {
             frappe.call({
@@ -227,7 +228,7 @@ frappe.listview_settings['Sales Invoice'] = {
             });
         });
 
-        listview.page.add_inner_button("Delete specific ZB Inv", () => {
+        /* listview.page.add_inner_button("Delete specific ZB Inv", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_invoices_to_delete',
                 async: false,
@@ -267,9 +268,9 @@ frappe.listview_settings['Sales Invoice'] = {
         }),
 
 
-        listview.page.add_inner_button("Delete ZB Payments CN-Refunds", () => {
+        listview.page.add_inner_button("Delete ZB Payments CN CN-Refunds", () => {
             frappe.call({
-                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_invoices_payments_cn_refunds_to_delete',
+                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_payments_cn_refunds_to_delete',
                 async: false,
                 callback: (r) => {
                     if (r.message) {
@@ -277,14 +278,15 @@ frappe.listview_settings['Sales Invoice'] = {
                         console.log("Number of payments to delete: ", length);
                         console.log("Payments List: ", r.message);
                         //console.log("r.message[0]['name']: ", r.message[0]["name"]);
-                        /* let deleted = 0;
+                        let deleted = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_customer_payments_in_zoho',
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_customer_payments_cn_refunds_in_zb',
                                     args: {
                                         invoice: r.message[i]["name"],
                                         custom_zoho_payment_id: r.message[i]["custom_zoho_payment_id"],
+                                        custom_zb_creditnote_id: r.message[i]["custom_zb_creditnote_id"],
                                         custom_zb_creditnote_refund_id: r.message[i]["custom_zb_creditnote_refund_id"],
                                     },
                                     async: false,
@@ -298,14 +300,14 @@ frappe.listview_settings['Sales Invoice'] = {
                                     console.log("Deleted ", deleted, ", of ", length);
                                 });
                                 const count = i+1;
-                                const message = "Adding "+count+" of "+length;
+                                const message = "Deleting "+count+" of "+length;
                                 frappe.show_progress("Deleting Payments in Zoho Books", count, length, message);
                             }, 0);
-                        } */
+                        }
                     }
                 }
             });
-        })
+        }) */
 
         /* listview.page.add_inner_button("Update ERP Invoices in ZB", () => {
             frappe.call({

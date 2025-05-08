@@ -744,13 +744,40 @@ class ZohoBooksAPI(Document):
 				#r.raise_for_status()
 
 
-	def delete_creditnote_refund(self, custom_zb_creditnote_refund_id):
+	def delete_creditnote(self, custom_zb_creditnote_id):
 		master = "creditnotes"
 		scope='ZohoBooks.creditnotes.DELETE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
 
-		api_url = 'https://www.zohoapis.in/books/v3/creditnotes/' + custom_zb_creditnote_refund_id + '?'
+		api_url = 'https://www.zohoapis.in/books/v3/creditnotes/' + custom_zb_creditnote_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.delete(api_url)
+
+			return r.json()
+			#return r.json().get('message')
+			# r.raise_for_status()
+
+
+	def delete_creditnote_refund(self, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
+		master = "creditnotes"
+		scope='ZohoBooks.creditnotes.DELETE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/creditnotes/' + custom_zb_creditnote_id + '/refunds/' + custom_zb_creditnote_refund_id + '?'
 
 		authorization = 'Zoho-oauthtoken ' + token_to_use
 
@@ -944,28 +971,34 @@ class ZohoBooksAPI(Document):
 
 
 def update_contact_in_zoho(doc, method):
+	if doc.customer_type != "Company":
+		return
+
 	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 		return
 
-	if doc.custom_update_zoho_contact == 0:
-		return
+	#if doc.custom_update_zoho_contact == 0:
+	#	return
 
 	api_controller = frappe.get_doc("Zoho Books API")
 
-	if doc.customer_type == "Individual":
-		customer_sub_type = "individual"
-	else:
+	if doc.customer_type == "Company":
 		customer_sub_type = "business"
+	else:
+		customer_sub_type = "individual"
 
-	data = {
-		"contact_name": doc.name,
-		"contact_type": "customer",
-		"customer_sub_type": customer_sub_type
+	gst_treatment = {
+		"Registered Regular": "business_gst",
+		"Unregistered": "business_none",
+		"Overseas": "overseas"
 	}
 
-	put_data = {
+	data = {
+		"contact_name": doc.customer_name,
 		"contact_type": "customer",
-		"customer_sub_type": customer_sub_type
+		"customer_sub_type": customer_sub_type,
+		"gst_no": doc.gstin,
+		"gst_treatment": gst_treatment[doc.gst_category]
 	}
 
 	if doc.custom_zoho_contact_id == None:
@@ -976,7 +1009,7 @@ def update_contact_in_zoho(doc, method):
 
 	else:
 		# put/update existing Contact
-		res = api_controller.put_contact(doc.custom_zoho_contact_id, put_data)
+		res = api_controller.put_contact(doc.custom_zoho_contact_id, data)
 		if res.get("custom_zoho_contact_id"):
 			# checks if the API controller handled a non-existing contact,
 			# in case of wrong/old Zoho Contact IDs stored in the ERP supplier record, by calling post instead
@@ -988,6 +1021,9 @@ def update_contact_in_zoho(doc, method):
 
 
 def delete_contact_in_zoho(doc, method):
+	if doc.customer_type != "Company":
+		return
+
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		return
@@ -1881,7 +1917,7 @@ def sync_return_inv_with_zoho_books(invoice):
 def fetch_unsynced_erp_fs_invoice_list():
 	return frappe.db.sql(
 		"""
-		SELECT name, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
+		SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
 		WHERE docstatus = 1 AND status IN ('Paid', 'Credit Note Issued')
 		AND custom_fs_account_number IS NOT NULL
 		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL)
@@ -1892,9 +1928,14 @@ def fetch_unsynced_erp_fs_invoice_list():
 	)
 
 @frappe.whitelist(allow_guest=True)
-def sync_fs_inv_with_zoho_books(invoice):
+def sync_fs_inv_with_zoho_books(invoice, customer):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
+	if frappe.get_value("Customer", customer, "customer_type") == "Company":
+		customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
+	else:
+		customer_id = 2464766000000395217  # "FS Account Customers" in ZB
+
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
 	# Flow for: registering Paid Invoices and their Payments in ZB; registering Credit Notes and their Credit Note Refunds
@@ -1925,7 +1966,7 @@ def sync_fs_inv_with_zoho_books(invoice):
 
 		if not invoice_doc.is_return:
 			invoice_data = {
-				'customer_id': 2464766000000395217, # "FS Account Customers" in ZB
+				'customer_id': customer_id,
 				'invoice_number': invoice[-16:],
 				'date': date,
 				"is_inclusive_tax": True,
@@ -1950,7 +1991,7 @@ def sync_fs_inv_with_zoho_books(invoice):
 
 				if invoice_doc.custom_zoho_payment_id == None:
 					payment_data = {
-						"customer_id": 2464766000000395217, # "FS Account Customers" in ZB
+						"customer_id": customer_id,
 						"payment_mode": 'Bank Transfer',
 						"amount": float(res.get("total")),
 						"date": date,
@@ -1990,7 +2031,7 @@ def sync_fs_inv_with_zoho_books(invoice):
 		#frappe.throw(str(zb_inv))
 		if "total" in zb_inv:
 			payment_data = {
-				"customer_id": 2464766000000395217, # "FS Account Customers" in ZB
+				"customer_id": customer_id,
 				"payment_mode": 'Bank Transfer',
 				"amount": float(zb_inv.get("total")),
 				"date": date,
@@ -2331,13 +2372,25 @@ def fetch_specific_invoices_to_delete():
 	)
 
 @frappe.whitelist(allow_guest=True)
-def fetch_invoices_payments_cn_refunds_to_delete():
+def fetch_payments_cn_refunds_to_delete():
 	return frappe.db.sql(
 		"""
-		select si.name, si.custom_zoho_invoice_id, si.custom_zoho_payment_id,
-		si.custom_zb_creditnote_id, si.custom_zb_creditnote_refund_id
+		select si.name, si.custom_zoho_payment_id, si.custom_zb_creditnote_id, si.custom_zb_creditnote_refund_id
 		from `tabSales Invoice` si, tabCustomer c
 		where si.customer = c.name and c.customer_type = "Company"
+		and (si.custom_zoho_payment_id IS NOT NULL or si.custom_zb_creditnote_id IS NOT NULL or si.custom_zb_creditnote_refund_id IS NOT NULL)
+		and posting_date <= "2025-05-01" and si.docstatus = 1;
+		""",
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def fetch_invoices_to_delete():
+	return frappe.db.sql(
+		"""
+		select si.name, si.custom_zoho_invoice_id from `tabSales Invoice` si, tabCustomer c
+		where si.customer = c.name and c.customer_type = "Company"
+		and si.custom_zoho_invoice_id IS NOT NULL
 		and posting_date <= "2025-05-01" and si.docstatus = 1;
 		""",
 		as_dict=True
@@ -2356,7 +2409,7 @@ def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
 		#frappe.msgprint(msg)
 
 @frappe.whitelist(allow_guest=True)
-def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_refund_id):
+def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
 	api_controller = frappe.get_doc("Zoho Books API")
 
 	if custom_zoho_payment_id != None:
@@ -2369,9 +2422,17 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, c
 			#frappe.msgprint(msg)
 
 	if custom_zb_creditnote_refund_id != None:
-		res = api_controller.delete_creditnote_refund(custom_zb_creditnote_refund_id)
+		res = api_controller.delete_creditnote_refund(custom_zb_creditnote_id, custom_zb_creditnote_refund_id)
 		if res.get("code") == 0:
 			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_refund_id", "")
+			return { "DELETED" }
+			#msg = "Zoho Books Response: " + res.json().get("message")
+			#frappe.msgprint(msg)
+
+	if custom_zb_creditnote_id != None:
+		res = api_controller.delete_creditnote(custom_zb_creditnote_id)
+		if res.get("code") == 0:
+			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_id", "")
 			return { "DELETED" }
 			#msg = "Zoho Books Response: " + res.json().get("message")
 			#frappe.msgprint(msg)
