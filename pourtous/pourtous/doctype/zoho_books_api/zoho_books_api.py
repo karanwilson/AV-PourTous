@@ -213,9 +213,10 @@ class ZohoBooksAPI(Document):
 
 			r = s.get(api_url)
 
-			r.raise_for_status()
 			if r.json().get('message') == 'success':
 				return r.json().get('contacts')
+			else:
+				r.raise_for_status()
 
 
 	def get_a_contact(self, contact_id):
@@ -240,9 +241,10 @@ class ZohoBooksAPI(Document):
 
 			r = s.get(api_url)
 
-			r.raise_for_status()
 			if r.json().get('message') == 'success':
 				return r.json().get('contact')
+			else:
+				r.raise_for_status()
 
 
 	def post_tax(self, data):
@@ -357,8 +359,10 @@ class ZohoBooksAPI(Document):
 
 			r = s.delete(api_url)
 
-			r.raise_for_status()
-			return r.json().get('message')
+			if r.json().get('code') == 0:
+				return r.json().get('message')
+			else:
+				r.raise_for_status()
 
 
 	def post_tax_group(self, data):
@@ -1658,7 +1662,7 @@ def add_erp_bills_in_zoho(bill):
 		# r2.json().get('contact').get("tax_info_list")[0].get('place_of_supply')
 
 		# check if tax info is available, i.e. whether the supplier GSTIN is updated
-		if len(contact.get("tax_info_list")) > 0 in contact:
+		if len(contact.get("tax_info_list")) > 0:
 			if contact.get("tax_info_list")[0].get('place_of_supply') == 'TN':
 				tax_specification = "intra"
 			else:
@@ -1683,10 +1687,16 @@ def add_erp_bills_in_zoho(bill):
 		item_doc = frappe.get_doc("Item", item.item_code)
 
 		try:
-			if tax_specification == "intra":
-				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+			if is_reverse_charge_applied:
+				if tax_specification == "intra":
+					reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_rcm_group_id")
+				else:
+					reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_igst_rcm_id")
 			else:
-				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+				if tax_specification == "intra":
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				else:
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 		except Exception as err:
 			frappe.msgprint(str(err))
 			msg = "Please verify the Tax-template/Supplier/ZB-tax_id for Item Code " + item.item_code
@@ -1698,9 +1708,15 @@ def add_erp_bills_in_zoho(bill):
 				"item_id": frappe.get_value("Item", item.item_code, "custom_zoho_item_id"),
 				"rate": float(item.price_list_rate),
 				"quantity": float(item.qty),
-				"tax_id": tax_id,
-				"reverse_charge_tax_id": tax_id
+				#"tax_id": tax_id,
+				#"reverse_charge_tax_id": reverse_charge_tax_id
 			}
+			if is_reverse_charge_applied:
+				line_item["reverse_charge_tax_id"] = reverse_charge_tax_id
+				is_inclusive_tax = False
+			else:
+				line_item["tax_id"] = tax_id
+
 			line_items.append(line_item)
 
 	date = bill_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
