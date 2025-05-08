@@ -39,7 +39,7 @@ frappe.listview_settings['Sales Invoice'] = {
             });
         }),
 
-        listview.page.add_inner_button("FS Inv to ZB", () => {
+        /* listview.page.add_inner_button("FS Inv to ZB", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_fs_invoice_list',
                 async: false,
@@ -153,7 +153,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        }),
+        }), */
 
         listview.page.add_inner_button("Orders to Invoices", () => {
             frappe.call({
@@ -267,9 +267,9 @@ frappe.listview_settings['Sales Invoice'] = {
         }),
 
 
-        listview.page.add_inner_button("Delete ZB Payments", () => {
+        listview.page.add_inner_button("Delete ZB Payments CN-Refunds", () => {
             frappe.call({
-                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_payments_list_to_delete',
+                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_invoices_payments_cn_refunds_to_delete',
                 async: false,
                 callback: (r) => {
                     if (r.message) {
@@ -277,7 +277,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         console.log("Number of payments to delete: ", length);
                         console.log("Payments List: ", r.message);
                         //console.log("r.message[0]['name']: ", r.message[0]["name"]);
-                        let deleted = 0;
+                        /* let deleted = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
@@ -285,6 +285,7 @@ frappe.listview_settings['Sales Invoice'] = {
                                     args: {
                                         invoice: r.message[i]["name"],
                                         custom_zoho_payment_id: r.message[i]["custom_zoho_payment_id"],
+                                        custom_zb_creditnote_refund_id: r.message[i]["custom_zb_creditnote_refund_id"],
                                     },
                                     async: false,
                                 }).then(r => {
@@ -300,7 +301,7 @@ frappe.listview_settings['Sales Invoice'] = {
                                 const message = "Adding "+count+" of "+length;
                                 frappe.show_progress("Deleting Payments in Zoho Books", count, length, message);
                             }, 0);
-                        }
+                        } */
                     }
                 }
             });

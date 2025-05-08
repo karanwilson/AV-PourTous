@@ -744,6 +744,33 @@ class ZohoBooksAPI(Document):
 				#r.raise_for_status()
 
 
+	def delete_creditnote_refund(self, custom_zb_creditnote_refund_id):
+		master = "creditnotes"
+		scope='ZohoBooks.creditnotes.DELETE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/creditnotes/' + custom_zb_creditnote_refund_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.delete(api_url)
+
+			return r.json()
+			#return r.json().get('message')
+			# r.raise_for_status()
+
+
 	def get_a_credit_note(self, creditnote_id):
 		master = "creditnotes"
 		scope='ZohoBooks.creditnotes.READ'
@@ -2304,12 +2331,14 @@ def fetch_specific_invoices_to_delete():
 	)
 
 @frappe.whitelist(allow_guest=True)
-def fetch_invoices_to_delete():
+def fetch_invoices_payments_cn_refunds_to_delete():
 	return frappe.db.sql(
 		"""
-		select si.name from `tabSales Invoice` si, tabCustomer c
+		select si.name, si.custom_zoho_invoice_id, si.custom_zoho_payment_id,
+		si.custom_zb_creditnote_id, si.custom_zb_creditnote_refund_id
+		from `tabSales Invoice` si, tabCustomer c
 		where si.customer = c.name and c.customer_type = "Company"
-		and posting_date <= "2025-05-01" and si.docstatus = 1
+		and posting_date <= "2025-05-01" and si.docstatus = 1;
 		""",
 		as_dict=True
 	)
@@ -2327,16 +2356,25 @@ def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
 		#frappe.msgprint(msg)
 
 @frappe.whitelist(allow_guest=True)
-def delete_customer_payments_in_zoho(invoice, custom_zoho_payment_id):
+def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_refund_id):
 	api_controller = frappe.get_doc("Zoho Books API")
 
-	res = api_controller.delete_customerpayments(custom_zoho_payment_id)
+	if custom_zoho_payment_id != None:
+		res = api_controller.delete_customerpayments(custom_zoho_payment_id)
 
-	if res.get("code") == 0:
-		frappe.set_value("Sales Invoice", invoice, "custom_zoho_payment_id", "")
-		return { "DELETED" }
-		#msg = "Zoho Books Response: " + res.json().get("message")
-		#frappe.msgprint(msg)
+		if res.get("code") == 0:
+			frappe.set_value("Sales Invoice", invoice, "custom_zoho_payment_id", "")
+			return { "DELETED" }
+			#msg = "Zoho Books Response: " + res.json().get("message")
+			#frappe.msgprint(msg)
+
+	if custom_zb_creditnote_refund_id != None:
+		res = api_controller.delete_creditnote_refund(custom_zb_creditnote_refund_id)
+		if res.get("code") == 0:
+			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_refund_id", "")
+			return { "DELETED" }
+			#msg = "Zoho Books Response: " + res.json().get("message")
+			#frappe.msgprint(msg)
 
 
 @frappe.whitelist(allow_guest=True)
