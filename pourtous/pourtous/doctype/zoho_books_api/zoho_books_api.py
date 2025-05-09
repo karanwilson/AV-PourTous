@@ -653,6 +653,33 @@ class ZohoBooksAPI(Document):
 				# r.raise_for_status()
 
 
+	def delete_bill(self, custom_zoho_bill_id):
+		master = "bills"
+		scope='ZohoBooks.bills.DELETE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/bills/' + custom_zoho_bill_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.delete(api_url)
+
+			return r.json()
+			#return r.json().get('message')
+			# r.raise_for_status()
+
+
 	def post_invoice(self, data):
 		master = "invoices"
 		scope='ZohoBooks.invoices.CREATE'
@@ -1501,7 +1528,9 @@ def update_item_in_zoho(doc, method):
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
 			#'purchase_account_id': '2464766000000341487',
-			'purchase_account_name': 'Purchase of Goods & Services',
+			#'purchase_account_name': 'Purchase of Goods & Services',
+			#'purchase_account_id': '2464766000000000567',
+			'purchase_account_name': 'Cost of Goods Sold',
 			'purchase_description': doc.item_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
@@ -1562,7 +1591,7 @@ def custom_fetch_erp_items_list():
 	return frappe.db.sql(
 		"""
 		SELECT name, custom_zoho_item_id, item_name FROM tabItem
-		WHERE disabled = 0 AND custom_zoho_item_updated = 0
+		WHERE disabled = 0 AND custom_zoho_item_updated = 1
 		""",
 		as_dict=True
 	)
@@ -1599,7 +1628,8 @@ def custom_add_erp_item_in_zb(name, custom_zoho_item_id, item_name):
 		#doc = frappe.get_doc("Item", item)
 
 	data = {
-		"name": item_name,
+		'purchase_account_id': '2464766000000000567',
+		'purchase_account_name': 'Cost of Goods Sold',
 	}
 
 	api_controller = frappe.get_doc("Zoho Books API")
@@ -1607,7 +1637,7 @@ def custom_add_erp_item_in_zb(name, custom_zoho_item_id, item_name):
 
 	if str(res) == 'Item details have been saved.' or 'The item has been added.':
 		#doc.save()
-		frappe.set_value("Item", name, "custom_zoho_item_updated", 1)
+		frappe.set_value("Item", name, "custom_zoho_item_updated", 0)
 		return { "ADDED" }
 
 
@@ -1628,17 +1658,20 @@ def sync_zb_item_id_with_erp(item_id, item_name):
 
 @frappe.whitelist(allow_guest=True)
 def fetch_erp_bills_list():
+	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
+		owner = "Administrator"
+		posting_date = "2025-04-02"
+	elif frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		owner = "karan@pourtous-av.in"
+		posting_date = "2025-04-01"
+
 	return frappe.db.sql(
 		"""
-		SELECT name FROM `tabPurchase Receipt` WHERE NOT (owner = "Administrator" AND posting_date = "2025-04-02")
+		SELECT name FROM `tabPurchase Receipt` WHERE NOT (owner = '{0}' AND posting_date = '{1}')
 		AND docstatus = 1 AND custom_zoho_bill_id IS NULL
-		""",
+		""".format(owner, posting_date),
 		as_dict=True
 	)
-	""" return frappe.get_all('Purchase Receipt', filters = {
-		"docstatus": 1,
-		"custom_zoho_bill_id": ["is", "not set"]
-	}) """
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1708,8 +1741,6 @@ def add_erp_bills_in_zoho(bill):
 				"item_id": frappe.get_value("Item", item.item_code, "custom_zoho_item_id"),
 				"rate": float(item.price_list_rate),
 				"quantity": float(item.qty),
-				#"tax_id": tax_id,
-				#"reverse_charge_tax_id": reverse_charge_tax_id
 			}
 			if is_reverse_charge_applied:
 				line_item["reverse_charge_tax_id"] = reverse_charge_tax_id
@@ -1741,26 +1772,25 @@ def add_erp_bills_in_zoho(bill):
 		return { "ADDED" }
 
 
-@frappe.whitelist(allow_guest=True)
-def fetch_unpaid_erp_fs_invoice_list():
-	return frappe.db.sql(
-		"""
-		SELECT si.name, sip.mode_of_payment, si.custom_fs_account_number, si.docstatus, si.status
-		FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
-		WHERE si.docstatus = 1 AND si.status = 'Paid' AND si.status = 'Return'
-		AND sip.mode_of_payment LIKE "FS%" AND sip.parent = si.name
-		AND (si.custom_zoho_invoice_id IS NULL OR si.custom_zoho_payment_id IS NULL)
-		AND si.posting_date BETWEEN "2025-04-01" AND "2025-04-30"
-		""",
-		as_dict=True
-	)
-
+#@frappe.whitelist(allow_guest=True)
+#def fetch_unpaid_erp_fs_invoice_list():
+#	return frappe.db.sql(
+#		as_dict=True
+#	)
+	"""
+	SELECT si.name, sip.mode_of_payment, si.custom_fs_account_number, si.docstatus, si.status
+	FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
+	WHERE si.docstatus = 1 AND si.status = 'Paid' AND si.status = 'Return'
+	AND sip.mode_of_payment LIKE "FS%" AND sip.parent = si.name
+	AND (si.custom_zoho_invoice_id IS NULL OR si.custom_zoho_payment_id IS NULL)
+	AND si.posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+	""",
 
 @frappe.whitelist(allow_guest=True)
 def fetch_unsynced_erp_return_invoice_list():
 	return frappe.db.sql(
 		"""
-		SELECT name, docstatus, status FROM `tabSales Invoice`
+		SELECT name, customer, docstatus, status FROM `tabSales Invoice`
 		WHERE docstatus = 1 AND status = "Return"
 		AND (custom_zb_creditnote_id IS NULL OR custom_zb_creditnote_refund_id IS NULL)
 		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
@@ -1772,9 +1802,15 @@ def fetch_unsynced_erp_return_invoice_list():
 
 
 @frappe.whitelist(allow_guest=True)
-def sync_return_inv_with_zoho_books(invoice):
+def sync_return_inv_with_zoho_books(invoice, customer):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
+
+	if frappe.get_value("Customer", customer, "customer_type") == "Company":
+		fs_customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
+	else:
+		fs_customer_id = 2464766000000395217  # "FS Account Customers" in ZB
+
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
 	customer_group = frappe.get_value("Customer", invoice_doc.customer, "customer_group")
@@ -1821,7 +1857,7 @@ def sync_return_inv_with_zoho_books(invoice):
 
 		if invoice_doc.custom_fs_account_number:
 			creditnote_data = {
-				'customer_id': 2464766000000395217, # "FS Account Customers" in ZB
+				'customer_id': fs_customer_id, # "FS Account Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
 				"is_inclusive_tax": True,
@@ -1875,7 +1911,7 @@ def sync_return_inv_with_zoho_books(invoice):
 
 			if invoice_doc.custom_zb_creditnote_refund_id == None:
 				creditnote_refund_data = {
-					#"customer_id": 2464766000000395217, # "FS Account Customers" in ZB
+					#"customer_id": fs_customer_id, # "FS Account Customers" in ZB
 					"refund_mode": 'Bank Transfer',
 					"amount": float(res.get("total")),
 					"date": date,
@@ -1885,7 +1921,7 @@ def sync_return_inv_with_zoho_books(invoice):
 				}
 
 			if invoice_doc.custom_fs_account_number:
-				creditnote_refund_data["customer_id"] = 2464766000000395217 # "FS Account Customers" in ZB
+				creditnote_refund_data["customer_id"] = fs_customer_id # "FS Account Customers" in ZB
 
 			elif customer_group == "Aurocard Payments":
 				creditnote_refund_data["customer_id"] = 2464766000000395229 # "Aurocard Customers" in ZB
@@ -1911,7 +1947,7 @@ def sync_return_inv_with_zoho_books(invoice):
 
 		if "total" in zb_inv:
 			creditnote_refund_data = {
-				"customer_id": 2464766000000395217, # "FS Account Customers" in ZB
+				"customer_id": fs_customer_id, # "FS Account Customers" in ZB
 				"refund_mode": 'Bank Transfer',
 				"amount": float(zb_inv.get("total")),
 				"date": date,
@@ -1934,7 +1970,7 @@ def fetch_unsynced_erp_fs_invoice_list():
 	return frappe.db.sql(
 		"""
 		SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
-		WHERE docstatus = 1 AND status IN ('Paid', 'Credit Note Issued')
+		WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND custom_fs_account_number IS NOT NULL
 		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL)
 		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
@@ -1980,67 +2016,68 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				}
 				line_items.append(line_item)
 
-		if not invoice_doc.is_return:
-			invoice_data = {
-				'customer_id': customer_id,
-				'invoice_number': invoice[-16:],
-				'date': date,
-				"is_inclusive_tax": True,
-				#'price_precision': 2,
-				"custom_fields": [
-					{
-						"index": 1,
-						"label": "cf_fs_account_number",
-						"value": invoice_doc.custom_fs_account_number,
-						"data_type": "text"
-					}
-				],
-				"line_items": line_items
-			}
+		#if not invoice_doc.is_return:
+		invoice_data = {
+			'customer_id': customer_id,
+			'invoice_number': invoice[-16:],
+			'date': date,
+			"is_inclusive_tax": True,
+			#'price_precision': 2,
+			"custom_fields": [
+				{
+					"index": 1,
+					"label": "cf_fs_account_number",
+					"value": invoice_doc.custom_fs_account_number,
+					"data_type": "text"
+				}
+			],
+			"line_items": line_items
+		}
 
-			#frappe.throw(str(invoice_data))
-			res = api_controller.post_invoice(invoice_data)
-			if res:
-				invoice_doc.custom_zoho_invoice_id = res.get('invoice_id')
-				invoice_doc.save()
-				frappe.db.commit()
+		#frappe.throw(str(invoice_data))
+		res = api_controller.post_invoice(invoice_data)
+		if res:
+			invoice_doc.custom_zoho_invoice_id = res.get('invoice_id')
+			invoice_doc.save()
+			frappe.db.commit()
 
-				if invoice_doc.custom_zoho_payment_id == None:
-					payment_data = {
-						"customer_id": customer_id,
-						"payment_mode": 'Bank Transfer',
-						"amount": float(res.get("total")),
-						"date": date,
-						"reference_number": invoice_doc.name,
-						'account_id': '2464766000000103144',
-						'account_name': 'PT PURCHASING SERVICE',
-						'payment_status': 'paid',
-						"invoices": [
-							{
-								"invoice_id": invoice_doc.custom_zoho_invoice_id,
-								"amount_applied": float(res.get("total"))
-							}
-						],
-						"custom_fields": [
-							{
-								"index": 1,
-								"label": "cf_transaction_id",
-								"value": invoice_doc.remarks[-95:],
-								"data_type": "text"
-							}
-						]
-					}
-					#frappe.throw(str(payment_data))
-					res = api_controller.post_payment(payment_data)
-					if res:
-						invoice_doc.custom_zoho_payment_id = res
-						invoice_doc.save()
-						frappe.db.commit()
+			if invoice_doc.custom_zoho_payment_id == None:
+				payment_data = {
+					"customer_id": customer_id,
+					"payment_mode": 'Bank Transfer',
+					"amount": float(res.get("total")),
+					"date": date,
+					"reference_number": invoice_doc.name,
+					'account_id': '2464766000000103144',
+					'account_name': 'PT PURCHASING SERVICE',
+					'payment_status': 'paid',
+					"invoices": [
+						{
+							"invoice_id": invoice_doc.custom_zoho_invoice_id,
+							"amount_applied": float(res.get("total"))
+						}
+					],
+					"custom_fields": [
+						{
+							"index": 1,
+							"label": "cf_transaction_id",
+							"value": invoice_doc.remarks[-95:],
+							"data_type": "text"
+						}
+					]
+				}
+				#frappe.throw(str(payment_data))
+				res = api_controller.post_payment(payment_data)
+				if res:
+					invoice_doc.custom_zoho_payment_id = res
+					invoice_doc.save()
+					frappe.db.commit()
 
-						return "ADDED" # returning either to the recursive call below, or to the front-end frappe.call script
+					return "ADDED" # returning either to the recursive call below, or to the front-end frappe.call script
 
 	# Flow for registering payments (missed/deleted) for Paid Invoices.
-	elif invoice_doc.custom_zoho_payment_id == None and not invoice_doc.is_return:
+	elif invoice_doc.custom_zoho_payment_id == None and (invoice_doc.status == "Paid" or invoice_doc.status == "Submitted"):
+	#elif invoice_doc.custom_zoho_payment_id == None and not invoice_doc.is_return:
 		# Getting the Invoice Total from ZB Invoice and then registering Payments for that value,
 		# to avoid rounding differences between Zoho and ERPNext
 		zb_inv = api_controller.get_an_invoice(invoice_doc.custom_zoho_invoice_id)
@@ -2086,7 +2123,8 @@ def fetch_unsynced_erp_aurocard_invoice_list():
 	return frappe.db.sql(
 		"""
 		SELECT si.name, si.docstatus, si.status
-		FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1 AND si.status = 'Paid'
+		FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
+		AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND si.custom_fs_account_number IS NULL AND c.customer_group = "UPI Payments" AND si.customer = c.name
 		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL) AND posting_date BETWEEN "2025-04-01" AND "2025-04-30";
 		""",
@@ -2232,7 +2270,8 @@ def fetch_unsynced_erp_upi_invoice_list():
 	return frappe.db.sql(
 		"""
 		SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id, si.custom_zoho_payment_id
-		FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1 AND si.status = 'Paid'
+		FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
+		AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND si.custom_fs_account_number IS NULL AND c.customer_group = "UPI Payments" AND si.customer = c.name
 		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL) AND posting_date BETWEEN "2025-04-01" AND "2025-04-30";
 		""",
@@ -2365,6 +2404,27 @@ def sync_upi_inv_with_zoho_books(invoice):
 
 
 @frappe.whitelist(allow_guest=True)
+def fetch_bills_to_delete():
+	return frappe.db.sql(
+		"""
+		select name, custom_zoho_bill_id FROM `tabPurchase Receipt`
+		where owner = "karan@pourtous-av.in" and posting_date = "2025-04-01"
+		and custom_zoho_bill_id IS NOT NULL and docstatus = 1
+		""",
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def delete_bills_in_zoho(bill, custom_zoho_bill_id):
+	api_controller = frappe.get_doc("Zoho Books API")
+	res = api_controller.delete_bill(custom_zoho_bill_id)
+
+	if res.get("code") == 0:
+		frappe.set_value("Purchase Receipt", bill, "custom_zoho_bill_id", "")
+		return { "DELETED" }
+
+
+@frappe.whitelist(allow_guest=True)
 def fetch_specific_invoices_to_delete():
 	import csv
 	
@@ -2384,19 +2444,6 @@ def fetch_specific_invoices_to_delete():
 		AND custom_zoho_invoice_id IS NOT NULL
 		AND name IN {0}
 		""".format(tuple(del_inv_list)),
-		as_dict=True
-	)
-
-@frappe.whitelist(allow_guest=True)
-def fetch_payments_cn_refunds_to_delete():
-	return frappe.db.sql(
-		"""
-		select si.name, si.custom_zoho_payment_id, si.custom_zb_creditnote_id, si.custom_zb_creditnote_refund_id
-		from `tabSales Invoice` si, tabCustomer c
-		where si.customer = c.name and c.customer_type = "Company"
-		and (si.custom_zoho_payment_id IS NOT NULL or si.custom_zb_creditnote_id IS NOT NULL or si.custom_zb_creditnote_refund_id IS NOT NULL)
-		and posting_date <= "2025-05-01" and si.docstatus = 1;
-		""",
 		as_dict=True
 	)
 
@@ -2424,8 +2471,28 @@ def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
 		#msg = "Zoho Books Response: " + res.json().get("message")
 		#frappe.msgprint(msg)
 
+
 @frappe.whitelist(allow_guest=True)
-def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
+def fetch_payments_cn_refunds_to_delete():
+	return frappe.db.sql(
+		"""
+		SELECT name, custom_zoho_payment_id, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
+		WHERE docstatus = 1 AND status IN ('Unpaid', 'Overdue')
+		AND custom_fs_account_number IS NOT NULL
+		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		""",
+		as_dict=True
+	)
+	""" select si.name, si.custom_zoho_payment_id, si.custom_zb_creditnote_id, si.custom_zb_creditnote_refund_id
+	from `tabSales Invoice` si, tabCustomer c
+	where si.customer = c.name and c.customer_type = "Company"
+	and (si.custom_zoho_payment_id IS NOT NULL or si.custom_zb_creditnote_id IS NOT NULL or si.custom_zb_creditnote_refund_id IS NOT NULL)
+	and posting_date <= "2025-05-01" and si.docstatus = 1; """
+
+
+@frappe.whitelist(allow_guest=True)
+#def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
+def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 	api_controller = frappe.get_doc("Zoho Books API")
 
 	if custom_zoho_payment_id != None:
@@ -2437,7 +2504,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, c
 			#msg = "Zoho Books Response: " + res.json().get("message")
 			#frappe.msgprint(msg)
 
-	if custom_zb_creditnote_refund_id != None:
+	""" if custom_zb_creditnote_refund_id != None:
 		res = api_controller.delete_creditnote_refund(custom_zb_creditnote_id, custom_zb_creditnote_refund_id)
 		if res.get("code") == 0:
 			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_refund_id", "")
@@ -2451,7 +2518,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, c
 			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_id", "")
 			return { "DELETED" }
 			#msg = "Zoho Books Response: " + res.json().get("message")
-			#frappe.msgprint(msg)
+			#frappe.msgprint(msg) """
 
 
 @frappe.whitelist(allow_guest=True)

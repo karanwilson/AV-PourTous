@@ -18,6 +18,7 @@ frappe.listview_settings['Sales Invoice'] = {
                                     method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_return_inv_with_zoho_books',
                                     args: {
                                         invoice: r.message[i]["name"],
+                                        customer: r.message[i]["customer"]
                                     },
                                     async: false,
                                 }).then(r => {
@@ -265,10 +266,10 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        }),
+        }), */
 
 
-        listview.page.add_inner_button("Delete ZB Payments CN CN-Refunds", () => {
+        /* listview.page.add_inner_button("Delete ZB Payments CN CN-Refunds", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_payments_cn_refunds_to_delete',
                 async: false,
@@ -286,8 +287,8 @@ frappe.listview_settings['Sales Invoice'] = {
                                     args: {
                                         invoice: r.message[i]["name"],
                                         custom_zoho_payment_id: r.message[i]["custom_zoho_payment_id"],
-                                        custom_zb_creditnote_id: r.message[i]["custom_zb_creditnote_id"],
-                                        custom_zb_creditnote_refund_id: r.message[i]["custom_zb_creditnote_refund_id"],
+                                        //custom_zb_creditnote_id: r.message[i]["custom_zb_creditnote_id"],
+                                        //custom_zb_creditnote_refund_id: r.message[i]["custom_zb_creditnote_refund_id"],
                                     },
                                     async: false,
                                 }).then(r => {
