@@ -1,6 +1,6 @@
 frappe.listview_settings['Item Tax Template'] = {
     refresh(listview) {
-        listview.page.add_inner_button("Sync ZB taxes with ERP", () => {
+        listview.page.add_inner_button("Add ZB taxIDs in ERP", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.get_zb_tax_list',
                 async: false,

@@ -8,6 +8,7 @@ frappe.listview_settings['Sales Order'] = {
                     if (r.message) {
                         const length = r.message.length;
                         console.log("Number of SO Payments to process: ", length);
+                        console.log("SO Payments: ", r.message);
                         let transfers = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {

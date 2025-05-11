@@ -138,10 +138,10 @@ doc_events = {
     #    "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_tax_in_zoho", # update Zoho Books
     #    "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_tax_in_zoho" # update Zoho Books
     #},
-	#"Customer": {
-        #"before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_contact_in_zoho",
-        #"on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
-	#},
+	"Customer": {
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_contact_in_zoho",
+        "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
+	},
 	"Supplier": {
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_supplier_contact_in_zoho",
         "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
@@ -271,6 +271,7 @@ fixtures = [
                     "Item-custom_uom_int", #'UOM INT' for fetching stock_uom.must_be_whole_number setting from Item doctype
                                            #-used in code to prevent decimal entries in Integer values
                     "Item-custom_zoho_item_id", # required in case we create Invoices/Purchases on Zoho Books, via API
+                    "Item-custom_zoho_item_updated", # for put/update calls
 
                     "Payment Entry-custom_av_section_break", # PTDC
                     "Payment Entry-custom_contact", # PTDC
@@ -344,7 +345,9 @@ fixtures = [
                     "Batch-custom_buying_price", # for recording batch wise buying price
 
                     "Item Tax Template-custom_zoho_tax_group_id",
-                    "Item Tax Template-custom_zoho_tax_igst_id"
+                    "Item Tax Template-custom_zoho_tax_igst_id",
+                    "Item Tax Template-custom_zoho_rcm_group_id",
+                    "Item Tax Template-custom_zoho_igst_rcm_id"
 				)
 			]
 		]
