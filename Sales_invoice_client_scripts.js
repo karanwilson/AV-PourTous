@@ -287,8 +287,8 @@ frappe.listview_settings['Sales Invoice'] = {
                                     args: {
                                         invoice: r.message[i]["name"],
                                         custom_zoho_payment_id: r.message[i]["custom_zoho_payment_id"],
-                                        //custom_zb_creditnote_id: r.message[i]["custom_zb_creditnote_id"],
-                                        //custom_zb_creditnote_refund_id: r.message[i]["custom_zb_creditnote_refund_id"],
+                                        custom_zb_creditnote_id: r.message[i]["custom_zb_creditnote_id"],
+                                        custom_zb_creditnote_refund_id: r.message[i]["custom_zb_creditnote_refund_id"],
                                     },
                                     async: false,
                                 }).then(r => {
