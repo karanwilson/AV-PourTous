@@ -481,6 +481,35 @@ def get_tax_template():
 
 
 @frappe.whitelist(allow_guest=True)
+def get_purchase_tax_template(doc, method):
+	tax_template = frappe.get_list(
+		'Purchase Taxes and Charges Template',
+		{
+			"company": frappe.defaults.get_user_default("company"),
+			"tax_category": "In-State"
+		},
+		"name"
+	)
+	#frappe.throw("before_insert")
+	#doc.taxes_and_charges = tax_template[0].get("name")
+	tax_doc = frappe.get_doc("Purchase Taxes and Charges Template", tax_template[0].get("name"))
+
+	for tax_detail in tax_doc.taxes:
+		found = any(tax.account_head == tax_detail.get("account_head") for tax in doc.taxes)
+		if not found:
+			doc.append("taxes",
+				{
+					"category": tax_detail.get("category"),
+					"add_deduct_tax": tax_detail.get("add_deduct_tax"),
+					"description": tax_detail.get("description"),
+					"charge_type": "On Net Total",
+					"account_head": tax_detail.get("account_head"),
+					#"included_in_print_rate": tax_detail.get("included_in_print_rate"),
+				}
+			)
+
+
+@frappe.whitelist(allow_guest=True)
 def get_sales_tax_template(doc, method):
 	tax_template = frappe.get_list(
 		'Sales Taxes and Charges Template',

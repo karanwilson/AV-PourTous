@@ -149,6 +149,7 @@ doc_events = {
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
 		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
+        #"before_insert": "auroville.api.get_purchase_tax_template",
 	},
 	"Stock Entry": {
 		"on_submit": "pourtous.api.opening_stock_update_price_lists", # Add the 'Item Price'
