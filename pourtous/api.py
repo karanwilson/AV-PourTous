@@ -678,6 +678,8 @@ def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
 
 def update_price_lists(doc, method):
 	for item in doc.items:
+		if doc.doctype == "Purchase Invoice" and not doc.update_stock:
+			return
 
 		if item.batch_no:
 			if item.custom_selling_price > 0:

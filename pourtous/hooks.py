@@ -151,6 +151,10 @@ doc_events = {
 		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
         #"before_insert": "auroville.api.get_purchase_tax_template",
 	},
+	"Purchase Invoice": {
+		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
+        #"before_insert": "auroville.api.get_purchase_tax_template",
+	},
 	"Stock Entry": {
 		"on_submit": "pourtous.api.opening_stock_update_price_lists", # Add the 'Item Price'
 	},
@@ -339,6 +343,7 @@ fixtures = [
                     "Purchase Receipt-custom_zoho_bill_id",
 
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
+                    "Purchase Invoice Item-custom_selling_price", # for setting the Selling Price
 
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
 

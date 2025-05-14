@@ -26,7 +26,7 @@ def execute(filters=None):
 
 
 def get_columns(filters):
-	if filters.voucher_type == "Purchase Receipt":
+	if filters.voucher_type == "Purchase Receipt" or filters.voucher_type == "Purchase Invoice":
 		return [
 			{
 				"fieldname": "voucher_name",
@@ -177,6 +177,24 @@ def get_data1(filters):
 			as_dict=True
 		)
 
+	elif filters.voucher_type == "Purchase Invoice":
+		query = frappe.db.sql(
+			"""
+			SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
+			`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
+			tabBatch.custom_barcode, `tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty, `tabPurchase Invoice Item`.custom_selling_price,
+			IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
+			FROM `tabPurchase Invoice Item`
+			INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
+			AND `tabPurchase Invoice`.docstatus = 1
+			AND `tabPurchase Invoice`.posting_date = '{0}'
+			AND `tabPurchase Invoice`.posting_time BETWEEN '{1}' AND '{2}'
+			LEFT JOIN tabBatch
+			ON `tabPurchase Invoice Item`.batch_no = tabBatch.name
+			""".format(filters.posting_date, filters.from_time, filters.to_time),
+			as_dict=True
+		)
+
 	else:
 		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
 		# get company abbreviation
@@ -214,6 +232,23 @@ def get_data2(filters):
 			AND `tabPurchase Receipt`.posting_date = '{0}'
 			LEFT JOIN tabBatch
 			ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
+			""".format(filters.posting_date),
+			as_dict=True
+		)
+
+	elif filters.voucher_type == "Purchase Invoice":
+		query = frappe.db.sql(
+			"""
+			SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
+			`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
+			tabBatch.custom_barcode, `tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty, `tabPurchase Invoice Item`.custom_selling_price,
+			IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
+			FROM `tabPurchase Invoice Item`
+			INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
+			AND `tabPurchase Invoice`.docstatus = 1
+			AND `tabPurchase Invoice`.posting_date = '{0}'
+			LEFT JOIN tabBatch
+			ON `tabPurchase Invoice Item`.batch_no = tabBatch.name
 			""".format(filters.posting_date),
 			as_dict=True
 		)
