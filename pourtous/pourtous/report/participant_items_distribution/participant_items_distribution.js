@@ -22,5 +22,13 @@ frappe.query_reports["Participant Items Distribution"] = {
 			"fieldtype": "Date",
 			"width": "60px",
 		}
-	]
+	],
+
+	onload(report) {
+		report.page.add_inner_button(
+					__("Push to Zoho"),
+					function () {
+						frappe.msgprint("Test Message");
+					});
+	}
 };
