@@ -229,9 +229,9 @@ frappe.listview_settings['Sales Invoice'] = {
             });
         })
 
-        /* listview.page.add_inner_button("DelSpeciZBInvP", () => {
+        listview.page.add_inner_button("DelZBInvP", () => {
             frappe.call({
-                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_specific_invoices_to_delete_payment',
+                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_invoices_to_delete',
                 async: false,
                 callback: (r) => {
                     if (r.message) {
@@ -243,10 +243,10 @@ frappe.listview_settings['Sales Invoice'] = {
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_specific_invoice_payments',
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_invoices_in_zoho',
                                     args: {
-                                        invoice: r.message[i][0],
-                                        //custom_zoho_invoice_id: r.message[i]["custom_zoho_invoice_id"],
+                                        invoice: r.message[i]["name"],
+                                        custom_zoho_invoice_id: r.message[i]["custom_zoho_invoice_id"]
                                     },
                                     async: false,
                                 }).then(r => {
@@ -260,16 +260,16 @@ frappe.listview_settings['Sales Invoice'] = {
                                 });
                                 const count = i+1;
                                 const message = "Deleting "+count+" of "+length;
-                                frappe.show_progress("Deleting Specific Invoice Payment IDs in ERP", count, length, message);
+                                frappe.show_progress("Deleting Invoice IDs in ERP", count, length, message);
                             }, 0);
                         }
                     }
                 }
             });
-        }) */
+        })
 
 
-        /* listview.page.add_inner_button("Delete ZB Payments CN CN-Refunds", () => {
+        listview.page.add_inner_button("Delete ZB Payments CN CN-Refunds", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_payments_cn_refunds_to_delete',
                 async: false,
@@ -287,8 +287,8 @@ frappe.listview_settings['Sales Invoice'] = {
                                     args: {
                                         invoice: r.message[i]["name"],
                                         custom_zoho_payment_id: r.message[i]["custom_zoho_payment_id"],
-                                        custom_zb_creditnote_id: r.message[i]["custom_zb_creditnote_id"],
-                                        custom_zb_creditnote_refund_id: r.message[i]["custom_zb_creditnote_refund_id"],
+                                        //custom_zb_creditnote_id: r.message[i]["custom_zb_creditnote_id"],
+                                        //custom_zb_creditnote_refund_id: r.message[i]["custom_zb_creditnote_refund_id"],
                                     },
                                     async: false,
                                 }).then(r => {
@@ -308,7 +308,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        }) */
+        })
 
         /* listview.page.add_inner_button("Update ERP Invoices in ZB", () => {
             frappe.call({

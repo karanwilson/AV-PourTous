@@ -1833,8 +1833,8 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 			else:
 				line_item = {
 					"item_id": item_doc.custom_zoho_item_id,
-					"name": item.item_code,
-					"description": item.item_name,
+					"name": item.item_name,
+					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": abs(float(item.qty)), # ERPNext uses negative values in returns
 					"tax_id": tax_id
@@ -2008,8 +2008,8 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			else:
 				line_item = {
 					"item_id": item_doc.custom_zoho_item_id,
-					"name": item.item_code,
-					"description": item.item_name,
+					"name": item.item_name,
+					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
 					"tax_id": tax_id
@@ -2048,8 +2048,9 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 					"amount": float(res.get("total")),
 					"date": date,
 					"reference_number": invoice_doc.name,
-					'account_id': '2464766000000103144',
-					'account_name': 'PT PURCHASING SERVICE',
+					#'account_id': '2464766000000103144',
+					#'account_name': 'PT PURCHASING SERVICE',
+					'account_name': 'AVMF - 0373',
 					'payment_status': 'paid',
 					"invoices": [
 						{
@@ -2090,8 +2091,9 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				"date": date,
 				"reference_number": invoice_doc.name,
 				"cf_transaction_id": invoice_doc.remarks[-95:],
-				'account_id': '2464766000000103144',
-				'account_name': 'PT PURCHASING SERVICE',
+				#'account_id': '2464766000000103144',
+				#'account_name': 'PT PURCHASING SERVICE',
+				'account_name': 'AVMF - 0373',
 				'payment_status': 'paid',
 				"invoices": [
 					{
@@ -2156,8 +2158,8 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			else:
 				line_item = {
 					"item_id": item_doc.custom_zoho_item_id,
-					"name": item.item_code,
-					"description": item.item_name,
+					"name": item.item_name,
+					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
 					"tax_id": tax_id
@@ -2196,8 +2198,9 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 					"date": date,
 					"reference_number": invoice_doc.name,
 					#"cf_transaction_id": invoice_doc.remarks[-95:],
-					'account_id': '2464766000000103144',
-					'account_name': 'PT PURCHASING SERVICE',
+					#'account_id': '2464766000000103144',
+					#'account_name': 'PT PURCHASING SERVICE',
+					'account_name': 'AVMF - 0373',
 					'payment_status': 'paid',
 					"invoices": [
 						{
@@ -2238,8 +2241,9 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 				"date": date,
 				"reference_number": invoice_doc.name,
 				"cf_transaction_id": invoice_doc.remarks[-95:],
-				'account_id': '2464766000000103144',
-				'account_name': 'PT PURCHASING SERVICE',
+				#'account_id': '2464766000000103144',
+				#'account_name': 'PT PURCHASING SERVICE',
+				'account_name': 'AVMF - 0373',
 				'payment_status': 'paid',
 				"invoices": [
 					{
@@ -2304,8 +2308,8 @@ def sync_upi_inv_with_zoho_books(invoice):
 			else:
 				line_item = {
 					"item_id": item_doc.custom_zoho_item_id,
-					"name": item.item_code,
-					"description": item.item_name,
+					"name": item.item_name,
+					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
 					"tax_id": tax_id
@@ -2335,8 +2339,9 @@ def sync_upi_inv_with_zoho_books(invoice):
 					"amount": float(res.get("total")),
 					"date": date,
 					"reference_number": invoice_doc.name,
-					'account_id': '2464766000000103144',
-					'account_name': 'PT PURCHASING SERVICE',
+					#'account_id': '2464766000000103144',
+					#'account_name': 'PT PURCHASING SERVICE',
+					'account_name': 'AVMF - 0373',
 					'payment_status': 'paid',
 					"invoices": [
 						{
@@ -2377,8 +2382,9 @@ def sync_upi_inv_with_zoho_books(invoice):
 				"date": date,
 				"reference_number": invoice_doc.name,
 				"cf_transaction_id": invoice_doc.remarks[-95:],
-				'account_id': '2464766000000103144',
-				'account_name': 'PT PURCHASING SERVICE',
+				#'account_id': '2464766000000103144',
+				#'account_name': 'PT PURCHASING SERVICE',
+				'account_name': 'AVMF - 0373',
 				'payment_status': 'paid',
 				"invoices": [
 					{
@@ -2461,13 +2467,19 @@ def delete_specific_invoice_payments(invoice):
 def fetch_invoices_to_delete():
 	return frappe.db.sql(
 		"""
-		select si.name, si.custom_zoho_invoice_id from `tabSales Invoice` si, tabCustomer c
-		where si.customer = c.name and c.customer_type = "Company"
-		and si.custom_zoho_invoice_id IS NOT NULL
-		and posting_date <= "2025-05-01" and si.docstatus = 1;
+		select name, custom_zoho_invoice_id from `tabSales Invoice`
+		where custom_zoho_invoice_id IS NOT NULL
+		and posting_date <= "2025-04-07" and docstatus = 1;
 		""",
 		as_dict=True
 	)
+
+	"""
+	select si.name, si.custom_zoho_invoice_id from `tabSales Invoice` si, tabCustomer c
+	where si.customer = c.name and c.customer_type = "Company"
+	and si.custom_zoho_invoice_id IS NOT NULL
+	and posting_date <= "2025-05-01" and si.docstatus = 1;
+	"""
 
 @frappe.whitelist(allow_guest=True)
 def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
@@ -2486,10 +2498,9 @@ def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
 def fetch_payments_cn_refunds_to_delete():
 	return frappe.db.sql(
 		"""
-		SELECT name, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id,
-		customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
-		WHERE docstatus = 1 AND custom_fs_account_number = "252651"
-		and (custom_zoho_payment_id IS NOT NULL or custom_zb_creditnote_id IS NOT NULL or custom_zb_creditnote_refund_id IS NOT NULL)
+		SELECT name, custom_zoho_payment_id, customer, custom_fs_account_number, docstatus, status
+		FROM `tabSales Invoice` WHERE docstatus = 1
+		and custom_zoho_payment_id IS NOT NULL
 		""",
 		as_dict=True
 	)
@@ -2497,19 +2508,25 @@ def fetch_payments_cn_refunds_to_delete():
 	from `tabSales Invoice` si, tabCustomer c
 	where si.customer = c.name and c.customer_type = "Company"
 	and (si.custom_zoho_payment_id IS NOT NULL or si.custom_zb_creditnote_id IS NOT NULL or si.custom_zb_creditnote_refund_id IS NOT NULL)
-	and posting_date <= "2025-05-01" and si.docstatus = 1; """
-
+	and posting_date <= "2025-05-01" and si.docstatus = 1;
+	"""
 	"""
 	SELECT name, custom_zoho_payment_id, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
 	WHERE docstatus = 1 AND status IN ('Unpaid', 'Overdue')
 	AND custom_fs_account_number IS NOT NULL
 	AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 	"""
+	"""
+	SELECT name, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id,
+	customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
+	WHERE docstatus = 1 AND custom_fs_account_number = "252651"
+	and (custom_zoho_payment_id IS NOT NULL or custom_zb_creditnote_id IS NOT NULL or custom_zb_creditnote_refund_id IS NOT NULL)
+	"""
 
 
 @frappe.whitelist(allow_guest=True)
-def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
-#def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
+#def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
+def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 	api_controller = frappe.get_doc("Zoho Books API")
 
 	if custom_zoho_payment_id != None:
@@ -2521,7 +2538,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, c
 			#msg = "Zoho Books Response: " + res.json().get("message")
 			#frappe.msgprint(msg)
 
-	if custom_zb_creditnote_refund_id != None:
+	""" if custom_zb_creditnote_refund_id != None:
 		res = api_controller.delete_creditnote_refund(custom_zb_creditnote_id, custom_zb_creditnote_refund_id)
 		if res.get("code") == 0:
 			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_refund_id", "")
@@ -2535,7 +2552,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, c
 			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_id", "")
 			return { "DELETED" }
 			#msg = "Zoho Books Response: " + res.json().get("message")
-			#frappe.msgprint(msg)
+			#frappe.msgprint(msg) """
 
 
 @frappe.whitelist(allow_guest=True)
