@@ -6,7 +6,7 @@ from frappe import _, msgprint
 
 
 def execute(filters=None):
-	if not (filters): # don't execute until filters are set
+	if not (filters.from_date and filters.to_date): # don't execute until filters are set
 		return [], []
 
 	columns, data = [], []
@@ -199,9 +199,10 @@ def get_data(filters):
 			grand_total
 
 			FROM `tabSales Invoice` WHERE docstatus = 1
-			AND posting_date = '{0}' AND customer = '{1}'
+			AND posting_date between '{0}' and '{1}'
+			AND customer = '{2}'
 			) table1
-			""".format(filters.query_date, filters.customer),
+			""".format(filters.from_date, filters.to_date, filters.customer),
 			as_dict=True
 		)
 
@@ -265,9 +266,9 @@ def get_data(filters):
 			grand_total
 
 			FROM `tabSales Invoice` WHERE docstatus = 1
-			AND posting_date = '{0}'
+			AND posting_date between '{0}' and '{1}'
 			) table1
-			""".format(filters.query_date),
+			""".format(filters.from_date, filters.to_date),
 			as_dict=True
 		)
 
