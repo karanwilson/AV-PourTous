@@ -680,6 +680,37 @@ class ZohoBooksAPI(Document):
 			# r.raise_for_status()
 
 
+	def post_vendor_credit(self, data):
+		master = "vendorcredit"
+		scope='ZohoBooks.debitnotes.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/vendorcredits?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}			
+
+			r = s.post(api_url, data=json.dumps(data))
+			#frappe.throw(str(r.json()))
+			#if r.json().get('message') == 'The credit note has been created.':
+			if r.json().get('code') == 0:
+				return r.json().get('vendor_credit').get('vendor_credit_id')
+				#return r.json().get('invoice').get('invoice_id')
+			else :
+				frappe.msgprint(r.json().get('message'))
+				#r.raise_for_status()
+
+
 	def post_invoice(self, data):
 		master = "invoices"
 		scope='ZohoBooks.invoices.CREATE'
@@ -1658,25 +1689,38 @@ def sync_zb_item_id_with_erp(item_id, item_name):
 
 @frappe.whitelist(allow_guest=True)
 def fetch_erp_bills_list():
-	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
-		owner = "Administrator"
-		posting_date = "2025-04-02"
-	elif frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
-		owner = "karan@pourtous-av.in"
-		posting_date = "2025-04-01"
+		return frappe.db.sql(
+			"""
+			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1 AND custom_zoho_bill_id IS NULL
+			""",
+			as_dict=True
+		)
 
-	return frappe.db.sql(
-		"""
-		SELECT name FROM `tabPurchase Receipt` WHERE NOT (owner = '{0}' AND posting_date = '{1}')
-		AND docstatus = 1 AND custom_zoho_bill_id IS NULL
-		""".format(owner, posting_date),
-		as_dict=True
-	)
+	#if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
+		#owner = "Administrator"
+		#posting_date = "2025-04-02"
+	#	return frappe.db.sql(
+	#		"""
+	#		SELECT name FROM `tabPurchase Receipt` WHERE NOT (owner = "Administrator" AND posting_date = "2025-04-02")
+	#		AND docstatus = 1 AND custom_zoho_bill_id IS NULL
+	#		""",
+	#		as_dict=True
+	#	)
+
+	#elif frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+	#	return frappe.db.sql(
+	#		"""
+	#		SELECT name FROM `tabPurchase Receipt` WHERE NOT (owner = "karan@pourtous-av.in" AND (posting_date = "2025-04-01" OR posting_date = "2025-04-06"))
+	#		AND docstatus = 1 AND custom_zoho_bill_id IS NULL
+	#		""",
+	#		as_dict=True
+	#	)
 
 
 @frappe.whitelist(allow_guest=True)
 def add_erp_bills_in_zoho(bill):
-	bill_doc = frappe.get_doc("Purchase Receipt", bill)
+	#bill_doc = frappe.get_doc("Purchase Receipt", bill)
+	bill_doc = frappe.get_doc("Purchase Invoice", bill)
 
 	# Check if Supplier is Inter/Intra state
 
@@ -1740,7 +1784,7 @@ def add_erp_bills_in_zoho(bill):
 			line_item = {
 				"item_id": frappe.get_value("Item", item.item_code, "custom_zoho_item_id"),
 				"rate": float(item.price_list_rate),
-				"quantity": float(item.qty),
+				"quantity": abs(float(item.qty))
 			}
 			if is_reverse_charge_applied:
 				line_item["reverse_charge_tax_id"] = reverse_charge_tax_id
@@ -1750,11 +1794,15 @@ def add_erp_bills_in_zoho(bill):
 
 			line_items.append(line_item)
 
-	date = bill_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+	if bill_doc.bill_date:
+		date = bill_doc.bill_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+	else:
+		date = bill_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
 	data = {
 		'vendor_id': frappe.get_value("Supplier", bill_doc.supplier, "custom_zoho_contact_id"),
-		'bill_number': bill_doc.name,
+		#'bill_number': bill_doc.bill_no,
+		'reference_number': bill_doc.name,
 		'date': date,
 		"is_inclusive_tax": is_inclusive_tax,
 		"is_reverse_charge_applied": is_reverse_charge_applied,
@@ -1763,13 +1811,35 @@ def add_erp_bills_in_zoho(bill):
 		"line_items": line_items
 	}
 
-	#frappe.throw(str(data))
-	res = api_controller.post_bill(data)
-	if res:
-		bill_doc.custom_zoho_bill_id = res
-		bill_doc.save()
-		frappe.db.commit()
-		return { "ADDED" }
+	if bill_doc.is_return:
+		# ZB is asking for Bill number to return against.. hence skipping this section for now.
+		return
+		if bill_doc.bill_no:
+			data["vendor_credit_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
+		else:
+			data["vendor_credit_number"] = bill_doc.name # Supplier/Vendor Bill Number
+
+		#frappe.throw(str(data))
+		res = api_controller.post_vendor_credit(data)
+		if res:
+			bill_doc.custom_zb_vendor_credit_id = res
+			bill_doc.save()
+			frappe.db.commit()
+			return { "ADDED" }
+
+	else:
+		if bill_doc.bill_no:
+			data["bill_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
+		else:
+			data["bill_number"] = bill_doc.name # Supplier/Vendor Bill Number
+
+		#frappe.throw(str(data))
+		res = api_controller.post_bill(data)
+		if res:
+			bill_doc.custom_zoho_bill_id = res
+			bill_doc.save()
+			frappe.db.commit()
+			return { "ADDED" }
 
 
 #@frappe.whitelist(allow_guest=True)
@@ -2416,7 +2486,7 @@ def fetch_bills_to_delete():
 	return frappe.db.sql(
 		"""
 		select name, custom_zoho_bill_id FROM `tabPurchase Receipt`
-		where owner = "karan@pourtous-av.in" and posting_date = "2025-04-01"
+		where owner = "karan@pourtous-av.in" and posting_date = "2025-04-06"
 		and custom_zoho_bill_id IS NOT NULL and docstatus = 1
 		""",
 		as_dict=True
@@ -2469,11 +2539,11 @@ def fetch_invoices_to_delete():
 		"""
 		select name, custom_zoho_invoice_id from `tabSales Invoice`
 		where custom_zoho_invoice_id IS NOT NULL
-		and posting_date <= "2025-04-07" and docstatus = 1;
+		and docstatus = 1;
 		""",
 		as_dict=True
 	)
-
+	# and posting_date <= "2025-04-30"
 	"""
 	select si.name, si.custom_zoho_invoice_id from `tabSales Invoice` si, tabCustomer c
 	where si.customer = c.name and c.customer_type = "Company"
