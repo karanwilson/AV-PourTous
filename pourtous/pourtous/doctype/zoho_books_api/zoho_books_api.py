@@ -1533,7 +1533,7 @@ def update_item_in_zoho(doc, method):
 		data = {
 			"sku": doc.item_code,
 			"name": doc.item_name,
-			#"description": doc.item_name,
+			"description": "",
 			"unit": uom[doc.stock_uom],
 			"product_type": product_type,
 			"item_tax_preferences": [
@@ -1550,7 +1550,7 @@ def update_item_in_zoho(doc, method):
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
 			'purchase_account_name': 'Cost of Goods Sold',
-			#'purchase_description': doc.item_name,
+			'purchase_description': "",
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -1558,7 +1558,7 @@ def update_item_in_zoho(doc, method):
 		put_data = {
 			#"sku": doc.item_code,
 			"name": doc.item_name,
-			#"description": doc.item_name,
+			"description": "",
 			"unit": uom[doc.stock_uom],
 			"product_type": product_type,
 			"item_tax_preferences": [
@@ -1578,7 +1578,7 @@ def update_item_in_zoho(doc, method):
 			#'purchase_account_name': 'Purchase of Goods & Services',
 			#'purchase_account_id': '2464766000000000567',
 			'purchase_account_name': 'Cost of Goods Sold',
-			#'purchase_description': doc.item_name,
+			'purchase_description': "",
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -1708,6 +1708,7 @@ def fetch_erp_bills_list():
 		return frappe.db.sql(
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1 AND custom_zoho_bill_id IS NULL
+			AND posting_date > "2025-04-30"
 			""",
 			as_dict=True
 		)
@@ -1829,7 +1830,7 @@ def add_erp_bills_in_zoho(bill):
 
 	if bill_doc.is_return:
 		# ZB is asking for Bill number to return against.. hence skipping this section for now.
-		return
+		#return
 		if bill_doc.bill_no:
 			data["vendor_credit_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
 		else:
