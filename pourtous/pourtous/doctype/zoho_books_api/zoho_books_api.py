@@ -2003,7 +2003,8 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 					"date": date,
 					"reference_number": invoice_doc.name,
 					"description": invoice_doc.remarks[-95:],
-					'from_account_id': '2464766000000103144',
+					#'from_account_id': '2464766000000103144',
+					'account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
 				}
 
 			if invoice_doc.custom_fs_account_number:
@@ -2039,7 +2040,8 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				"date": date,
 				"reference_number": invoice_doc.name,
 				"description": invoice_doc.remarks[-95:],
-				'from_account_id': '2464766000000103144',
+				#'from_account_id': '2464766000000103144',
+				'account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
 			}
 			#frappe.throw(str(payment_data))
 			res = api_controller.post_creditnote_refund(creditnote_refund_data, invoice_doc.custom_zb_creditnote_id)
@@ -2137,6 +2139,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 					"reference_number": invoice_doc.name,
 					#'account_id': '2464766000000103144',
 					#'account_name': 'PT PURCHASING SERVICE',
+					'account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
 					'account_name': 'AVMF - 0373',
 					'payment_status': 'paid',
 					"invoices": [
@@ -2180,6 +2183,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				"cf_transaction_id": invoice_doc.remarks[-95:],
 				#'account_id': '2464766000000103144',
 				#'account_name': 'PT PURCHASING SERVICE',
+				'account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
 				'account_name': 'AVMF - 0373',
 				'payment_status': 'paid',
 				"invoices": [
@@ -2287,6 +2291,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 					#"cf_transaction_id": invoice_doc.remarks[-95:],
 					#'account_id': '2464766000000103144',
 					#'account_name': 'PT PURCHASING SERVICE',
+					'account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
 					'account_name': 'AVMF - 0373',
 					'payment_status': 'paid',
 					"invoices": [
@@ -2330,6 +2335,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 				"cf_transaction_id": invoice_doc.remarks[-95:],
 				#'account_id': '2464766000000103144',
 				#'account_name': 'PT PURCHASING SERVICE',
+				'account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
 				'account_name': 'AVMF - 0373',
 				'payment_status': 'paid',
 				"invoices": [
@@ -2428,6 +2434,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 					"reference_number": invoice_doc.name,
 					#'account_id': '2464766000000103144',
 					#'account_name': 'PT PURCHASING SERVICE',
+					'account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
 					'account_name': 'AVMF - 0373',
 					'payment_status': 'paid',
 					"invoices": [
@@ -2471,6 +2478,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 				"cf_transaction_id": invoice_doc.remarks[-95:],
 				#'account_id': '2464766000000103144',
 				#'account_name': 'PT PURCHASING SERVICE',
+				'account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
 				'account_name': 'AVMF - 0373',
 				'payment_status': 'paid',
 				"invoices": [
@@ -2595,9 +2603,9 @@ def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
 def fetch_payments_cn_refunds_to_delete():
 	return frappe.db.sql(
 		"""
-		SELECT name, customer, custom_fs_account_number, docstatus, status, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id
+		SELECT name, customer, custom_fs_account_number, docstatus, status, custom_zoho_payment_id
 		FROM `tabSales Invoice` WHERE docstatus = 1
-		and (custom_zoho_payment_id IS NOT NULL or custom_zb_creditnote_id IS NOT NULL or custom_zb_creditnote_refund_id IS NOT NULL)
+		and (custom_zoho_payment_id IS NOT NULL)
 		""",
 		as_dict=True
 	)
@@ -2622,8 +2630,8 @@ def fetch_payments_cn_refunds_to_delete():
 
 
 @frappe.whitelist(allow_guest=True)
-def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
-#def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
+#def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
+def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 	api_controller = frappe.get_doc("Zoho Books API")
 
 	if custom_zoho_payment_id != None:
@@ -2635,7 +2643,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, c
 			#msg = "Zoho Books Response: " + res.json().get("message")
 			#frappe.msgprint(msg)
 
-	if custom_zb_creditnote_refund_id != None:
+	""" if custom_zb_creditnote_refund_id != None:
 		res = api_controller.delete_creditnote_refund(custom_zb_creditnote_id, custom_zb_creditnote_refund_id)
 		if res.get("code") == 0:
 			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_refund_id", "")
@@ -2649,7 +2657,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, c
 			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_id", "")
 			return { "DELETED" }
 			#msg = "Zoho Books Response: " + res.json().get("message")
-			#frappe.msgprint(msg)
+			#frappe.msgprint(msg) """
 
 
 @frappe.whitelist(allow_guest=True)
