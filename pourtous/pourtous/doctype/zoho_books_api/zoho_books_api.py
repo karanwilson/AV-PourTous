@@ -1060,8 +1060,24 @@ def update_contact_in_zoho(doc, method):
 		"contact_type": "customer",
 		"customer_sub_type": customer_sub_type,
 		"gst_no": doc.gstin,
-		"gst_treatment": gst_treatment[doc.gst_category]
+		"gst_treatment": gst_treatment[doc.gst_category],
 	}
+
+	if doc.customer_primary_address:
+		address_doc = frappe.get_doc("Address", doc.customer_primary_address)
+		billing_address = {
+            #"attention": "Mr.John",
+            "address": address_doc.address_line1,
+            "street2": address_doc.address_line2,
+            #"state_code": "CA",
+            "city": address_doc.city,
+            "state": address_doc.state,
+            "zip": address_doc.pincode,
+            "country": address_doc.country,
+            "phone": doc.mobile_no
+		}
+
+		data["billing_address"] = billing_address
 
 	if doc.custom_zoho_contact_id == None:
 		# post new Contact
@@ -1517,7 +1533,7 @@ def update_item_in_zoho(doc, method):
 		data = {
 			"sku": doc.item_code,
 			"name": doc.item_name,
-			"description": doc.item_name,
+			#"description": doc.item_name,
 			"unit": uom[doc.stock_uom],
 			"product_type": product_type,
 			"item_tax_preferences": [
@@ -1534,7 +1550,7 @@ def update_item_in_zoho(doc, method):
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
 			'purchase_account_name': 'Cost of Goods Sold',
-			'purchase_description': doc.item_name,
+			#'purchase_description': doc.item_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -1542,7 +1558,7 @@ def update_item_in_zoho(doc, method):
 		put_data = {
 			#"sku": doc.item_code,
 			"name": doc.item_name,
-			"description": doc.item_name,
+			#"description": doc.item_name,
 			"unit": uom[doc.stock_uom],
 			"product_type": product_type,
 			"item_tax_preferences": [
@@ -1562,7 +1578,7 @@ def update_item_in_zoho(doc, method):
 			#'purchase_account_name': 'Purchase of Goods & Services',
 			#'purchase_account_id': '2464766000000000567',
 			'purchase_account_name': 'Cost of Goods Sold',
-			'purchase_description': doc.item_name,
+			#'purchase_description': doc.item_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -2043,6 +2059,7 @@ def fetch_unsynced_erp_fs_invoice_list():
 		WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND custom_fs_account_number IS NOT NULL
 		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL)
+		AND posting_date BETWEEN "2025-04-01" AND "2025-04-05"
 		""",
 		as_dict=True
 		# AND posting_date BETWEEN "2025-04-01" AND "2025-05-05"
@@ -2503,31 +2520,6 @@ def delete_bills_in_zoho(bill, custom_zoho_bill_id):
 
 
 @frappe.whitelist(allow_guest=True)
-def fetch_specific_invoices_to_delete_payment():
-	import csv
-	
-	with open('Invoices_to_delete.csv', newline='') as f:
-		reader = csv.reader(f)
-		del_inv_list_of_lists = list(reader)
-
-	del_inv_list = []
-
-	for row in del_inv_list_of_lists:
-		del_inv_list.extend(row)
-	
-	return del_inv_list_of_lists
-
-	#return frappe.db.sql(
-	#	"""
-	#	SELECT name, custom_zoho_invoice_id FROM `tabSales Invoice`
-	#	WHERE docstatus = 1 AND status = 'paid'
-	#	AND custom_zoho_invoice_id IS NOT NULL
-	#	AND name IN {0}
-	#	""".format(tuple(del_inv_list)),
-	#	as_dict=True
-	#)
-
-@frappe.whitelist(allow_guest=True)
 def delete_specific_invoice_payments(invoice):
 	frappe.set_value("Sales Invoice", invoice, "custom_zoho_payment_id", "")
 	return { "DELETED" }
@@ -2537,9 +2529,7 @@ def delete_specific_invoice_payments(invoice):
 def fetch_invoices_to_delete():
 	return frappe.db.sql(
 		"""
-		select name, custom_zoho_invoice_id from `tabSales Invoice`
-		where custom_zoho_invoice_id IS NOT NULL
-		and docstatus = 1;
+		SELECT name FROM `tabSales Invoice` WHERE docstatus = 1 and custom_zoho_invoice_id IS NOT NULL
 		""",
 		as_dict=True
 	)
@@ -2551,13 +2541,50 @@ def fetch_invoices_to_delete():
 	and posting_date <= "2025-05-01" and si.docstatus = 1;
 	"""
 
+
+@frappe.whitelist(allow_guest=True)
+def delete_invoice_ids_in_erp(invoice):
+	import csv
+
+	with open('Invoice_ids_to_retain.csv', newline='') as f:
+		reader = csv.reader(f)
+		inv_ids_list_of_lists = list(reader)
+
+	inv_ids_list = []
+
+	for row in inv_ids_list_of_lists:
+		inv_ids_list.extend(row)
+
+	exists = any(inv_name == invoice for inv_name in inv_ids_list)
+
+	if not exists:
+		frappe.set_value("Sales Invoice", invoice, "custom_zoho_invoice_id", "")
+		return { "DELETED" }
+
+	#return inv_ids_list_of_lists
+
+	#return frappe.db.sql(
+	#	"""
+	#	SELECT name, custom_zoho_invoice_id FROM `tabSales Invoice`
+	#	WHERE docstatus = 1 AND status = 'paid'
+	#	AND custom_zoho_invoice_id IS NOT NULL
+	#	AND name IN {0}
+	#	""".format(tuple(del_inv_list)),
+	#	as_dict=True
+	#)
+
+
 @frappe.whitelist(allow_guest=True)
 def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
+#def delete_invoice_ids_in_erp(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 
 	res = api_controller.delete_invoices(custom_zoho_invoice_id)
 
+	#frappe.throw(str(res))
+
 	if res.get("code") == 0:
+	#if res.get("code") == 1002 and res.get("message") == 'Invoice does not exist.':
 		frappe.set_value("Sales Invoice", invoice, "custom_zoho_invoice_id", "")
 		return { "DELETED" }
 		#msg = "Zoho Books Response: " + res.json().get("message")
@@ -2568,9 +2595,9 @@ def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
 def fetch_payments_cn_refunds_to_delete():
 	return frappe.db.sql(
 		"""
-		SELECT name, custom_zoho_payment_id, customer, custom_fs_account_number, docstatus, status
+		SELECT name, customer, custom_fs_account_number, docstatus, status, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id
 		FROM `tabSales Invoice` WHERE docstatus = 1
-		and custom_zoho_payment_id IS NOT NULL
+		and (custom_zoho_payment_id IS NOT NULL or custom_zb_creditnote_id IS NOT NULL or custom_zb_creditnote_refund_id IS NOT NULL)
 		""",
 		as_dict=True
 	)
@@ -2595,8 +2622,8 @@ def fetch_payments_cn_refunds_to_delete():
 
 
 @frappe.whitelist(allow_guest=True)
-#def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
-def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
+def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
+#def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 	api_controller = frappe.get_doc("Zoho Books API")
 
 	if custom_zoho_payment_id != None:
@@ -2608,7 +2635,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 			#msg = "Zoho Books Response: " + res.json().get("message")
 			#frappe.msgprint(msg)
 
-	""" if custom_zb_creditnote_refund_id != None:
+	if custom_zb_creditnote_refund_id != None:
 		res = api_controller.delete_creditnote_refund(custom_zb_creditnote_id, custom_zb_creditnote_refund_id)
 		if res.get("code") == 0:
 			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_refund_id", "")
@@ -2622,7 +2649,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_id", "")
 			return { "DELETED" }
 			#msg = "Zoho Books Response: " + res.json().get("message")
-			#frappe.msgprint(msg) """
+			#frappe.msgprint(msg)
 
 
 @frappe.whitelist(allow_guest=True)
