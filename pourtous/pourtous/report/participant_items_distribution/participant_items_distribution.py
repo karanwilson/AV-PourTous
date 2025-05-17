@@ -89,3 +89,10 @@ def get_data(filters):
 	)
 
 	return query
+
+
+""" @frappe.whitelist()
+def get_participant_monthly_distribution(filters):
+	if not (filters.custom_fs_account_number and filters.from_date and filters.to_date): # don't execute until filters are set
+		return [], []
+	return get_data(filters) """

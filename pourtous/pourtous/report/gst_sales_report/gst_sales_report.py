@@ -28,7 +28,7 @@ def get_columns():
 			"label": "Invoice ID",
 			"fieldtype": "Link",
 			"options": "Sales Invoice",
-			"width": "130"
+			"width": "150"
 		},
 
 		{
@@ -160,28 +160,29 @@ def get_data(filters):
 			AND (item_tax_template like "Nil-Rated%" OR item_tax_template like "Non-GST%" OR item_tax_template like "Exempted%"))
 			AS sales_exempted,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 3_ -%")
+			(SELECT SUM(sii.net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 3.0)
 			AS sales_3,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 5_ -%")
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 5.0)
 			AS sales_5,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 12_ -%")
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 12.0)
 			AS sales_12,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 18_ -%")
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 18.0)
 			AS sales_18,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28_ -%")
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 28.0)
 			AS sales_28,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28_ CESS 12%")
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name
+			AND sii.item_tax_template = itt.name AND itt.gst_rate = 28.0 AND sii.item_tax_template like "GST 28_ CESS 12%")
 			AS sales_28_cess_12,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
@@ -207,7 +208,7 @@ def get_data(filters):
 		)
 
 		return gst_sales_query
-	
+
 	else:
 		gst_sales_query = frappe.db.sql(
 			"""
@@ -227,28 +228,29 @@ def get_data(filters):
 			AND (item_tax_template like "Nil-Rated%" OR item_tax_template like "Non-GST%" OR item_tax_template like "Exempted%"))
 			AS sales_exempted,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 3_ -%")
+			(SELECT SUM(sii.net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 3.0)
 			AS sales_3,
-			
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 5_ -%")
+
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 5.0)
 			AS sales_5,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 12_ -%")
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 12.0)
 			AS sales_12,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 18_ -%")
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 18.0)
 			AS sales_18,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28_ -%")
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 28.0)
 			AS sales_28,
 
-			(SELECT SUM(net_amount) FROM `tabSales Invoice Item`
-			WHERE parent = `tabSales Invoice`.name AND item_tax_template like "GST 28_ CESS 12%")
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name
+			AND sii.item_tax_template = itt.name AND itt.gst_rate = 28.0 AND sii.item_tax_template like "GST 28_ CESS 12%")
 			AS sales_28_cess_12,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
