@@ -2060,6 +2060,70 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				return "ADDED"
 
 
+## WIP ## PTDC Consolidated Invoices push to ZB
+@frappe.whitelist(allow_guest=True)
+def sync_pt_consol_inv_with_zb(invoice, customer):
+	api_controller = frappe.get_doc("Zoho Books API")
+	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
+	if frappe.get_value("Customer", customer, "customer_type") == "Company":
+		customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
+	else:
+		customer_id = 2464766000000395217  # "FS Account Customers" in ZB
+
+	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+
+	# Flow for: registering Paid Invoices and their Payments in ZB; registering Credit Notes and their Credit Note Refunds
+	if invoice_doc.custom_zoho_invoice_id == None:
+		line_items = []
+
+		for item in invoice_doc.items:
+			item_doc = frappe.get_doc("Item", item.item_code)
+
+			try:
+				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+			except Exception as err:
+				frappe.msgprint(str(err))
+				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
+				frappe.msgprint(msg)
+				return
+
+			else:
+				line_item = {
+					"item_id": item_doc.custom_zoho_item_id,
+					"name": item.item_name,
+					#"description": item.item_name,
+					"rate": float(item.rate),
+					"quantity": float(item.qty),
+					"tax_id": tax_id
+				}
+				line_items.append(line_item)
+
+		#if not invoice_doc.is_return:
+		invoice_data = {
+			'customer_id': customer_id,
+			'invoice_number': invoice[-16:],
+			'date': date,
+			"is_inclusive_tax": True,
+			#'price_precision': 2,
+			"custom_fields": [
+				{
+					"index": 1,
+					"label": "cf_fs_account_number",
+					"value": invoice_doc.custom_fs_account_number,
+					"data_type": "text"
+				}
+			],
+			"line_items": line_items
+		}
+
+		#frappe.throw(str(invoice_data))
+		res = api_controller.post_invoice(invoice_data)
+		if res:
+			invoice_doc.custom_zoho_invoice_id = res.get('invoice_id')
+			invoice_doc.save()
+			frappe.db.commit()
+
+
 @frappe.whitelist(allow_guest=True)
 def fetch_unsynced_erp_fs_invoice_list():
 	return frappe.db.sql(
