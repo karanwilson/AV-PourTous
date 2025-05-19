@@ -1762,12 +1762,16 @@ def add_erp_bills_in_zoho(bill):
 			else:
 				tax_specification = "inter"
 
+			reference_invoice_type = "registered" # used in case of "Vendor Credits"
+
 		# in case tax info is not available, i.e. in case the GSTIN of supplier is not updated:-
 		else:
-			with open('tax_info_list_empty.txt', 'w') as file:
-				file.write(str(contact.get("tax_info_list")))
 			tax_specification = "intra"
 			is_reverse_charge_applied = True
+
+			reference_invoice_type = "b2c_others" # used in case of "Vendor Credits"
+			#with open('tax_info_list_empty.txt', 'w') as file:
+			#	file.write(str(contact.get("tax_info_list")))
 
 	except Exception as err:
 		#with open('tax_info_list_exception_err.txt', 'w') as file:
@@ -1835,6 +1839,8 @@ def add_erp_bills_in_zoho(bill):
 			data["vendor_credit_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
 		else:
 			data["vendor_credit_number"] = bill_doc.name # Supplier/Vendor Bill Number
+		
+		data["reference_invoice_type"] = reference_invoice_type
 
 		#frappe.throw(str(data))
 		res = api_controller.post_vendor_credit(data)
