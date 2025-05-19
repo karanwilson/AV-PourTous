@@ -525,14 +525,16 @@ class ZohoBooksAPI(Document):
 			r = s.post(api_url, data=json.dumps(data))
 
 			#if r.json().get('message') == 'The item has been added.':
-			if r.json().get('code') == 0:
+			""" if r.json().get('code') == 0:
 				custom_zoho_item_id = r.json().get('item').get('item_id')
 				return custom_zoho_item_id
 
 			else:
 				#frappe.msgprint(r.json().get('message'))
 				#r.raise_for_status()
-				return r.json().get('message')
+				return r.json().get('message') """
+
+			return r.json()
 
 
 	def put_item(self, item_id, data):
@@ -557,11 +559,11 @@ class ZohoBooksAPI(Document):
 
 			r = s.put(api_url, data=json.dumps(data))
 			#r.raise_for_status()
-			if r.json().get('message') == "This item cannot be edited as it does not exist.":
-				return self.post_item(data)
+			#if r.json().get('message') == "This item cannot be edited as it does not exist.":
+			#	return self.post_item(data)
 
-			else:
-				return r.json().get('message')
+			#else:
+			return r.json()
 
 
 	def delete_item(self, item_id):
@@ -1587,15 +1589,38 @@ def update_item_in_zoho(doc, method):
 		# post new Item
 		res = api_controller.post_item(data)
 		if res:
-			doc.custom_zoho_item_id = res
-			return doc.custom_zoho_item_id
-			# returning this value for the add_item_to_zb function below (for bulk Items additions to Zoho)
+			if res.get('code') == 0:
+				doc.custom_zoho_item_id = res.get('item').get('item_id')
+				return doc.custom_zoho_item_id
+				# returning this value for the add_item_to_zb function below (for bulk Items additions to Zoho)
+			else:
+				frappe.msgprint(res.get("message"))
 
 	else:
 		# put/update existing Item
 		res = api_controller.put_item(doc.custom_zoho_item_id, put_data)
-		msg = "Zoho Books API Response: " + str(res)
-		frappe.msgprint(msg)
+		#frappe.throw(str(res))
+		if res:
+			if res.get('message') == "This item cannot be edited as it does not exist.":
+				res2 = api_controller.post_item(data)
+				#frappe.throw(str(res2))
+				if res2:
+					if res2.get('code') == 0:
+						doc.custom_zoho_item_updated = 1
+						doc.custom_zoho_item_id = res2.get('item').get('item_id')
+						return doc.custom_zoho_item_id
+						# returning this value for the add_item_to_zb function below (for bulk Items additions to Zoho)
+					else:
+						frappe.msgprint(res2.get("message"))
+
+			elif res.get('code') == 0:
+				doc.custom_zoho_item_updated = 1
+			else:
+				frappe.msgprint(res.get('message'))
+		else:
+			frappe.msgprint(str(res))
+		#msg = "Zoho Books API Response: " + str(res)
+		#frappe.msgprint(msg)
 
 
 def delete_item_in_zoho(doc, method):
@@ -1637,8 +1662,8 @@ def custom_fetch_erp_items_list():
 	#return frappe.get_all('Supplier', filters = {"disabled": 0})
 	return frappe.db.sql(
 		"""
-		SELECT name, custom_zoho_item_id, item_name FROM tabItem
-		WHERE disabled = 0 AND custom_zoho_item_updated = 1
+		SELECT name, custom_zoho_item_id, gst_hsn_code FROM tabItem
+		WHERE disabled = 0 AND custom_zoho_item_updated = 0
 		""",
 		as_dict=True
 	)
@@ -1646,9 +1671,9 @@ def custom_fetch_erp_items_list():
 
 @frappe.whitelist(allow_guest=True)
 #def custom_add_erp_item_in_zb(erp_item):
-def custom_add_erp_item_in_zb(name, custom_zoho_item_id, item_name):
+def custom_add_erp_item_in_zb(name, custom_zoho_item_id, gst_hsn_code):
 	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
-	
+
 	""" custom_zoho_item_id = update_item_in_zoho(doc, method=None)
 	if custom_zoho_item_id:
 		doc.custom_zoho_item_id = custom_zoho_item_id
@@ -1674,18 +1699,30 @@ def custom_add_erp_item_in_zb(name, custom_zoho_item_id, item_name):
 	#if item_name:
 		#doc = frappe.get_doc("Item", item)
 
-	data = {
+	""" data = {
 		'purchase_account_id': '2464766000000000567',
 		'purchase_account_name': 'Cost of Goods Sold',
+	} """
+
+	put_data = {
+		"description": "",
+		'purchase_description': "",
+		"hsn_or_sac": gst_hsn_code,
 	}
 
 	api_controller = frappe.get_doc("Zoho Books API")
-	res = api_controller.put_item(custom_zoho_item_id, data)
+	res = api_controller.put_item(custom_zoho_item_id, put_data)
+	if res.get('code') == 0:
+		#doc.custom_zoho_item_updated = 1
+		frappe.set_value("Item", name, "custom_zoho_item_updated", 1)
+		return { "ADDED" }
+	else:
+		frappe.msgprint(res.get('message'))
 
-	if str(res) == 'Item details have been saved.' or 'The item has been added.':
+	""" if str(res) == 'Item details have been saved.' or 'The item has been added.':
 		#doc.save()
 		frappe.set_value("Item", name, "custom_zoho_item_updated", 0)
-		return { "ADDED" }
+		return { "ADDED" } """
 
 
 @frappe.whitelist(allow_guest=True)
