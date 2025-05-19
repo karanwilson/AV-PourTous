@@ -2064,20 +2064,6 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 def fetch_unsynced_erp_fs_invoice_list():
 	return frappe.db.sql(
 		"""
-		SELECT s.name, s.customer, item_name, qty, rate
-		FROM `tabSales Invoice Item` si, `tabSales Invoice` s
-		WHERE s.docstatus = 1 AND s.custom_fs_account_number = '{0}'
-		AND s.posting_date BETWEEN '{1}' AND '{2}'
-		AND si.parent = s.name
-		""".format(custom_fs_account_number, from_date, to_date),
-		as_dict=True
-	)
-
-
-@frappe.whitelist(allow_guest=True)
-def fetch_unsynced_erp_fs_invoice_list():
-	return frappe.db.sql(
-		"""
 		SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
 		WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND custom_fs_account_number IS NOT NULL
