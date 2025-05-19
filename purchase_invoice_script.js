@@ -8,6 +8,7 @@ frappe.ui.form.on('Purchase Invoice', {
                         frm.refresh_field('taxes_and_charges');
                     });
             });
+		frm.set_value('disable_rounded_total', 0);
 	},
 
 	/* before_save(frm) {
