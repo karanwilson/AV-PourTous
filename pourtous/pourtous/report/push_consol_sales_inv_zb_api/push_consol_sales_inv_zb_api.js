@@ -34,10 +34,41 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 					},
 					callback: function (r) {
 						if (r.message) {
-							//console.log("r.message: ", r.message);
-							const length = r.message.length;
+							const length = Object.keys(r.message).length;
 							console.log("Number of FS invoices to sync: ", length);
 							console.log("Invoice List: ", r.message);
+
+							// WIP
+
+							// Reference:-
+							//for (const [key, value] of Object.entries(object)) {
+							//	console.log(key, value);
+							//}
+
+							let added = 0;
+							for (let i = 0; i < 10; i++) {
+								setTimeout(() => {
+									frappe.call({
+										method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_pt_consol_inv_with_zb',
+										args: {
+											invoice: r.message[i]["name"],
+											customer: r.message[i]["customer"],
+										},
+										async: false,
+									}).then(r => {
+										if (r.message == "ADDED")
+											added++;
+									}).then(r => {
+										// placing this statement block here as it does not work outside of the main frappe.call block
+										// though it prints on console for each loop iteration (comes in only one line, with the loop count),
+										// it shows an accurate result in the end. This design works.
+										console.log("Added ", added, ", of ", length);
+									});
+									const count = i+1;
+									const message = "Adding "+count+" of "+length;
+									frappe.show_progress("Pushing FS Invoices to Zoho Books", count, length, message);
+								}, 0);
+							}
 						}
 					},
 				});
