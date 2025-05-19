@@ -34,7 +34,10 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 					},
 					callback: function (r) {
 						if (r.message) {
-							console.log("r.message: ", r.message);
+							//console.log("r.message: ", r.message);
+							const length = r.message.length;
+							console.log("Number of FS invoices to sync: ", length);
+							console.log("Invoice List: ", r.message);
 						}
 					},
 				});

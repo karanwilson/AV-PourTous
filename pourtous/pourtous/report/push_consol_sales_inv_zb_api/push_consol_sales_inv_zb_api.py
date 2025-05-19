@@ -84,6 +84,7 @@ def get_data(from_date, to_date):
 		WHERE s.docstatus = 1 AND si.parent = s.name AND s.is_return = 0
 		AND s.posting_date BETWEEN '{0}' AND '{1}'
 		AND s.custom_zoho_invoice_id IS NULL AND s.custom_zb_consol_inv_id IS NULL
+		ORDER BY s.custom_fs_account_number
 		""".format(from_date, to_date),
 		as_dict=True
 	)
@@ -107,4 +108,21 @@ def update_sync_status(from_date, to_date):
 
 @frappe.whitelist()
 def get_participant_monthly_distribution(from_date, to_date):
-	return get_data(from_date, to_date)
+	#return get_data(from_date, to_date)
+
+	consol_list_dict_erp = get_data(from_date, to_date)
+	#frappe.throw(str(len(consol_dict)))
+	#frappe.throw(str(consol_dict[0].get("name")))
+	#frappe.throw(str(consol_dict))
+
+	cust_consol_inv_dict = {} # initialise a dictionary of lists of consolidated customer invoices
+
+	for i in range(len(consol_list_dict_erp)):
+		consol_inv_id = consol_list_dict_erp[i].get("custom_fs_account_number")
+
+		if consol_inv_id in cust_consol_inv_dict:
+			cust_consol_inv_dict[consol_inv_id].append(consol_list_dict_erp[i])
+		else:
+			cust_consol_inv_dict[consol_inv_id] = [consol_list_dict_erp[i]]
+
+	return cust_consol_inv_dict
