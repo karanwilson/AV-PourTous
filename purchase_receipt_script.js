@@ -7,6 +7,7 @@ frappe.ui.form.on('Purchase Receipt', {
                         frm.refresh_field('taxes_and_charges');
                     });
             });
+        frm.set_value('disable_rounded_total', 0);
 	},
 
     /* supplier(frm) {
