@@ -186,15 +186,15 @@ def get_data(filters):
 			AS sales_28_cess_12,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
-			WHERE parent = `tabSales Invoice`.name AND description = "CGST")
+			WHERE parent = `tabSales Invoice`.name AND description = "CGST" limit 1)
 			AS cgst_amount,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
-			WHERE parent = `tabSales Invoice`.name AND description = "SGST")
+			WHERE parent = `tabSales Invoice`.name AND description = "SGST" limit 1)
 			AS sgst_amount,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
-			WHERE parent = `tabSales Invoice`.name AND description = "CESS")
+			WHERE parent = `tabSales Invoice`.name AND description = "CESS" limit 1)
 			AS cess_amount,
 
 			grand_total
@@ -254,15 +254,15 @@ def get_data(filters):
 			AS sales_28_cess_12,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
-			WHERE parent = `tabSales Invoice`.name AND description = "CGST")
+			WHERE parent = `tabSales Invoice`.name AND description = "CGST" limit 1)
 			AS cgst_amount,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
-			WHERE parent = `tabSales Invoice`.name AND description = "SGST")
+			WHERE parent = `tabSales Invoice`.name AND description = "SGST" limit 1)
 			AS sgst_amount,
 
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
-			WHERE parent = `tabSales Invoice`.name AND description = "CESS")
+			WHERE parent = `tabSales Invoice`.name AND description = "CESS" limit 1)
 			AS cess_amount,
 
 			grand_total
