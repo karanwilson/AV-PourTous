@@ -1535,7 +1535,7 @@ def update_item_in_zoho(doc, method):
 		data = {
 			"sku": doc.item_code,
 			"name": doc.item_name,
-			"description": "",
+			#"description": "",
 			"unit": uom[doc.stock_uom],
 			"product_type": product_type,
 			"item_tax_preferences": [
@@ -1552,7 +1552,7 @@ def update_item_in_zoho(doc, method):
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
 			'purchase_account_name': 'Cost of Goods Sold',
-			'purchase_description': "",
+			#'purchase_description': "",
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -1560,7 +1560,7 @@ def update_item_in_zoho(doc, method):
 		put_data = {
 			#"sku": doc.item_code,
 			"name": doc.item_name,
-			"description": "",
+			#"description": "",
 			"unit": uom[doc.stock_uom],
 			"product_type": product_type,
 			"item_tax_preferences": [
@@ -1580,7 +1580,7 @@ def update_item_in_zoho(doc, method):
 			#'purchase_account_name': 'Purchase of Goods & Services',
 			#'purchase_account_id': '2464766000000000567',
 			'purchase_account_name': 'Cost of Goods Sold',
-			'purchase_description': "",
+			#'purchase_description': "",
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
