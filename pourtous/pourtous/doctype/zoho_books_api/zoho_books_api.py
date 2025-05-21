@@ -1922,13 +1922,14 @@ def fetch_unsynced_erp_return_invoice_list():
 		"""
 		SELECT name, customer, docstatus, status FROM `tabSales Invoice`
 		WHERE docstatus = 1 AND status = "Return"
-		AND (custom_zb_creditnote_id IS NULL OR custom_zb_creditnote_refund_id IS NULL)
+		AND custom_zb_creditnote_id IS NULL
 		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 		""",
 		as_dict=True
 		# AND status IN ('Paid', 'Credit Note Issued', 'Return')
 		# AND custom_fs_account_number IS NOT NULL
 		# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		# AND (custom_zb_creditnote_id IS NULL OR custom_zb_creditnote_refund_id IS NULL)
 	)
 
 
@@ -2040,7 +2041,9 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 			invoice_doc.save()
 			frappe.db.commit()
 
-			if invoice_doc.custom_zb_creditnote_refund_id == None:
+			return "ADDED"
+
+			""" if invoice_doc.custom_zb_creditnote_refund_id == None:
 				creditnote_refund_data = {
 					#"customer_id": fs_customer_id, # "FS Account Customers" in ZB
 					"refund_mode": 'Bank Transfer',
@@ -2095,7 +2098,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				invoice_doc.save()
 				frappe.db.commit()
 
-				return "ADDED"
+				return "ADDED" """
 
 
 ## WIP ## PTDC Consolidated Invoices push to ZB
@@ -2239,7 +2242,9 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			invoice_doc.save()
 			frappe.db.commit()
 
-			if invoice_doc.custom_zoho_payment_id == None and (invoice_doc.status == "Paid" or invoice_doc.status == "Submitted"):
+			return "ADDED"
+
+			""" if invoice_doc.custom_zoho_payment_id == None and (invoice_doc.status == "Paid" or invoice_doc.status == "Submitted"):
 				payment_data = {
 					"customer_id": customer_id,
 					"payment_mode": 'Bank Transfer',
@@ -2317,7 +2322,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				invoice_doc.save()
 				frappe.db.commit()
 
-				return "ADDED"
+				return "ADDED" """
 
 
 @frappe.whitelist(allow_guest=True)
@@ -2391,7 +2396,9 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			invoice_doc.save()
 			frappe.db.commit()
 
-			if invoice_doc.custom_zoho_payment_id == None:
+			return { "ADDED" }
+
+			""" if invoice_doc.custom_zoho_payment_id == None:
 				payment_data = {
 					"customer_id": 2464766000000395229, # "Aurocard Customers" in ZB
 					"payment_mode": 'Bank Transfer',
@@ -2470,7 +2477,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 				invoice_doc.save()
 				frappe.db.commit()
 
-				return { "ADDED" }
+				return { "ADDED" } """
 
 
 @frappe.whitelist(allow_guest=True)
@@ -2536,7 +2543,9 @@ def sync_upi_inv_with_zoho_books(invoice):
 			invoice_doc.save()
 			frappe.db.commit()
 
-			if invoice_doc.custom_zoho_payment_id == None:
+			return { "ADDED" }
+
+			""" if invoice_doc.custom_zoho_payment_id == None:
 				payment_data = {
 					"customer_id": 2464766000000395241, # "UPI Customers" in ZB
 					"payment_mode": 'Bank Transfer',
@@ -2614,7 +2623,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 				invoice_doc.save()
 				frappe.db.commit()
 
-				return { "ADDED" }
+				return { "ADDED" } """
 
 
 @frappe.whitelist(allow_guest=True)
