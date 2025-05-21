@@ -2162,9 +2162,11 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, erp_line_items):
 	#frappe.throw(str(invoice_data))
 	res = api_controller.post_invoice(invoice_data)
 	if res:
-		invoice_doc.custom_zoho_invoice_id = res.get('invoice_id')
-		invoice_doc.save()
-		frappe.db.commit()
+		for invoice in erp_line_items:
+			frappe.db.setvalue("Sales Invoice", erp_line_items.name, "custom_zb_consol_inv_id", res.get('invoice_id'))
+			#invoice_doc.custom_zoho_invoice_id = res.get('invoice_id')
+			#invoice_doc.save()
+			frappe.db.commit()
 
 
 @frappe.whitelist(allow_guest=True)
