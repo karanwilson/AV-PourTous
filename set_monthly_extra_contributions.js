@@ -7,8 +7,8 @@ frappe.listview_settings['Payment Entry'] = {
                 callback: (r) => {
                     if (r.message) {
                         if (r.message.length >0) {
-                            /* console.log("r.message: ", r.message);
-                            console.log("contact: ", r.message[0]["contact"]);
+                            console.log("r.message: ", r.message);
+                            /* console.log("contact: ", r.message[0]["contact"]);
                             console.log("customer: ", r.message[0]["customer"]);
                             console.log("custom_in_kind_scheme: ", r.message[0]["custom_in_kind_scheme"]);
                             console.log("custom_lunch_scheme: ", r.message[0]["custom_lunch_scheme"]);
