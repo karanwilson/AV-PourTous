@@ -83,7 +83,7 @@ def get_data(from_date, to_date):
 		FROM `tabSales Invoice Item` si, `tabSales Invoice` s
 		WHERE s.docstatus = 1 AND si.parent = s.name AND s.is_return = 0
 		AND s.posting_date BETWEEN '{0}' AND '{1}'
-		AND s.custom_zoho_invoice_id IS NULL AND s.custom_zb_consol_inv_id IS NULL
+		AND s.custom_zb_consol_inv_id IS NULL
 		ORDER BY s.custom_fs_account_number
 		""".format(from_date, to_date),
 		as_dict=True

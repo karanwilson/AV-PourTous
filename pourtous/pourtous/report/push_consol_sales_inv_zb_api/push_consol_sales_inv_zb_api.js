@@ -40,19 +40,20 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 
 							// WIP
 
-							// Reference:-
-							//for (const [key, value] of Object.entries(object)) {
-							//	console.log(key, value);
-							//}
-
 							let added = 0;
-							for (let i = 0; i < 10; i++) {
+							for (const [key, value] of Object.entries(r.message)) {
+								console.log(key);
+								console.log(value);
+								console.log(value[0]);
+								//added++;
+								//if (added > 4) // 5 iterations
+								//	break;
 								setTimeout(() => {
 									frappe.call({
 										method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_pt_consol_inv_with_zb',
 										args: {
-											invoice: r.message[i]["name"],
-											customer: r.message[i]["customer"],
+											consol_inv_pt_account: key,
+											erp_line_items: value,
 										},
 										async: false,
 									}).then(r => {
