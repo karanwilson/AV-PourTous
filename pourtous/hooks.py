@@ -282,6 +282,7 @@ fixtures = [
                     "Payment Entry-custom_contact", # PTDC
                     "Payment Entry-custom_extra_contribution", # for PTDC Monthly Balance
                     "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
+                    "Payment Entry-custom_fs_account_number", # for FS Transactions
                     "Payment Entry-custom_av_column_break" # PTDC
                     "Payment Entry-custom_in_kind_scheme", # for PTDC Monthly Balance
                     "Payment Entry-custom_lunch_scheme", # for PTDC Monthly Balance
