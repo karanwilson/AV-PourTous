@@ -1923,6 +1923,7 @@ def fetch_unsynced_erp_return_invoice_list():
 		SELECT name, customer, docstatus, status FROM `tabSales Invoice`
 		WHERE docstatus = 1 AND status = "Return"
 		AND (custom_zb_creditnote_id IS NULL OR custom_zb_creditnote_refund_id IS NULL)
+		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 		""",
 		as_dict=True
 		# AND status IN ('Paid', 'Credit Note Issued', 'Return')
@@ -2048,7 +2049,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 					"reference_number": invoice_doc.name,
 					"description": invoice_doc.remarks[-95:],
 					#'from_account_id': '2464766000000103144',
-					'account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
+					'from_account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
 				}
 
 			if invoice_doc.custom_fs_account_number:
@@ -2085,7 +2086,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				"reference_number": invoice_doc.name,
 				"description": invoice_doc.remarks[-95:],
 				#'from_account_id': '2464766000000103144',
-				'account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
+				'from_account_id': '2464766000000048004', # account ID in PTPS Org for 'AVMF - 0373'
 			}
 			#frappe.throw(str(payment_data))
 			res = api_controller.post_creditnote_refund(creditnote_refund_data, invoice_doc.custom_zb_creditnote_id)
@@ -2169,7 +2170,7 @@ def fetch_unsynced_erp_fs_invoice_list():
 		WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND custom_fs_account_number IS NOT NULL
 		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL)
-		AND posting_date BETWEEN "2025-04-01" AND "2025-04-05"
+		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 		""",
 		as_dict=True
 		# AND posting_date BETWEEN "2025-04-01" AND "2025-05-05"
@@ -2238,7 +2239,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			invoice_doc.save()
 			frappe.db.commit()
 
-			if invoice_doc.custom_zoho_payment_id == None:
+			if invoice_doc.custom_zoho_payment_id == None and (invoice_doc.status == "Paid" or invoice_doc.status == "Submitted"):
 				payment_data = {
 					"customer_id": customer_id,
 					"payment_mode": 'Bank Transfer',
@@ -2327,7 +2328,8 @@ def fetch_unsynced_erp_aurocard_invoice_list():
 		FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
 		AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND si.custom_fs_account_number IS NULL AND c.customer_group = "Aurocard Payments" AND si.customer = c.name
-		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL);
+		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL)
+		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 		""",
 		as_dict=True
 		# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
@@ -2479,7 +2481,8 @@ def fetch_unsynced_erp_upi_invoice_list():
 		FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
 		AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND si.custom_fs_account_number IS NULL AND c.customer_group = "UPI Payments" AND si.customer = c.name
-		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL);
+		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL)
+		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 		""",
 		as_dict=True
 		# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
