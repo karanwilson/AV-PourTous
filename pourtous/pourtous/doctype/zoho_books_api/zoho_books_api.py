@@ -949,6 +949,60 @@ class ZohoBooksAPI(Document):
 				frappe.msgprint(r.json().get('message'))
 
 
+	def void_invoice(self, invoice_id):
+		master = "invoices"
+		scope='ZohoBooks.invoices.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/invoices/' + invoice_id + '/status/void?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url)
+
+			return r.json().get('message')
+			# if r.json().get('message') != "Invoice status has been changed to Void.":
+			# r.raise_for_status()
+
+
+	def mark_invoice_as_sent(self, invoice_id):
+		master = "invoices"
+		scope='ZohoBooks.invoices.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/invoices/' + invoice_id + '/status/sent?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url)
+
+			return r.json().get('message')
+			# if r.json().get('message') != "Invoice status has been changed to Sent.":
+			# r.raise_for_status()
+
+
 	def delete_invoices(self, invoice_id):
 		master = "invoices"
 		scope='ZohoBooks.invoices.DELETE'
@@ -1923,14 +1977,13 @@ def fetch_unsynced_erp_return_invoice_list():
 		SELECT name, customer, docstatus, status FROM `tabSales Invoice`
 		WHERE docstatus = 1 AND status = "Return"
 		AND custom_zb_creditnote_id IS NULL
-		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 		""",
 		as_dict=True
-		# AND status IN ('Paid', 'Credit Note Issued', 'Return')
-		# AND custom_fs_account_number IS NOT NULL
-		# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
-		# AND (custom_zb_creditnote_id IS NULL OR custom_zb_creditnote_refund_id IS NULL)
 	)
+	# AND status IN ('Paid', 'Credit Note Issued', 'Return')
+	# AND custom_fs_account_number IS NOT NULL
+	# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+	# AND (custom_zb_creditnote_id IS NULL OR custom_zb_creditnote_refund_id IS NULL)
 
 
 @frappe.whitelist(allow_guest=True)
@@ -2176,13 +2229,14 @@ def fetch_unsynced_erp_fs_invoice_list():
 		SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
 		WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND custom_fs_account_number IS NOT NULL
-		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL)
-		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		AND custom_zoho_invoice_id IS NULL
 		""",
 		as_dict=True
-		# AND posting_date BETWEEN "2025-04-01" AND "2025-05-05"
-		# AND status IN ('Paid', 'Credit Note Issued', 'Return')
 	)
+		# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		# AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL)
+		# AND status IN ('Paid', 'Credit Note Issued', 'Return')
+
 
 @frappe.whitelist(allow_guest=True)
 def sync_fs_inv_with_zoho_books(invoice, customer):
@@ -2235,7 +2289,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 					"data_type": "text"
 				}
 			],
-			"line_items": line_items
+			"line_items": line_items,
 		}
 
 		#frappe.throw(str(invoice_data))
@@ -2336,8 +2390,7 @@ def fetch_unsynced_erp_aurocard_invoice_list():
 		FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
 		AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND si.custom_fs_account_number IS NULL AND c.customer_group = "Aurocard Payments" AND si.customer = c.name
-		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL)
-		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		AND custom_zoho_invoice_id IS NULL
 		""",
 		as_dict=True
 		# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
@@ -2490,8 +2543,7 @@ def fetch_unsynced_erp_upi_invoice_list():
 		FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
 		AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND si.custom_fs_account_number IS NULL AND c.customer_group = "UPI Payments" AND si.customer = c.name
-		AND (custom_zoho_invoice_id IS NULL OR custom_zoho_payment_id IS NULL)
-		AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		AND custom_zoho_invoice_id IS NULL
 		""",
 		as_dict=True
 		# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"

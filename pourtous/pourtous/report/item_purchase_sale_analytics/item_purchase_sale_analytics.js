@@ -12,13 +12,6 @@ frappe.query_reports["Item Purchase Sale Analytics"] = {
 			"width": "60px"
 		},
 		{
-			"fieldname": "voucher_type",
-			"label": __("Voucher Type"),
-			"fieldtype": "Select",
-			"options": ["", "Purchase Invoice", "Purchase Receipt"],
-			"width": "60px",
-		},
-		{
 			"fieldname": "from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",

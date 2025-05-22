@@ -71,7 +71,7 @@ def get_data(filters):
 		"""
 		SELECT name, customer_name, posting_date, status, custom_fs_transfer_status, grand_total
 		FROM `tabSales Invoice`
-		WHERE docstatus = 1 AND status IN
+		WHERE docstatus = 1 AND outstanding_amount > 0 AND status IN
 		("Unpaid", "Unpaid and Discounted", "Partly Paid", "Partly Paid and Discounted", "Overdue", "Overdue and Discounted")
 		""",
 		as_dict=True
