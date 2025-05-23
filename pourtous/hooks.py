@@ -123,7 +123,8 @@ app_include_js = [
 
 doc_events = {
     "Sales Invoice": {
-        "on_submit": "pourtous.api.payment_entry_for_return" # creates 'Payment Entry' for item returns
+        "on_submit": "pourtous.api.payment_entry_for_return", # creates 'Payment Entry' for item returns
+        "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_invoice_in_zoho" # cancel invoice in ZB
 	},
     #"Payment Entry": {
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)

@@ -587,7 +587,7 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.delete(api_url)
-			r.raise_for_status()
+			#r.raise_for_status()
 
 			return r.json().get('message')
 
@@ -1685,8 +1685,9 @@ def delete_item_in_zoho(doc, method):
 	if doc.custom_zoho_item_id:
 		api_controller = frappe.get_doc("Zoho Books API")
 		res = api_controller.delete_item(doc.custom_zoho_item_id)
-		msg = "Zoho Books Response: " + res
-		frappe.msgprint(msg)
+		if res:
+			msg = "Zoho Books Response: " + res
+			frappe.msgprint(msg)
 
 
 @frappe.whitelist(allow_guest=True)
@@ -2295,11 +2296,14 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 		#frappe.throw(str(invoice_data))
 		res = api_controller.post_invoice(invoice_data)
 		if res:
-			invoice_doc.custom_zoho_invoice_id = res.get('invoice_id')
+			zb_invoice_id = res.get('invoice_id')
+			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
 			frappe.db.commit()
 
-			return "ADDED"
+			res2 = api_controller.mark_invoice_as_sent(zb_invoice_id)
+			if res2 == "Invoice status has been changed to Sent.":
+				return "ADDED"
 
 			""" if invoice_doc.custom_zoho_payment_id == None and (invoice_doc.status == "Paid" or invoice_doc.status == "Submitted"):
 				payment_data = {
@@ -2447,11 +2451,14 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 		#frappe.throw(str(invoice_data))
 		res = api_controller.post_invoice(invoice_data)
 		if res:
-			invoice_doc.custom_zoho_invoice_id = res.get('invoice_id')
+			zb_invoice_id = res.get('invoice_id')
+			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
 			frappe.db.commit()
 
-			return { "ADDED" }
+			res2 = api_controller.mark_invoice_as_sent(zb_invoice_id)
+			if res2 == "Invoice status has been changed to Sent.":
+				return { "ADDED" }
 
 			""" if invoice_doc.custom_zoho_payment_id == None:
 				payment_data = {
@@ -2592,11 +2599,14 @@ def sync_upi_inv_with_zoho_books(invoice):
 		#frappe.throw(str(invoice_data))
 		res = api_controller.post_invoice(invoice_data)
 		if res:
-			invoice_doc.custom_zoho_invoice_id = res.get('invoice_id')
+			zb_invoice_id = res.get('invoice_id')
+			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
 			frappe.db.commit()
 
-			return { "ADDED" }
+			res2 = api_controller.mark_invoice_as_sent(zb_invoice_id)
+			if res2 == "Invoice status has been changed to Sent.":
+				return { "ADDED" }
 
 			""" if invoice_doc.custom_zoho_payment_id == None:
 				payment_data = {
@@ -2677,6 +2687,20 @@ def sync_upi_inv_with_zoho_books(invoice):
 				frappe.db.commit()
 
 				return { "ADDED" } """
+
+
+def void_invoice_in_zoho(doc, method):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
+	#if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
+		return
+
+	if doc.custom_zoho_invoice_id:
+		api_controller = frappe.get_doc("Zoho Books API")
+		res = api_controller.void_invoice(doc.custom_zoho_invoice_id)
+		if res:
+			msg = "Zoho Books Response: " + res
+			frappe.msgprint(msg)
+			# if r.json().get('message') != "Invoice status has been changed to Void.":
 
 
 @frappe.whitelist(allow_guest=True)
