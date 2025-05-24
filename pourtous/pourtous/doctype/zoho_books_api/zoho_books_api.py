@@ -655,13 +655,93 @@ class ZohoBooksAPI(Document):
 				# r.raise_for_status()
 
 
-	def delete_bill(self, custom_zoho_bill_id):
+	def put_bill(self, bill_id, data):
+		master = "bills"
+		scope='ZohoBooks.bills.UPDATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/bills/' + bill_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.put(api_url, data=json.dumps(data))
+			#r.raise_for_status()
+			#if r.json().get('message') == "Bill information has been updated.":
+			return r.json()
+
+
+	def void_bill(self, bill_id):
+		master = "bills"
+		scope='ZohoBooks.bills.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/bills/' + bill_id + '/status/void?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url)
+
+			return r.json().get('message')
+			# if r.json().get('message') != "The bill has been marked as void.":
+			# r.raise_for_status()
+
+
+	def void_vendor_credit(self, vendor_credit_id):
+		master = "debitnotes"
+		scope='ZohoBooks.debitnotes.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/vendorcredits/' + vendor_credit_id + '/status/void?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url)
+
+			return r.json().get('message')
+			# if r.json().get('message') != "The vendor credit has been voided.":
+			# r.raise_for_status()
+
+
+	def delete_bill(self, bill_id):
 		master = "bills"
 		scope='ZohoBooks.bills.DELETE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
 
-		api_url = 'https://www.zohoapis.in/books/v3/bills/' + custom_zoho_bill_id + '?'
+		api_url = 'https://www.zohoapis.in/books/v3/bills/' + bill_id + '?'
 
 		authorization = 'Zoho-oauthtoken ' + token_to_use
 
@@ -835,6 +915,33 @@ class ZohoBooksAPI(Document):
 			# r.raise_for_status()
 
 
+	def void_creditnote(self, custom_zb_creditnote_id):
+		master = "creditnotes"
+		scope='ZohoBooks.creditnotes.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/creditnotes/' + custom_zb_creditnote_id + '/status/void?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url)
+
+			return r.json().get('message')
+			# if r.json().get('message') != "The credit note has been marked as void.":
+			# r.raise_for_status()
+
+
 	def delete_creditnote_refund(self, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
 		master = "creditnotes"
 		scope='ZohoBooks.creditnotes.DELETE'
@@ -1003,7 +1110,7 @@ class ZohoBooksAPI(Document):
 			# r.raise_for_status()
 
 
-	def delete_invoices(self, invoice_id):
+	def delete_invoice(self, invoice_id):
 		master = "invoices"
 		scope='ZohoBooks.invoices.DELETE'
 
@@ -1797,37 +1904,32 @@ def sync_zb_item_id_with_erp(item_id, item_name):
 
 @frappe.whitelist(allow_guest=True)
 def fetch_erp_bills_list():
-		return frappe.db.sql(
-			"""
-			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1 AND custom_zoho_bill_id IS NULL
-			AND posting_date > "2025-04-30"
-			""",
-			as_dict=True
-		)
-
-	#if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
-		#owner = "Administrator"
-		#posting_date = "2025-04-02"
-	#	return frappe.db.sql(
-	#		"""
-	#		SELECT name FROM `tabPurchase Receipt` WHERE NOT (owner = "Administrator" AND posting_date = "2025-04-02")
-	#		AND docstatus = 1 AND custom_zoho_bill_id IS NULL
-	#		""",
-	#		as_dict=True
-	#	)
-
-	#elif frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
-	#	return frappe.db.sql(
-	#		"""
-	#		SELECT name FROM `tabPurchase Receipt` WHERE NOT (owner = "karan@pourtous-av.in" AND (posting_date = "2025-04-01" OR posting_date = "2025-04-06"))
-	#		AND docstatus = 1 AND custom_zoho_bill_id IS NULL
-	#		""",
-	#		as_dict=True
-	#	)
-
+	return frappe.db.sql(
+		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+		"""
+		SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
+		AND is_return = 0 AND custom_zoho_bill_id IS NULL
+		AND posting_date > "2025-04-30"
+		""",
+		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+		as_dict=True
+	)
 
 @frappe.whitelist(allow_guest=True)
-def add_erp_bills_in_zoho(bill):
+def fetch_erp_debitnotes_list():
+	return frappe.db.sql(
+		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+		"""
+		SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
+		AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
+		AND posting_date > "2025-04-30"
+		""",
+		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def add_erp_bills_debitnotes_in_zoho(bill):
 	#bill_doc = frappe.get_doc("Purchase Receipt", bill)
 	bill_doc = frappe.get_doc("Purchase Invoice", bill)
 
@@ -1924,7 +2026,7 @@ def add_erp_bills_in_zoho(bill):
 		"line_items": line_items
 	}
 
-	if bill_doc.is_return:
+	if bill_doc.is_return and bill_doc.custom_zb_vendor_credit_id == None:
 		# ZB is asking for Bill number to return against.. hence skipping this section for now.
 		#return
 		if bill_doc.bill_no:
@@ -1942,13 +2044,20 @@ def add_erp_bills_in_zoho(bill):
 			frappe.db.commit()
 			return { "ADDED" }
 
-	else:
+	elif bill_doc.custom_zoho_bill_id == None:
 		if bill_doc.bill_no:
 			data["bill_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
 		else:
 			data["bill_number"] = bill_doc.name # Supplier/Vendor Bill Number
 
 		#frappe.throw(str(data))
+		if bill_doc.amended_from:
+			void_bill_id = frappe.get_value("Purchase Invoice", bill_doc.amended_from, "custom_zoho_void_bill_id")
+			res = api_controller.delete_bill(void_bill_id)
+			#frappe.throw(str(res))
+			if res.get('code') != 0:
+				frappe.msgprint(res.get("message"))
+
 		res = api_controller.post_bill(data)
 		if res:
 			bill_doc.custom_zoho_bill_id = res
@@ -1956,20 +2065,6 @@ def add_erp_bills_in_zoho(bill):
 			frappe.db.commit()
 			return { "ADDED" }
 
-
-#@frappe.whitelist(allow_guest=True)
-#def fetch_unpaid_erp_fs_invoice_list():
-#	return frappe.db.sql(
-#		as_dict=True
-#	)
-	"""
-	SELECT si.name, sip.mode_of_payment, si.custom_fs_account_number, si.docstatus, si.status
-	FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
-	WHERE si.docstatus = 1 AND si.status = 'Paid' AND si.status = 'Return'
-	AND sip.mode_of_payment LIKE "FS%" AND sip.parent = si.name
-	AND (si.custom_zoho_invoice_id IS NULL OR si.custom_zoho_payment_id IS NULL)
-	AND si.posting_date BETWEEN "2025-04-01" AND "2025-04-30"
-	"""
 
 @frappe.whitelist(allow_guest=True)
 def fetch_unsynced_erp_return_invoice_list():
@@ -2294,6 +2389,13 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 		}
 
 		#frappe.throw(str(invoice_data))
+		if invoice_doc.amended_from:
+			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
+			res = api_controller.delete_invoice(void_invoice_id)
+			#frappe.throw(str(res))
+			if res.get('code') != 0:
+				frappe.msgprint(res.get("message"))
+
 		res = api_controller.post_invoice(invoice_data)
 		if res:
 			zb_invoice_id = res.get('invoice_id')
@@ -2449,6 +2551,13 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 		}
 
 		#frappe.throw(str(invoice_data))
+		if invoice_doc.amended_from:
+			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
+			res = api_controller.delete_invoice(void_invoice_id)
+			#frappe.throw(str(res))
+			if res.get('code') != 0:
+				frappe.msgprint(res.get("message"))
+
 		res = api_controller.post_invoice(invoice_data)
 		if res:
 			zb_invoice_id = res.get('invoice_id')
@@ -2597,6 +2706,13 @@ def sync_upi_inv_with_zoho_books(invoice):
 		}
 
 		#frappe.throw(str(invoice_data))
+		if invoice_doc.amended_from:
+			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
+			res = api_controller.delete_invoice(void_invoice_id)
+			#frappe.throw(str(res))
+			if res.get('code') != 0:
+				frappe.msgprint(res.get("message"))
+
 		res = api_controller.post_invoice(invoice_data)
 		if res:
 			zb_invoice_id = res.get('invoice_id')
@@ -2694,13 +2810,53 @@ def void_invoice_in_zoho(doc, method):
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		return
 
-	if doc.custom_zoho_invoice_id:
+	if doc.is_return == 0 and doc.custom_zoho_invoice_id:
 		api_controller = frappe.get_doc("Zoho Books API")
 		res = api_controller.void_invoice(doc.custom_zoho_invoice_id)
 		if res:
 			msg = "Zoho Books Response: " + res
 			frappe.msgprint(msg)
+			# setting the invoice ids to null here, to avoid checking for amends in the highly subscribed "Sales Invoice" before_save hook
+			doc.custom_zoho_void_invoice_id = doc.custom_zoho_invoice_id
+			doc.custom_zoho_invoice_id = None
 			# if r.json().get('message') != "Invoice status has been changed to Void.":
+
+	elif doc.is_return == 1 and doc.custom_zb_creditnote_id:
+		api_controller = frappe.get_doc("Zoho Books API")
+		res = api_controller.void_creditnote(doc.custom_zb_creditnote_id)
+		if res:
+			msg = "Zoho Books Response: " + res
+			frappe.msgprint(msg)
+			# setting the invoice ids to null here, to avoid checking for amends in the highly subscribed "Sales Invoice" before_save hook
+			doc.custom_zoho_void_invoice_id = doc.custom_zb_creditnote_id
+			doc.custom_zb_creditnote_id = None
+			# if r.json().get('message') != "The credit note has been marked as void.":
+
+
+def void_bill_in_zoho(doc, method):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
+	#if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
+		return
+
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	if doc.is_return == 0 and doc.custom_zoho_bill_id:
+		res = api_controller.void_bill(doc.custom_zoho_bill_id)
+		if res:
+			msg = "Zoho Books Response: " + res
+			frappe.msgprint(msg)
+			doc.custom_zoho_void_bill_id = doc.custom_zoho_bill_id
+			doc.custom_zoho_bill_id = None
+			# if r.json().get('message') != "The bill has been marked as void.":
+	
+	elif doc.is_return == 1 and doc.custom_zb_vendor_credit_id:
+		res = api_controller.void_vendor_credit(doc.custom_zb_vendor_credit_id)
+		if res:
+			msg = "Zoho Books Response: " + res
+			frappe.msgprint(msg)
+			doc.custom_zoho_void_bill_id = doc.custom_zb_vendor_credit_id
+			doc.custom_zb_vendor_credit_id = None
+			# if r.json().get('message') != "The credit note has been marked as void.":
 
 
 @frappe.whitelist(allow_guest=True)
@@ -2784,7 +2940,7 @@ def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
 #def delete_invoice_ids_in_erp(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 
-	res = api_controller.delete_invoices(custom_zoho_invoice_id)
+	res = api_controller.delete_invoice(custom_zoho_invoice_id)
 
 	#frappe.throw(str(res))
 

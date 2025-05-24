@@ -12,7 +12,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         console.log("Invoice List: ", r.message);
                         //console.log("r.message[0]['name']: ", r.message[0]["name"]);
                         let added = 0;
-                        for (let i = 0; i < 2; i++) {
+                        for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
                                     method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_return_inv_with_zoho_books',
