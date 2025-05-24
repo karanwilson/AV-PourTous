@@ -36,7 +36,7 @@ frappe.listview_settings['Item'] = {
                     }
                 }
             });
-        }); */
+        }, __("Sales Invoice")); */
 
 
         /* listview.page.add_inner_button("Sync ERP Items with ZB", () => {
@@ -76,7 +76,7 @@ frappe.listview_settings['Item'] = {
                     }
                 }
             });
-        }); */
+        }, __("Sync with ZB")); */
 
         listview.page.add_inner_button("Custom Sync ERP Items with ZB", () => {
             frappe.call({
@@ -118,6 +118,6 @@ frappe.listview_settings['Item'] = {
                     }
                 }
             });
-        });
+        }, __("Sync with ZB"));
     },
 };

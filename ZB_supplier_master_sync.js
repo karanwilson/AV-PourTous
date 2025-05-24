@@ -44,7 +44,7 @@ frappe.listview_settings['Supplier'] = {
                     }
                 }
             });
-        }); */
+        }, __("Sync with ZB")); */
 
         listview.page.add_inner_button("Add missing Suppliers in ZB", () => {
             frappe.call({
@@ -83,6 +83,6 @@ frappe.listview_settings['Supplier'] = {
                     }
                 }
             });
-        });
+        }, __("Sync with ZB"));
     },
 };

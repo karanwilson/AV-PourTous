@@ -36,7 +36,7 @@ frappe.listview_settings['Purchase Invoice'] = {
                     }
                 }
             });
-        });
+        }, __("Sync with ZB"));
 
         /* listview.page.add_inner_button("Delete specific bills in ZB", () => {
             frappe.call({
@@ -75,6 +75,6 @@ frappe.listview_settings['Purchase Invoice'] = {
                     }
                 }
             });
-        }); */
+        }, __("Sync with ZB")); */
     },
 };
