@@ -38,7 +38,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        })
+        }, __("Sync with ZB"));
 
         listview.page.add_inner_button("FS Inv to ZB", () => {
             frappe.call({
@@ -77,7 +77,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        })
+        }, __("Sync with ZB"));
 
 
         listview.page.add_inner_button("Aurocard Inv to ZB", () => {
@@ -116,7 +116,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        })
+        }, __("Sync with ZB"));
 
 
         listview.page.add_inner_button("UPI Inv to ZB", () => {
@@ -155,7 +155,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        })
+        }, __("Sync with ZB"));
 
         listview.page.add_inner_button("Orders to Invoices", () => {
             frappe.call({
@@ -266,7 +266,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        }) */
+        }, __("Sync with ZB")); */
 
 
         /* listview.page.add_inner_button("Delete ZB Payments CN CN-Refunds", () => {
@@ -308,7 +308,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        }) */
+        }, __("Sync with ZB")); */
 
         /* listview.page.add_inner_button("Update ERP Invoices in ZB", () => {
             frappe.call({
@@ -346,7 +346,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        }),
+        }, __("Sync with ZB"));
 
 
         listview.page.add_inner_button("TaxExc Process Orders to Invoices", () => {

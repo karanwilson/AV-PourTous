@@ -44,7 +44,7 @@ frappe.listview_settings['Item Tax Template'] = {
                     }
                 }
             });
-        });
+        }, __("Sync with ZB"));
 
 
         listview.page.add_inner_button("Sync ERP taxes with ZB", () => {
@@ -87,7 +87,6 @@ frappe.listview_settings['Item Tax Template'] = {
                     }
                 }
             });
-        });
-
+        }, __("Sync with ZB"));
     },
 };

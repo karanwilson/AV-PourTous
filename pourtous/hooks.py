@@ -123,7 +123,8 @@ app_include_js = [
 
 doc_events = {
     "Sales Invoice": {
-        "on_submit": "pourtous.api.payment_entry_for_return" # creates 'Payment Entry' for item returns
+        "on_submit": "pourtous.api.payment_entry_for_return", # creates 'Payment Entry' for item returns
+        "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_invoice_in_zoho" # cancel invoice in ZB
 	},
     #"Payment Entry": {
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)
@@ -152,8 +153,9 @@ doc_events = {
         #"before_insert": "auroville.api.get_purchase_tax_template",
 	},
 	"Purchase Invoice": {
-		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
         #"before_insert": "auroville.api.get_purchase_tax_template",
+        "on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
+        "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_bill_in_zoho" # cancel bill in ZB
 	},
 	"Stock Entry": {
 		"on_submit": "pourtous.api.opening_stock_update_price_lists", # Add the 'Item Price'
@@ -296,9 +298,10 @@ fixtures = [
 
                     "Sales Invoice-custom_zb_consol_inv_id", # PTDC
                     "Sales Invoice-custom_zoho_invoice_id", # for syncing with Zoho Books
-                    "Sales Invoice-custom_zoho_payment_id",
+                    #"Sales Invoice-custom_zoho_payment_id",
                     "Sales Invoice-custom_zb_creditnote_id",
-                    "Sales Invoice-custom_zb_creditnote_refund_id",
+                    #"Sales Invoice-custom_zb_creditnote_refund_id",
+                    "Sales Invoice-custom_zoho_void_invoice_id",
 
                     "Sales Order-custom_fs_account_number", # to Identify Sales Order based on FS Account number
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions
@@ -344,8 +347,9 @@ fixtures = [
 
                     "Purchase Invoice-custom_zoho_bill_id",
                     "Purchase Invoice-custom_zb_vendor_credit_id",
+                    "Purchase Invoice-custom_zoho_void_bill_id",
 
-                    "Purchase Receipt-custom_zoho_bill_id",
+                    #"Purchase Receipt-custom_zoho_bill_id",
 
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
                     "Purchase Invoice Item-custom_selling_price", # for setting the Selling Price

@@ -6,14 +6,13 @@ from frappe import _, msgprint
 
 
 def execute(filters=None):
-	if not (filters.supplier and filters.from_date and filters.to_date and (
-		filters.voucher_type == "Purchase Receipt" or filters.voucher_type == "Purchase Invoice")):
+	if not (filters.supplier and filters.from_date and filters.to_date):
 		# don't execute until filters are set
 		return [], []
 
 	columns, data = [], []
 
-	columns = get_columns(filters)
+	columns = get_columns()
 	data = get_data(filters)
 
 	if not data:
@@ -23,16 +22,8 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_columns(filters):
+def get_columns():
 	return [
-		{
-			"fieldname": "voucher_name",
-			"label": "Voucher ID",
-			"fieldtype": "Link",
-			"options": filters.voucher_type,
-			"width": "135"
-		},
-
 		{
 			"fieldname": "item_code",
 			"label": "Item Code",
@@ -79,13 +70,13 @@ def get_columns(filters):
 
 def get_data(filters):
 
-	gst_sales_query = frappe.db.sql(
+	query = frappe.db.sql(
 		"""
-		select `tabStock Ledger Entry`.item_code, tabItem.item_name, tabItem.item_group, tabItem.stock_uom,
+		select sle.item_code, tabItem.item_name, tabItem.item_group, tabItem.stock_uom,
 		(
 			select SUM(actual_qty) from `tabStock Ledger Entry`
 			where item_code = `tabItem Supplier`.parent
-			AND `tabStock Ledger Entry`.voucher_type = "{3}"
+			AND (`tabStock Ledger Entry`.voucher_type = 'Purchase Invoice' OR `tabStock Ledger Entry`.voucher_type = 'Purchase Receipt')
 			AND `tabStock Ledger Entry`.posting_date BETWEEN '{1}' AND '{2}'
 		) AS qty_purchased,
 
@@ -95,14 +86,14 @@ def get_data(filters):
 			AND voucher_type = "Sales Invoice"
 			AND `tabStock Ledger Entry`.posting_date BETWEEN '{1}' AND '{2}'
 		) AS qty_sold
-		FROM `tabStock Ledger Entry`, `tabItem Supplier`, tabItem
-		WHERE `tabStock Ledger Entry`.is_cancelled = 0
-		AND `tabStock Ledger Entry`.item_code = `tabItem Supplier`.parent
-		AND `tabStock Ledger Entry`.item_code = tabItem.item_code
+		FROM `tabStock Ledger Entry` sle, `tabItem Supplier`, tabItem
+		WHERE sle.is_cancelled = 0
+		AND sle.item_code = `tabItem Supplier`.parent
+		AND sle.item_code = tabItem.item_code
 		AND`tabItem Supplier`.supplier = '{0}'
-		GROUP BY `tabStock Ledger Entry`.item_code
-		""".format(filters.supplier, filters.from_date, filters.to_date, filters.voucher_type),
+		GROUP BY sle.item_code
+		""".format(filters.supplier, filters.from_date, filters.to_date),
 		as_dict=True
 	)
 
-	return gst_sales_query
+	return query

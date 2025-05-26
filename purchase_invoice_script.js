@@ -8,13 +8,13 @@ frappe.ui.form.on('Purchase Invoice', {
                         frm.refresh_field('taxes_and_charges');
                     });
             });
-		frm.set_value('disable_rounded_total', 0);
 	},
 
-	/* before_save(frm) {
-		frm.doc.items.forEach((row) => {
+	before_save(frm) {
+		frm.set_value('disable_rounded_total', 0);
+		/* frm.doc.items.forEach((row) => {
 			row.stock_qty = row.qty;
 		});
-		frm.refresh_field('items');
-	} */
+		frm.refresh_field('items'); */
+	}
 });
