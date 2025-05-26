@@ -108,21 +108,22 @@ def update_sync_status(from_date, to_date):
 
 @frappe.whitelist()
 def get_participant_monthly_distribution(from_date, to_date):
-	#return get_data(from_date, to_date)
+	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
+		#return get_data(from_date, to_date)
 
-	consol_list_dict_erp = get_data(from_date, to_date)
-	#frappe.throw(str(len(consol_dict)))
-	#frappe.throw(str(consol_dict[0].get("name")))
-	#frappe.throw(str(consol_dict))
+		consol_list_dict_erp = get_data(from_date, to_date)
+		#frappe.throw(str(len(consol_dict)))
+		#frappe.throw(str(consol_dict[0].get("name")))
+		#frappe.throw(str(consol_dict))
 
-	cust_consol_inv_dict = {} # initialise a dictionary of lists of consolidated customer invoices
+		cust_consol_inv_dict = {} # initialise a dictionary of lists of consolidated customer invoices
 
-	for i in range(len(consol_list_dict_erp)):
-		consol_inv_id = consol_list_dict_erp[i].get("custom_fs_account_number")
+		for i in range(len(consol_list_dict_erp)):
+			consol_inv_id = consol_list_dict_erp[i].get("custom_fs_account_number")
 
-		if consol_inv_id in cust_consol_inv_dict:
-			cust_consol_inv_dict[consol_inv_id].append(consol_list_dict_erp[i])
-		else:
-			cust_consol_inv_dict[consol_inv_id] = [consol_list_dict_erp[i]]
+			if consol_inv_id in cust_consol_inv_dict:
+				cust_consol_inv_dict[consol_inv_id].append(consol_list_dict_erp[i])
+			else:
+				cust_consol_inv_dict[consol_inv_id] = [consol_list_dict_erp[i]]
 
-	return cust_consol_inv_dict
+		return cust_consol_inv_dict

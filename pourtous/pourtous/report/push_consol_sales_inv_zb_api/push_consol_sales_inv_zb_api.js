@@ -40,7 +40,7 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 
 							// WIP
 
-							let added = 0;
+							/* let added = 0;
 							for (const [key, value] of Object.entries(r.message)) {
 								console.log(key);
 								console.log(value);
@@ -69,7 +69,7 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 									const message = "Adding "+count+" of "+length;
 									frappe.show_progress("Pushing FS Invoices to Zoho Books", count, length, message);
 								}, 0);
-							}
+							} */
 						}
 					},
 				});
