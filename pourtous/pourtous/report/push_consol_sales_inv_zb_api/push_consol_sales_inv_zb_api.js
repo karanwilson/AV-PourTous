@@ -35,7 +35,7 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 					callback: function (r) {
 						if (r.message) {
 							const length = Object.keys(r.message).length;
-							console.log("typeof(r.message): ", typeof(r.message));
+							//console.log("typeof(r.message): ", typeof(r.message));
 							console.log("Number of FS invoices to sync: ", length);
 							console.log("Invoice List: ", r.message);
 
@@ -46,8 +46,8 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 							for (const key in r.message) {
 								if (counter == 1)
 									break;
-								console.log("key: ", key);
-								console.log("r.message[key]: ", r.message[key]);
+								//console.log("key: ", key);
+								//console.log("r.message[key]: ", r.message[key]);
 
 								counter++
 
