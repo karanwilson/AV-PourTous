@@ -99,10 +99,10 @@ def get_data(filters):
 		SELECT table1.*, (table1.gst_5 + table1.gst_12 + table1.gst_18 + table1.gst_28 + table1.gst_28_cess_12) AS total_tax
 		FROM
 		(SELECT tabItem.gst_hsn_code, `tabGST HSN Code`.description, SUM(`tabSales Invoice Item`.qty) AS total_qty, SUM(`tabSales Invoice Item`.net_amount) AS taxable_value,
-		SUM(IF ((`tabSales Invoice Item`.item_tax_template like "GST 5_ -"), (`tabSales Invoice Item`.cgst_amount + `tabSales Invoice Item`.sgst_amount), 0) ) AS gst_5,
+		SUM(IF ((`tabSales Invoice Item`.item_tax_template like "GST 5_ -%"), (`tabSales Invoice Item`.cgst_amount + `tabSales Invoice Item`.sgst_amount), 0) ) AS gst_5,
 		SUM(IF ((`tabSales Invoice Item`.item_tax_template like "GST 12_ -%"), (`tabSales Invoice Item`.cgst_amount + `tabSales Invoice Item`.sgst_amount), 0) ) AS gst_12,
-		SUM(IF ((`tabSales Invoice Item`.item_tax_template like "GST 18_ -"), (`tabSales Invoice Item`.cgst_amount + `tabSales Invoice Item`.sgst_amount), 0) ) AS gst_18,
-		SUM(IF ((`tabSales Invoice Item`.item_tax_template like "GST 28_ -"), (`tabSales Invoice Item`.cgst_amount + `tabSales Invoice Item`.sgst_amount), 0) ) AS gst_28,
+		SUM(IF ((`tabSales Invoice Item`.item_tax_template like "GST 18_ -%"), (`tabSales Invoice Item`.cgst_amount + `tabSales Invoice Item`.sgst_amount), 0) ) AS gst_18,
+		SUM(IF ((`tabSales Invoice Item`.item_tax_template like "GST 28_ -%"), (`tabSales Invoice Item`.cgst_amount + `tabSales Invoice Item`.sgst_amount), 0) ) AS gst_28,
 		SUM(IF ((`tabSales Invoice Item`.item_tax_template like "GST 28_ CESS 12%"), (`tabSales Invoice Item`.cgst_amount + `tabSales Invoice Item`.sgst_amount + `tabSales Invoice Item`.cess_amount), 0) ) AS gst_28_cess_12
 		FROM tabItem, `tabGST HSN Code`, `tabSales Invoice Item`, `tabSales Invoice`
 		WHERE `tabSales Invoice`.docstatus = 1
