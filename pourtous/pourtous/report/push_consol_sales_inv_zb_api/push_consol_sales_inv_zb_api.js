@@ -35,27 +35,30 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 					callback: function (r) {
 						if (r.message) {
 							const length = Object.keys(r.message).length;
+							console.log("typeof(r.message): ", typeof(r.message));
 							console.log("Number of FS invoices to sync: ", length);
 							console.log("Invoice List: ", r.message);
 
 							// WIP
 
-							/* let added = 0;
-							for (const [key, value] of Object.entries(r.message)) {
-								console.log(key);
-								console.log(value);
-								console.log(value[0]);
-								//added++;
-								//if (added > 4) // 5 iterations
-								//	break;
+							let added = 0;
+							let counter = 0;
+							for (const key in r.message) {
+								if (counter == 1)
+									break;
+								console.log("key: ", key);
+								console.log("r.message[key]: ", r.message[key]);
+
+								counter++
+
 								setTimeout(() => {
 									frappe.call({
 										method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_pt_consol_inv_with_zb',
 										args: {
 											consol_inv_pt_account: key,
-											erp_line_items: value,
+											line_items_dict: r.message[key],
 										},
-										async: false,
+										async: true,
 									}).then(r => {
 										if (r.message == "ADDED")
 											added++;
@@ -65,11 +68,11 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 										// it shows an accurate result in the end. This design works.
 										console.log("Added ", added, ", of ", length);
 									});
-									const count = i+1;
-									const message = "Adding "+count+" of "+length;
-									frappe.show_progress("Pushing FS Invoices to Zoho Books", count, length, message);
+									//const count = counter+1;
+									const message = "Adding "+counter+" of "+length;
+									frappe.show_progress("Pushing FS Invoices to Zoho Books", counter, length, message);
 								}, 0);
-							} */
+							}
 						}
 					},
 				});

@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 import requests, json, re
 #import urllib
+import json
 
 
 class ZohoBooksAPI(Document):
@@ -2252,14 +2253,17 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 
 ## WIP ## PTDC Consolidated Invoices push to ZB
 @frappe.whitelist(allow_guest=True)
-def sync_pt_consol_inv_with_zb(consol_inv_pt_account, erp_line_items):
+def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict):
+	erp_line_items = json.loads(line_items_dict)
+	#frappe.throw(str(erp_line_items))
+	#frappe.throw(str(erp_line_items[0]))
+
 	api_controller = frappe.get_doc("Zoho Books API")
 	#invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	if frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "customer_type") == "Company":
 		customer_id = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "custom_zoho_contact_id")
 	else:
-		#customer_id = 2464766000000395217  # get the "FS Account Customers" in PTDC ZB
-		pass
+		customer_id = 2407242000000343009  # get the "FS Account Customers" in PTDC ZB
 
 	#date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 	date = nowdate()
@@ -2268,23 +2272,23 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, erp_line_items):
 	line_items = []
 
 	for item in erp_line_items:
-		item_doc = frappe.get_doc("Item", item.item_code)
+		item_doc = frappe.get_doc("Item", item.get("item_code"))
 
 		try:
 			tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
 		except Exception as err:
 			frappe.msgprint(str(err))
-			msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
+			msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
 			frappe.msgprint(msg)
 			return
 
 		else:
 			line_item = {
 				"item_id": item_doc.custom_zoho_item_id,
-				"name": item.item_name,
-				#"description": item.item_name,
-				"rate": float(item.rate),
-				"quantity": float(item.qty),
+				"name": item.get("item_name"),
+				#"description": item.get("item_name"),
+				"rate": float(item.get("rate")),
+				"quantity": float(item.get("qty")),
 				"tax_id": tax_id
 			}
 			line_items.append(line_item)
@@ -2293,14 +2297,14 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, erp_line_items):
 	invoice_data = {
 		'customer_id': customer_id,
 		#'invoice_number': invoice[-16:],
-		'invoice_number': consol_inv_pt_account+nowdate()[2:],
+		'invoice_number': consol_inv_pt_account+"--"+nowdate()[2:],
 		'date': date,
 		"is_inclusive_tax": True,
 		#'price_precision': 2,
 		"custom_fields": [
 			{
 				"index": 1,
-				"label": "cf_fs_account_number",
+				"label": "cf_pt_account_number",
 				"value": consol_inv_pt_account,
 				"data_type": "text"
 			}
@@ -2309,13 +2313,19 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, erp_line_items):
 	}
 
 	#frappe.throw(str(invoice_data))
+
 	res = api_controller.post_invoice(invoice_data)
 	if res:
-		for invoice in erp_line_items:
-			frappe.db.setvalue("Sales Invoice", erp_line_items.name, "custom_zb_consol_inv_id", res.get('invoice_id'))
-			#invoice_doc.custom_zoho_invoice_id = res.get('invoice_id')
-			#invoice_doc.save()
-			frappe.db.commit()
+		last_invoice = ""
+		for line in erp_line_items:
+			if line.get("name") != last_invoice:
+				frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_inv_id", res.get('invoice_id'))
+				frappe.db.commit()
+			last_invoice = line.get("name")
+
+	res2 = api_controller.mark_invoice_as_sent(res.get('invoice_id'))
+	if res2 == "Invoice status has been changed to Sent.":
+		return "ADDED"
 
 
 @frappe.whitelist(allow_guest=True)
