@@ -50,6 +50,12 @@ def get_columns(filters):
 				"width": "100"
 			},
 			{
+				"fieldname": "manufacturing_date",
+				"label": "Batch Date",
+				"fieldtype": "Date",
+				"width": "100"
+			},
+			{
 				"fieldname": "store_qty",
 				"label": "Store Qty",
 				"fieldtype": "Float",
@@ -144,7 +150,8 @@ def get_data(filters):
 	if frappe.get_value("Item", filters.name, "has_batch_no"):
 		query = frappe.db.sql(
 			"""
-			SELECT `tabStock Ledger Entry`.item_code, tabBatch.item_name, `tabItem Supplier`.supplier, `tabStock Ledger Entry`.batch_no,
+			SELECT `tabStock Ledger Entry`.item_code, tabBatch.item_name, `tabItem Supplier`.supplier,
+			`tabStock Ledger Entry`.batch_no, tabBatch.manufacturing_date,
 			(
 				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
 				WHERE is_cancelled = 0 AND warehouse LIKE '{0}'
