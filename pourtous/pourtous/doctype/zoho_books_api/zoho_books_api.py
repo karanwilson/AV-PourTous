@@ -1770,13 +1770,15 @@ def update_item_in_zoho(doc, method):
 					if res2.get('code') == 0:
 						doc.custom_zoho_item_updated = 1
 						doc.custom_zoho_item_id = res2.get('item').get('item_id')
-						return doc.custom_zoho_item_id
+						return res2
+						#return doc.custom_zoho_item_id
 						# returning this value for the add_item_to_zb function below (for bulk Items additions to Zoho)
 					else:
 						frappe.msgprint(res2.get("message"))
 
 			elif res.get('code') == 0:
 				doc.custom_zoho_item_updated = 1
+				return res
 			else:
 				frappe.msgprint(res.get('message'))
 		else:
@@ -1825,11 +1827,26 @@ def custom_fetch_erp_items_list():
 	#return frappe.get_all('Supplier', filters = {"disabled": 0})
 	return frappe.db.sql(
 		"""
-		SELECT name, custom_zoho_item_id, gst_hsn_code FROM tabItem
+		SELECT name FROM tabItem
 		WHERE disabled = 0 AND custom_zoho_item_updated = 0
 		""",
 		as_dict=True
+		# SELECT name, custom_zoho_item_id, gst_hsn_code FROM tabItem
 	)
+
+@frappe.whitelist(allow_guest=True)
+def update_erp_item_in_zb(erp_item):
+	doc = frappe.get_doc("Item", erp_item)
+	res = update_item_in_zoho(doc, method=None)
+
+	if res.get('item').get('item_id'):
+		doc.custom_zoho_item_id = res.get('item').get('item_id')
+		doc.save()
+		return { "ADDED" }
+
+	elif res.get("code") == 0:
+		doc.save()
+		return { "ADDED" }
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1837,35 +1854,13 @@ def custom_fetch_erp_items_list():
 def custom_add_erp_item_in_zb(name, custom_zoho_item_id, gst_hsn_code):
 	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
 
-	""" custom_zoho_item_id = update_item_in_zoho(doc, method=None)
-	if custom_zoho_item_id:
-		doc.custom_zoho_item_id = custom_zoho_item_id
-		doc.save()
-		return { "ADDED" }
-
-	try:
-		zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
-	except Exception as err:
-		msg = "Please verify the Supplier for Item Code " + doc.item_code
-		frappe.msgprint(msg)
-		return
-
-	data = {
-		'can_be_purchased': True,
-		'item_type': 'sales_and_purchases',
-		'vendor_id': zb_contact_id,
-		'purchase_account_id': '2464766000000030873',
-		'purchase_account_name': 'Purchases',
-		'purchase_description': doc.item_name,
-	} """
-
 	#if item_name:
 		#doc = frappe.get_doc("Item", item)
 
 	""" data = {
 		'purchase_account_id': '2464766000000000567',
 		'purchase_account_name': 'Cost of Goods Sold',
-	} """
+	}
 
 	put_data = {
 		"description": "",
@@ -1880,12 +1875,7 @@ def custom_add_erp_item_in_zb(name, custom_zoho_item_id, gst_hsn_code):
 		frappe.set_value("Item", name, "custom_zoho_item_updated", 1)
 		return { "ADDED" }
 	else:
-		frappe.msgprint(res.get('message'))
-
-	""" if str(res) == 'Item details have been saved.' or 'The item has been added.':
-		#doc.save()
-		frappe.set_value("Item", name, "custom_zoho_item_updated", 0)
-		return { "ADDED" } """
+		frappe.msgprint(res.get('message')) """
 
 
 @frappe.whitelist(allow_guest=True)

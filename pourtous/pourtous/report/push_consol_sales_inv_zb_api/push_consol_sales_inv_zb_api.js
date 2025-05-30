@@ -39,8 +39,6 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 							console.log("Number of FS invoices to sync: ", length);
 							console.log("Invoice List: ", r.message);
 
-							// WIP
-
 							let added = 0;
 							let counter = 0;
 							for (const key in r.message) {

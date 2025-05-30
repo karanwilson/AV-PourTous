@@ -288,6 +288,28 @@ def process_pt_extra_contributions(contact, customer, custom_extra_contribution)
 
 
 @frappe.whitelist(allow_guest=True)
+def fetch_invoice_list():
+	return frappe.db.sql(
+    	"""
+		SELECT name, customer FROM `tabSales Invoice`
+		WHERE
+			posting_date between "2025-04-01" and "2025-04-05"
+			AND docstatus = 1
+			AND custom_fs_account_number IS NULL
+	    """,
+       as_dict=1,
+	)
+
+
+@frappe.whitelist(allow_guest=True)
+def add_fs_accounts(invoice, customer):
+	fs_acc_num = frappe.get_value("Customer", customer, "custom_fs_account_number")
+	frappe.set_value("Sales Invoice", invoice, "custom_fs_account_number", fs_acc_num)
+
+	return "ADDED"
+
+
+@frappe.whitelist(allow_guest=True)
 def update_fs_accounts(fs_account, name, disable):
 	existing_fs_customer = frappe.get_value("Customer", {"custom_fs_account_number": fs_account}, "name")
 	if existing_fs_customer:
