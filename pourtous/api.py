@@ -481,6 +481,18 @@ def get_tax_template():
 
 
 @frappe.whitelist(allow_guest=True)
+def get_sales_tax_template_form_script():
+	return frappe.get_list(
+		'Sales Taxes and Charges Template',
+		{
+			"company": frappe.defaults.get_user_default("company"),
+			"tax_category": "In-State"
+		},
+		"name"
+	)
+
+
+@frappe.whitelist(allow_guest=True)
 def get_purchase_tax_template(doc, method):
 	tax_template = frappe.get_list(
 		'Purchase Taxes and Charges Template',
