@@ -87,13 +87,11 @@ frappe.listview_settings['Item'] = {
                         const length = r.message.length;
                         console.log("Length of the ERP Items List: ", length);
 						console.log("Items List: ", r.message);
-                        //length = 1000;
-                        //console.log("Limiting Length to: ", length);
                         let added = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.add_erp_item_in_zb',
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_erp_item_in_zb',
                                     args: {
                                         //item_id: r.message[i]["item_id"],
                                         erp_item: r.message[i]["name"],
