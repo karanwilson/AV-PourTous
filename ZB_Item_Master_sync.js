@@ -91,11 +91,11 @@ frappe.listview_settings['Item'] = {
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_erp_item_in_zb',
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.custom_update_erp_item_in_zb',
                                     args: {
                                         //item_id: r.message[i]["item_id"],
                                         erp_item: r.message[i]["name"],
-                                        //custom_zoho_item_id: r.message[i]["custom_zoho_item_id"],
+                                        custom_zoho_item_id: r.message[i]["custom_zoho_item_id"],
                                         //gst_hsn_code: r.message[i]["gst_hsn_code"],
                                     },
                                     async: false,
