@@ -2351,13 +2351,26 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 		for item in invoice_doc.items:
 			item_doc = frappe.get_doc("Item", item.item_code)
 
-			try:
-				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
-			except Exception as err:
-				frappe.msgprint(str(err))
-				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-				frappe.msgprint(msg)
-				return
+			if invoice_doc.taxes:
+
+				try:
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				except Exception as err:
+					frappe.msgprint(str(err))
+					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
+					frappe.msgprint(msg)
+					return
+
+				else:
+					line_item = {
+						"item_id": item_doc.custom_zoho_item_id,
+						"name": item.item_name,
+						#"description": item.item_name,
+						"rate": float(item.rate),
+						"quantity": float(item.qty),
+						"tax_id": tax_id
+					}
+					line_items.append(line_item)
 
 			else:
 				line_item = {
@@ -2366,7 +2379,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
-					"tax_id": tax_id
+					'gst_treatment_code': 'out_of_scope'
 				}
 				line_items.append(line_item)
 
@@ -2514,13 +2527,26 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 		for item in invoice_doc.items:
 			item_doc = frappe.get_doc("Item", item.item_code)
 
-			try:
-				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
-			except Exception as err:
-				frappe.msgprint(str(err))
-				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-				frappe.msgprint(msg)
-				return
+			if invoice_doc.taxes:
+
+				try:
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				except Exception as err:
+					frappe.msgprint(str(err))
+					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
+					frappe.msgprint(msg)
+					return
+
+				else:
+					line_item = {
+						"item_id": item_doc.custom_zoho_item_id,
+						"name": item.item_name,
+						#"description": item.item_name,
+						"rate": float(item.rate),
+						"quantity": float(item.qty),
+						"tax_id": tax_id
+					}
+					line_items.append(line_item)
 
 			else:
 				line_item = {
@@ -2529,9 +2555,9 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
-					"tax_id": tax_id
+					'gst_treatment_code': 'out_of_scope'
 				}
-				line_items.append(line_item)
+				line_items.append(line_item)	
 
 		invoice_data = {
 			'customer_id': 2464766000000395229, # "Aurocard Customers" in ZB
@@ -2677,13 +2703,26 @@ def sync_upi_inv_with_zoho_books(invoice):
 		for item in invoice_doc.items:
 			item_doc = frappe.get_doc("Item", item.item_code)
 
-			try:
-				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
-			except Exception as err:
-				frappe.msgprint(str(err))
-				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-				frappe.msgprint(msg)
-				return
+			if invoice_doc.taxes:
+
+				try:
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				except Exception as err:
+					frappe.msgprint(str(err))
+					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
+					frappe.msgprint(msg)
+					return
+
+				else:
+					line_item = {
+						"item_id": item_doc.custom_zoho_item_id,
+						"name": item.item_name,
+						#"description": item.item_name,
+						"rate": float(item.rate),
+						"quantity": float(item.qty),
+						"tax_id": tax_id
+					}
+					line_items.append(line_item)
 
 			else:
 				line_item = {
@@ -2692,7 +2731,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
-					"tax_id": tax_id
+					'gst_treatment_code': 'out_of_scope'
 				}
 				line_items.append(line_item)
 
