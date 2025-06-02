@@ -1400,7 +1400,7 @@ def sync_zb_tax_id_with_erp(tax_id, tax_name, tax_percentage, tax_type, tax_spec
 			)
 
 			if existing_erp_tax_template:
-				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_group_id", tax_id)
+				frappe.db.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_group_id", tax_id)
 				return { "UPDATED" }
 		
 		else:
@@ -1415,7 +1415,7 @@ def sync_zb_tax_id_with_erp(tax_id, tax_name, tax_percentage, tax_type, tax_spec
 			)
 
 			if existing_erp_tax_template:
-				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_igst_id", tax_id)
+				frappe.db.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_igst_id", tax_id)
 				return { "UPDATED" }
 
 
@@ -1432,10 +1432,10 @@ def sync_zb_tax_id_with_erp(tax_id, tax_name, tax_percentage, tax_type, tax_spec
 		)
 		if existing_erp_tax_template:
 			if float(tax_percentage) > 0:
-				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_group_id", tax_id)
+				frappe.db.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_group_id", tax_id)
 			else:
 				# for RCM groups (tax_percentage < 0)
-				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_rcm_group_id", tax_id)
+				frappe.db.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_rcm_group_id", tax_id)
 			return { "UPDATED" }
 
 
@@ -1451,9 +1451,9 @@ def sync_zb_tax_id_with_erp(tax_id, tax_name, tax_percentage, tax_type, tax_spec
 		)
 		if existing_erp_tax_template:
 			if float(tax_percentage) > 0:
-				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_igst_id", tax_id)
+				frappe.db.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_tax_igst_id", tax_id)
 			else:
-				frappe.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_igst_rcm_id", tax_id)
+				frappe.db.set_value("Item Tax Template", existing_erp_tax_template[0].get("name"), "custom_zoho_igst_rcm_id", tax_id)
 			return { "UPDATED" }
 
 	else:
@@ -1827,8 +1827,8 @@ def custom_fetch_erp_items_list():
 	#return frappe.get_all('Supplier', filters = {"disabled": 0})
 	return frappe.db.sql(
 		"""
-		SELECT name FROM tabItem
-		WHERE disabled = 0 AND custom_zoho_item_updated = 0
+		SELECT name, custom_zoho_item_id FROM tabItem
+		WHERE disabled = 0 AND custom_zoho_item_updated = 1
 		""",
 		as_dict=True
 		# SELECT name, custom_zoho_item_id, gst_hsn_code FROM tabItem
@@ -1850,32 +1850,27 @@ def update_erp_item_in_zb(erp_item):
 
 
 @frappe.whitelist(allow_guest=True)
-#def custom_add_erp_item_in_zb(erp_item):
-def custom_add_erp_item_in_zb(name, custom_zoho_item_id, gst_hsn_code):
+def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
+#def custom_update_erp_item_in_zb(name, custom_zoho_item_id, gst_hsn_code):
 	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
 
 	#if item_name:
 		#doc = frappe.get_doc("Item", item)
 
-	""" data = {
-		'purchase_account_id': '2464766000000000567',
-		'purchase_account_name': 'Cost of Goods Sold',
-	}
-
 	put_data = {
 		"description": "",
 		'purchase_description': "",
-		"hsn_or_sac": gst_hsn_code,
+		#"hsn_or_sac": gst_hsn_code,
 	}
 
 	api_controller = frappe.get_doc("Zoho Books API")
 	res = api_controller.put_item(custom_zoho_item_id, put_data)
 	if res.get('code') == 0:
 		#doc.custom_zoho_item_updated = 1
-		frappe.set_value("Item", name, "custom_zoho_item_updated", 1)
+		frappe.db.set_value("Item", erp_item, "custom_zoho_item_updated", 0)
 		return { "ADDED" }
 	else:
-		frappe.msgprint(res.get('message')) """
+		frappe.msgprint(res.get('message'))
 
 
 @frappe.whitelist(allow_guest=True)
@@ -2243,20 +2238,25 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 
 ## WIP ## PTDC Consolidated Invoices push to ZB
 @frappe.whitelist(allow_guest=True)
-def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict):
+def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 	erp_line_items = json.loads(line_items_dict)
 	#frappe.throw(str(erp_line_items))
 	#frappe.throw(str(erp_line_items[0]))
 
 	api_controller = frappe.get_doc("Zoho Books API")
 	#invoice_doc = frappe.get_doc("Sales Invoice", invoice)
-	if frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "customer_type") == "Company":
-		customer_id = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "custom_zoho_contact_id")
+	#if frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "customer_type") == "Company":
+		#customer_id = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "custom_zoho_contact_id")
+	if frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "customer_group") == "Special Case":
+		return
+		# "Special Case" participants in PT are B2B
+		# returning for now, as these customer GSTIN are not available in the customer records.
+		# the B2B customers would be processed separately, once their GST numbers are updated.
 	else:
-		customer_id = 2407242000000343009  # get the "FS Account Customers" in PTDC ZB
+		customer_id = 2407242000000343009  # get the "PT Account Customers" in PTDC ZB
 
 	#date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
-	date = nowdate()
+	#date = nowdate()
 
 	#if invoice_doc.custom_zoho_invoice_id == None:
 	line_items = []
@@ -2287,7 +2287,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict):
 	invoice_data = {
 		'customer_id': customer_id,
 		#'invoice_number': invoice[-16:],
-		'invoice_number': consol_inv_pt_account+"--"+nowdate()[2:],
+		'invoice_number': consol_inv_pt_account+"--"+date[2:],
 		'date': date,
 		"is_inclusive_tax": True,
 		#'price_precision': 2,
@@ -2915,13 +2915,13 @@ def delete_bills_in_zoho(bill, custom_zoho_bill_id):
 	res = api_controller.delete_bill(custom_zoho_bill_id)
 
 	if res.get("code") == 0:
-		frappe.set_value("Purchase Receipt", bill, "custom_zoho_bill_id", "")
+		frappe.db.set_value("Purchase Receipt", bill, "custom_zoho_bill_id", "")
 		return { "DELETED" }
 
 
 @frappe.whitelist(allow_guest=True)
 def delete_specific_invoice_payments(invoice):
-	frappe.set_value("Sales Invoice", invoice, "custom_zoho_payment_id", "")
+	frappe.db.set_value("Sales Invoice", invoice, "custom_zoho_payment_id", "")
 	return { "DELETED" }
 
 
@@ -2958,7 +2958,7 @@ def delete_invoice_ids_in_erp(invoice):
 	exists = any(inv_name == invoice for inv_name in inv_ids_list)
 
 	if not exists:
-		frappe.set_value("Sales Invoice", invoice, "custom_zoho_invoice_id", "")
+		frappe.db.set_value("Sales Invoice", invoice, "custom_zoho_invoice_id", "")
 		return { "DELETED" }
 
 	#return inv_ids_list_of_lists
@@ -2985,7 +2985,7 @@ def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
 
 	if res.get("code") == 0:
 	#if res.get("code") == 1002 and res.get("message") == 'Invoice does not exist.':
-		frappe.set_value("Sales Invoice", invoice, "custom_zoho_invoice_id", "")
+		frappe.db.set_value("Sales Invoice", invoice, "custom_zoho_invoice_id", "")
 		return { "DELETED" }
 		#msg = "Zoho Books Response: " + res.json().get("message")
 		#frappe.msgprint(msg)
@@ -3030,7 +3030,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 		res = api_controller.delete_customerpayments(custom_zoho_payment_id)
 
 		if res.get("code") == 0:
-			frappe.set_value("Sales Invoice", invoice, "custom_zoho_payment_id", "")
+			frappe.db.set_value("Sales Invoice", invoice, "custom_zoho_payment_id", "")
 			return { "DELETED" }
 			#msg = "Zoho Books Response: " + res.json().get("message")
 			#frappe.msgprint(msg)
@@ -3038,7 +3038,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 	""" if custom_zb_creditnote_refund_id != None:
 		res = api_controller.delete_creditnote_refund(custom_zb_creditnote_id, custom_zb_creditnote_refund_id)
 		if res.get("code") == 0:
-			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_refund_id", "")
+			frappe.db.set_value("Sales Invoice", invoice, "custom_zb_creditnote_refund_id", "")
 			return { "DELETED" }
 			#msg = "Zoho Books Response: " + res.json().get("message")
 			#frappe.msgprint(msg)
@@ -3046,7 +3046,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 	if custom_zb_creditnote_id != None:
 		res = api_controller.delete_creditnote(custom_zb_creditnote_id)
 		if res.get("code") == 0:
-			frappe.set_value("Sales Invoice", invoice, "custom_zb_creditnote_id", "")
+			frappe.db.set_value("Sales Invoice", invoice, "custom_zb_creditnote_id", "")
 			return { "DELETED" }
 			#msg = "Zoho Books Response: " + res.json().get("message")
 			#frappe.msgprint(msg) """

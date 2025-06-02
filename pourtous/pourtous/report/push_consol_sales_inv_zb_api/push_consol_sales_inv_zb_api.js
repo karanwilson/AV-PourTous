@@ -24,13 +24,14 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 			__("Push to Zoho"),
 			function () {
 				//frappe.msgprint("Test Message");
+				const to_date = frappe.query_report.get_filter_value('to_date')
 				console.log("frappe.query_report.get_filter_value('from_date'): ", frappe.query_report.get_filter_value("from_date"));
-				console.log("frappe.query_report.get_filter_value('to_date'): ", frappe.query_report.get_filter_value('to_date'));
+				console.log("frappe.query_report.get_filter_value('to_date'): ", to_date);
 				frappe.call({
 					method: `pourtous.pourtous.report.push_consol_sales_inv_zb_api.push_consol_sales_inv_zb_api.get_participant_monthly_distribution`,
 					args: {
 						from_date: frappe.query_report.get_filter_value("from_date"),
-						to_date: frappe.query_report.get_filter_value("to_date"),
+						to_date: to_date,
 					},
 					callback: function (r) {
 						if (r.message) {
@@ -42,7 +43,7 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 							let added = 0;
 							let counter = 0;
 							for (const key in r.message) {
-								if (counter == 1)
+								if (counter == 10)
 									break;
 								//console.log("key: ", key);
 								//console.log("r.message[key]: ", r.message[key]);
@@ -55,6 +56,7 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 										args: {
 											consol_inv_pt_account: key,
 											line_items_dict: r.message[key],
+											date: to_date
 										},
 										async: true,
 									}).then(r => {
