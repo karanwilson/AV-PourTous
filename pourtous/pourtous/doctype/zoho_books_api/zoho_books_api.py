@@ -1263,8 +1263,9 @@ def update_contact_in_zoho(doc, method):
 
 
 def delete_contact_in_zoho(doc, method):
-	if doc.customer_type != "Company":
-		return
+	if doc.doctype == "Customer":
+		if doc.customer_type != "Company":
+			return
 
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
@@ -1278,6 +1279,8 @@ def delete_contact_in_zoho(doc, method):
 
 
 def update_supplier_contact_in_zoho(doc, method):
+	if not doc.gstin:
+		doc.is_reverse_charge_applicable = 1
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		return

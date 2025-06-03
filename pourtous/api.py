@@ -491,15 +491,24 @@ def make_stock_reservation(doc, method):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_tax_template():
-	return frappe.get_list(
-		'Purchase Taxes and Charges Template',
-		{
-			"company": frappe.defaults.get_user_default("company"),
-			"tax_category": "In-State"
-		},
-		"name"
-	)
+def get_tax_template(company, supplier):
+	if frappe.db.get_value("Company", company, "gstin") and not frappe.db.get_value("Supplier", supplier, "gstin"):
+		return frappe.get_list(
+			'Purchase Taxes and Charges Template',
+			{
+				"company": company,
+				"tax_category": "Reverse Charge In-State"
+			},
+			"name"
+		)
+		""" return frappe.get_list(
+			'Purchase Taxes and Charges Template',
+			{
+				"company": company,
+				"tax_category": "In-State"
+			},
+			"name"
+		) """
 
 
 @frappe.whitelist(allow_guest=True)

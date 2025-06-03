@@ -3,9 +3,8 @@ frappe.ui.form.on('Purchase Receipt', {
         frappe.call('pourtous.api.get_tax_template')
             .then(r => {
                 frm.set_value('taxes_and_charges', r.message[0].name)
-                    .then(() => {
-                        frm.refresh_field('taxes_and_charges');
-                    });
+            }).then(() => {
+                frm.refresh_field('taxes_and_charges');
             });
         frm.set_value('disable_rounded_total', 0);
 	},
