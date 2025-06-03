@@ -26,13 +26,88 @@ def execute(filters=None):
 
 
 def get_columns(filters):
-	if filters.voucher_type == "Purchase Receipt" or filters.voucher_type == "Purchase Invoice":
+	if filters.voucher_type == "Purchase Receipt":
 		return [
 			{
 				"fieldname": "voucher_name",
 				"label": "Voucher ID",
 				"fieldtype": "Link",
 				"options": "Purchase Receipt",
+				"width": "135"
+			},
+
+			{
+				"fieldname": "posting_time",
+				"label": "Time",
+				"fieldtype": "Time",
+				"width": "100",
+			},
+
+			{
+				"fieldname": "supplier",
+				"label": "Supplier",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+
+			{
+				"fieldname": "item_code",
+				"label": "Item Code",
+				"fieldtype": "Data",
+				"width": "90"
+			},
+
+			{
+				"fieldname": "batch_no",
+				"label": "Batch",
+				"fieldtype": "Link",
+				"options": "Batch",
+				"width": "120"
+			},
+
+			{
+				"fieldname": "custom_barcode",
+				"label": "Barcode",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+
+			{
+				"fieldname": "item_name",
+				"label": "Item Name",
+				"fieldtype": "Data",
+				"width": "250"
+			},
+
+			{
+				"fieldname": "qty",
+				"label": "Qty",
+				"fieldtype": "Float",
+				"width": "90"
+			},
+
+			{
+				"fieldname": "custom_selling_price",
+				"label": "S Price",
+				"fieldtype": "Currency",
+				"width": "100"
+			},
+
+			{
+				"fieldname": "rate",
+				"label": "Rate (Old PR)",
+				"fieldtype": "Currency",
+				"width": "120"
+			},
+		]
+
+	elif filters.voucher_type == "Purchase Invoice":
+		return [
+			{
+				"fieldname": "voucher_name",
+				"label": "Voucher ID",
+				"fieldtype": "Link",
+				"options": "Purchase Invoice",
 				"width": "135"
 			},
 
