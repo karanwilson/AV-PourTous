@@ -2250,7 +2250,10 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 	#invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	#if frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "customer_type") == "Company":
 		#customer_id = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "custom_zoho_contact_id")
-	if frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "customer_group") == "Special Case":
+	customer = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "name")
+	company = frappe.defaults.get_user_default("company")
+
+	if frappe.get_value("Customer", customer, "customer_group") == "Special Case":
 		return
 		# "Special Case" participants in PT are B2B
 		# returning for now, as these customer GSTIN are not available in the customer records.
@@ -2261,28 +2264,43 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 	#date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 	#date = nowdate()
 
+	taxable = True
+	if frappe.db.get_value("Company", company, "gstin"):
+		if frappe.db.get_value("Customer", customer, "gstin") == frappe.db.get_value("Company", company, "gstin"):
+			taxable = False
+
 	#if invoice_doc.custom_zoho_invoice_id == None:
 	line_items = []
 
 	for item in erp_line_items:
 		item_doc = frappe.get_doc("Item", item.get("item_code"))
 
-		try:
-			tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
-		except Exception as err:
-			frappe.msgprint(str(err))
-			msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
-			frappe.msgprint(msg)
-			return
+		if taxable:
+			try:
+				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+			except Exception as err:
+				frappe.msgprint(str(err))
+				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+				frappe.msgprint(msg)
+				return
+
+			else:
+				line_item = {
+					"item_id": item_doc.custom_zoho_item_id,
+					"name": item.get("item_name"),
+					"rate": float(item.get("rate")),
+					"quantity": float(item.get("qty")),
+					"tax_id": tax_id
+				}
+				line_items.append(line_item)
 
 		else:
 			line_item = {
 				"item_id": item_doc.custom_zoho_item_id,
 				"name": item.get("item_name"),
-				#"description": item.get("item_name"),
 				"rate": float(item.get("rate")),
 				"quantity": float(item.get("qty")),
-				"tax_id": tax_id
+				'gst_treatment_code': 'out_of_scope'
 			}
 			line_items.append(line_item)
 
