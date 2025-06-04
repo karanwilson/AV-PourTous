@@ -43,7 +43,7 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 							let added = 0;
 							let counter = 0;
 							for (const key in r.message) {
-								if (counter == 10)
+								if (counter == 15)
 									break;
 								//console.log("key: ", key);
 								//console.log("r.message[key]: ", r.message[key]);
