@@ -2410,7 +2410,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 
 ## WIP ## PTDC Consolidated Invoices push to ZB
 @frappe.whitelist(allow_guest=True)
-def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
+def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_return):
 	erp_line_items = json.loads(line_items_dict)
 	#frappe.throw(str(erp_line_items))
 	#frappe.throw(str(erp_line_items[0]))
@@ -2438,7 +2438,6 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 		if frappe.db.get_value("Customer", customer, "gstin") == frappe.db.get_value("Company", company, "gstin"):
 			taxable = False
 
-	#if invoice_doc.custom_zoho_invoice_id == None:
 	line_items = []
 
 	for item in erp_line_items:
@@ -2458,7 +2457,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 					"item_id": item_doc.custom_zoho_item_id,
 					"name": item.get("item_name"),
 					"rate": float(item.get("rate")),
-					"quantity": float(item.get("qty")),
+					"quantity": abs(float(item.get("qty"))), # abs used, as section used for returns as well
 					"tax_id": tax_id
 				}
 				line_items.append(line_item)
@@ -2468,16 +2467,14 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 				"item_id": item_doc.custom_zoho_item_id,
 				"name": item.get("item_name"),
 				"rate": float(item.get("rate")),
-				"quantity": float(item.get("qty")),
+				"quantity": abs(float(item.get("qty"))), # abs used, as section used for returns as well
 				'gst_treatment_code': 'out_of_scope'
 			}
 			line_items.append(line_item)
 
-	#if not invoice_doc.is_return:
-	invoice_data = {
+	data = {
 		'customer_id': customer_id,
-		#'invoice_number': invoice[-16:],
-		'invoice_number': consol_inv_pt_account+"--"+date[2:],
+		#'invoice_number': consol_inv_pt_account+"--"+date[2:],
 		'date': date,
 		"is_inclusive_tax": True,
 		#'price_precision': 2,
@@ -2492,20 +2489,42 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 		"line_items": line_items
 	}
 
-	#frappe.throw(str(invoice_data))
+	#frappe.throw(str(data))
 
-	res = api_controller.post_invoice(invoice_data)
-	if res:
-		last_invoice = ""
-		for line in erp_line_items:
-			if line.get("name") != last_invoice:
-				frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_inv_id", res.get('invoice_id'))
-				frappe.db.commit()
-			last_invoice = line.get("name")
+	if is_return:
+		data["creditnote_number"] = consol_inv_pt_account+"-RT-"+date[5:]
+		data["reference_invoice_type"] = "b2c_others" # used when not referring to a return doc
 
-	res2 = api_controller.mark_invoice_as_sent(res.get('invoice_id'))
-	if res2 == "Invoice status has been changed to Sent.":
-		return "ADDED"
+		#frappe.throw(str(data))
+
+		res = api_controller.post_creditnote(data)
+		if res:
+			last_invoice = ""
+			for line in erp_line_items:
+				if line.get("name") != last_invoice:
+					frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_creditnote_id", res.get('creditnote_id'))
+					frappe.db.commit()
+				last_invoice = line.get("name")
+
+			return "ADDED"
+
+	else:
+		data["invoice_number"] = consol_inv_pt_account+"--"+date[2:]
+
+		#frappe.throw(str(data))
+
+		res = api_controller.post_invoice(data)
+		if res:
+			last_invoice = ""
+			for line in erp_line_items:
+				if line.get("name") != last_invoice:
+					frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_inv_id", res.get('invoice_id'))
+					frappe.db.commit()
+				last_invoice = line.get("name")
+
+		res2 = api_controller.mark_invoice_as_sent(res.get('invoice_id'))
+		if res2 == "Invoice status has been changed to Sent.":
+			return "ADDED"
 
 
 @frappe.whitelist(allow_guest=True)

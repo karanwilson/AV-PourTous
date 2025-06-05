@@ -15,6 +15,12 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 			"label": __("To Date*"),
 			"fieldtype": "Date",
 			"width": "60px",
+		},
+		{
+			"fieldname": "is_return",
+			"label": __("Returns"),
+			"fieldtype": "Check",
+			"width": "60px",
 		}
 	],
 
@@ -25,15 +31,18 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 			function () {
 				//frappe.msgprint("Test Message");
 				const to_date = frappe.query_report.get_filter_value('to_date')
+				const is_return = frappe.query_report.get_filter_value('is_return')
 				console.log("frappe.query_report.get_filter_value('from_date'): ", frappe.query_report.get_filter_value("from_date"));
 				console.log("frappe.query_report.get_filter_value('to_date'): ", to_date);
+				console.log("frappe.query_report.get_filter_value('is_return'): ", is_return);
 				frappe.call({
 					method: `pourtous.pourtous.report.push_consol_sales_inv_zb_api.push_consol_sales_inv_zb_api.get_participant_monthly_distribution`,
 					args: {
 						from_date: frappe.query_report.get_filter_value("from_date"),
 						to_date: to_date,
+						is_return: is_return
 					},
-					async: false,
+					//async: false,
 					callback: function (r) {
 						if (r.message) {
 							const length = Object.keys(r.message).length;
@@ -41,14 +50,16 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 							console.log("Number of PT invoices to sync: ", length);
 							console.log("Invoice List: ", r.message);
 
-							//if (counter == 100)
-							//	break;
-
 							let added = 0;
 							let counter = 0;
+
 							for (const key in r.message) {
+								//if (counter == 1)
+								//	break;
 								//console.log("key: ", key);
 								//console.log("r.message[key]: ", r.message[key]);
+
+								//counter++
 
 								setTimeout(() => {
 									frappe.call({
@@ -56,7 +67,8 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 										args: {
 											consol_inv_pt_account: key,
 											line_items_dict: r.message[key],
-											date: to_date
+											date: to_date,
+											is_return: is_return
 										},
 										async: false,
 									}).then(r => {

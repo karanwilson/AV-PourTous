@@ -300,6 +300,7 @@ fixtures = [
                     "Sales Invoice-custom_zoho_invoice_id", # for syncing with Zoho Books
                     #"Sales Invoice-custom_zoho_payment_id",
                     "Sales Invoice-custom_zb_creditnote_id",
+                    "Sales Invoice-custom_zb_consol_creditnote_id",
                     #"Sales Invoice-custom_zb_creditnote_refund_id",
                     "Sales Invoice-custom_zoho_void_invoice_id",
 
