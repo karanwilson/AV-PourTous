@@ -1899,7 +1899,7 @@ def fetch_ptdc_erp_bills_list():
 		SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
 		AND is_return = 0 AND custom_zoho_bill_id IS NULL
 		AND NOT (posting_date = "2025-04-02" AND owner = "Administrator")
-		AND posting_date < "2025-04-07" AND name != "PR-25-00891"
+		AND posting_date < "2025-05-01" AND name != "PR-25-00891"
 		""",
 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 		as_dict=True
@@ -1912,7 +1912,7 @@ def fetch_ptdc_erp_debitnotes_list():
 		"""
 		SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
 		AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-		AND posting_date < "2025-04-30"
+		AND posting_date < "2025-05-01"
 		""",
 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 		as_dict=True

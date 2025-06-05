@@ -41,6 +41,9 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 							console.log("Number of PT invoices to sync: ", length);
 							console.log("Invoice List: ", r.message);
 
+							//if (counter == 100)
+							//	break;
+
 							let added = 0;
 							let counter = 0;
 							for (const key in r.message) {
@@ -66,9 +69,6 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 										console.log("Added ", added, ", of ", length);
 									});
 									//const count = counter+1;
-
-									//if (counter == 100)
-									//	break;
 									counter++
 									const message = "Adding "+counter+" of "+length;
 									frappe.show_progress("Pushing PT Invoices to Zoho Books", counter, length, message);

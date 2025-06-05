@@ -351,6 +351,7 @@ fixtures = [
 
                     "Purchase Receipt-custom_zoho_bill_id",
                     "Purchase Receipt-custom_zb_vendor_credit_id",
+                    "Purchase Receipt-custom_zoho_void_bill_id",
 
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
                     "Purchase Invoice Item-custom_selling_price", # for setting the Selling Price
