@@ -1289,6 +1289,7 @@ def update_supplier_contact_in_zoho(doc, method):
 
 	gst_treatment = {
 		"Registered Regular": "business_gst",
+		"Registered Composition": "business_registered_composition",
 		"Unregistered": "business_none",
 		"Overseas": "overseas"
 	}
@@ -1987,7 +1988,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		else:
 			line_item = {
 				"item_id": frappe.get_value("Item", item.item_code, "custom_zoho_item_id"),
-				"rate": float(item.price_list_rate),
+				"rate": float(item.rate),
 				"quantity": abs(float(item.qty))
 			}
 			if is_reverse_charge_applied:
