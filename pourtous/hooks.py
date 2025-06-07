@@ -300,6 +300,7 @@ fixtures = [
                     "Sales Invoice-custom_zoho_invoice_id", # for syncing with Zoho Books
                     #"Sales Invoice-custom_zoho_payment_id",
                     "Sales Invoice-custom_zb_creditnote_id",
+                    "Sales Invoice-custom_zb_consol_creditnote_id",
                     #"Sales Invoice-custom_zb_creditnote_refund_id",
                     "Sales Invoice-custom_zoho_void_invoice_id",
 
@@ -349,7 +350,9 @@ fixtures = [
                     "Purchase Invoice-custom_zb_vendor_credit_id",
                     "Purchase Invoice-custom_zoho_void_bill_id",
 
-                    #"Purchase Receipt-custom_zoho_bill_id",
+                    "Purchase Receipt-custom_zoho_bill_id",
+                    "Purchase Receipt-custom_zb_vendor_credit_id",
+                    "Purchase Receipt-custom_zoho_void_bill_id",
 
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
                     "Purchase Invoice Item-custom_selling_price", # for setting the Selling Price

@@ -8,7 +8,7 @@ frappe.listview_settings['Purchase Invoice'] = {
                     if (r.message) {
                         const length = r.message.length;
                         console.log("Number of Bills to add: ", length);
-						console.log("Contacts List: ", r.message);
+						console.log("Bills List: ", r.message);
                         //console.log("r.message[0]['name']: ", r.message[0]["name"]);
                         let added = 0;
                         for (let i = 0; i < length; i++) {

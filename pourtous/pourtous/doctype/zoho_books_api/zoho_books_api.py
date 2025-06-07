@@ -124,6 +124,7 @@ class ZohoBooksAPI(Document):
 				}
 
 			r = s.post(api_url, data=json.dumps(data))
+			#frappe.throw(str(r.json()))
 
 			#if r.json().get('message') == 'The contact has been added.':
 			if r.json().get('code') == 0:
@@ -131,7 +132,8 @@ class ZohoBooksAPI(Document):
 					"custom_zoho_contact_id": r.json().get('contact').get('contact_id'),
 				}
 			else:
-				r.raise_for_status()
+				frappe.msgprint(r.json().get('message'))
+				#r.raise_for_status()
 
 
 	def put_contact(self, contact_id, data):
@@ -1831,8 +1833,8 @@ def custom_fetch_erp_items_list():
 	#return frappe.get_all('Supplier', filters = {"disabled": 0})
 	return frappe.db.sql(
 		"""
-		SELECT name, custom_zoho_item_id FROM tabItem
-		WHERE disabled = 0 AND custom_zoho_item_updated = 1
+		SELECT name, custom_zoho_item_id, gst_hsn_code FROM tabItem
+		WHERE disabled = 0 AND custom_zoho_item_updated = 0
 		""",
 		as_dict=True
 		# SELECT name, custom_zoho_item_id, gst_hsn_code FROM tabItem
@@ -1854,24 +1856,22 @@ def update_erp_item_in_zb(erp_item):
 
 
 @frappe.whitelist(allow_guest=True)
-def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
-#def custom_update_erp_item_in_zb(name, custom_zoho_item_id, gst_hsn_code):
+#def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
+def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id, gst_hsn_code):
 	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
 
 	#if item_name:
 		#doc = frappe.get_doc("Item", item)
 
 	put_data = {
-		"description": "",
-		'purchase_description': "",
-		#"hsn_or_sac": gst_hsn_code,
+		"hsn_or_sac": gst_hsn_code,
 	}
 
 	api_controller = frappe.get_doc("Zoho Books API")
 	res = api_controller.put_item(custom_zoho_item_id, put_data)
 	if res.get('code') == 0:
 		#doc.custom_zoho_item_updated = 1
-		frappe.db.set_value("Item", erp_item, "custom_zoho_item_updated", 0)
+		frappe.db.set_value("Item", erp_item, "custom_zoho_item_updated", 1)
 		return { "ADDED" }
 	else:
 		frappe.msgprint(res.get('message'))
@@ -1890,6 +1890,175 @@ def sync_zb_item_id_with_erp(item_id, item_name):
 		existing_item_doc.custom_zoho_item_id = item_id
 		existing_item_doc.save()
 		return { "UPDATED" }
+
+
+@frappe.whitelist(allow_guest=True)
+def fetch_ptdc_erp_bills_list():
+	return frappe.db.sql(
+		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+		"""
+		SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
+		AND is_return = 0 AND custom_zoho_bill_id IS NULL
+		AND NOT (posting_date = "2025-04-02" AND owner = "Administrator")
+		AND posting_date < "2025-05-01" AND name != "PR-25-00891"
+		""",
+		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def fetch_ptdc_erp_debitnotes_list():
+	return frappe.db.sql(
+		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+		"""
+		SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
+		AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
+		AND posting_date < "2025-05-01"
+		""",
+		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+		as_dict=True
+	)
+
+@frappe.whitelist(allow_guest=True)
+def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
+	bill_doc = frappe.get_doc("Purchase Receipt", bill)
+	#bill_doc = frappe.get_doc("Purchase Invoice", bill)
+
+	# Check if Supplier is Inter/Intra state
+
+	contact_id = frappe.get_value("Supplier", bill_doc.supplier, "custom_zoho_contact_id")
+	is_reverse_charge_applied = False # default value initialised here (context: GST-unregistered Vendors)
+
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		is_inclusive_tax = False
+	else:
+		is_inclusive_tax = True
+
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	try:
+		contact = api_controller.get_a_contact(contact_id)
+		# r2.json().get('contact').get("tax_info_list")[0].get('place_of_supply')
+
+		# check if tax info is available, i.e. whether the supplier GSTIN is updated
+		if len(contact.get("tax_info_list")) > 0:
+			if contact.get("tax_info_list")[0].get('place_of_supply') == 'TN':
+				tax_specification = "intra"
+			else:
+				tax_specification = "inter"
+
+			reference_invoice_type = "registered" # used in case of "Vendor Credits"
+
+		# in case tax info is not available, i.e. in case the GSTIN of supplier is not updated:-
+		else:
+			tax_specification = "intra"
+			is_reverse_charge_applied = True
+
+			reference_invoice_type = "b2c_others" # used in case of "Vendor Credits"
+			#with open('tax_info_list_empty.txt', 'w') as file:
+			#	file.write(str(contact.get("tax_info_list")))
+
+	except Exception as err:
+		#with open('tax_info_list_exception_err.txt', 'w') as file:
+		#	file.write(str(contact.get("tax_info_list")))
+		frappe.msgprint(str(err))
+		return
+
+	line_items = []
+
+	for item in bill_doc.items:
+		item_doc = frappe.get_doc("Item", item.item_code)
+
+		try:
+			if is_reverse_charge_applied:
+				if tax_specification == "intra":
+					reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_rcm_group_id")
+				else:
+					reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_igst_rcm_id")
+			else:
+				if tax_specification == "intra":
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				else:
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+		except Exception as err:
+			frappe.msgprint(str(err))
+			msg = "Please verify the Tax-template/Supplier/ZB-tax_id for Item Code " + item.item_code
+			frappe.msgprint(msg)
+			return
+
+		else:
+			line_item = {
+				"item_id": frappe.get_value("Item", item.item_code, "custom_zoho_item_id"),
+				"rate": float(item.price_list_rate),
+				"quantity": abs(float(item.qty))
+			}
+			if is_reverse_charge_applied:
+				line_item["reverse_charge_tax_id"] = reverse_charge_tax_id
+				is_inclusive_tax = False
+			else:
+				line_item["tax_id"] = tax_id
+
+			line_items.append(line_item)
+
+	#frappe.throw(str(line_items))
+
+	#if bill_doc.bill_date:
+	#	date = bill_doc.bill_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+	#else:
+	date = bill_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+
+	data = {
+		'vendor_id': frappe.get_value("Supplier", bill_doc.supplier, "custom_zoho_contact_id"),
+		#'bill_number': bill_doc.bill_no,
+		'reference_number': bill_doc.name,
+		'date': date,
+		"is_inclusive_tax": is_inclusive_tax,
+		"is_reverse_charge_applied": is_reverse_charge_applied,
+		#'price_precision': 2,
+		#'location_id': '2464766000000030367',
+		"line_items": line_items
+	}
+
+	if bill_doc.is_return and bill_doc.custom_zb_vendor_credit_id == None:
+		# ZB is asking for Bill number to return against.. hence skipping this section for now.
+		#return
+		#if bill_doc.bill_no:
+		#	data["vendor_credit_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
+		#else:
+		data["vendor_credit_number"] = bill_doc.name # Supplier/Vendor Bill Number
+		
+		data["reference_invoice_type"] = reference_invoice_type
+
+		#frappe.throw(str(data))
+		res = api_controller.post_vendor_credit(data)
+		if res:
+			bill_doc.custom_zb_vendor_credit_id = res
+			bill_doc.save()
+			frappe.db.commit()
+			return { "ADDED" }
+
+	elif bill_doc.custom_zoho_bill_id == None:
+		#if bill_doc.bill_no:
+		#	data["bill_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
+		#else:
+		data["bill_number"] = bill_doc.name # Supplier/Vendor Bill Number
+
+		#frappe.throw(str(data))
+		if bill_doc.amended_from:
+			#void_bill_id = frappe.get_value("Purchase Invoice", bill_doc.amended_from, "custom_zoho_void_bill_id")
+			void_bill_id = frappe.get_value("Purchase Receipt", bill_doc.amended_from, "custom_zoho_void_bill_id")
+			if void_bill_id:
+				res = api_controller.delete_bill(void_bill_id)
+				#frappe.throw(str(res))
+				if res.get('code') != 0:
+					frappe.msgprint(res.get("message"))
+
+		res = api_controller.post_bill(data)
+		if res:
+			bill_doc.custom_zoho_bill_id = res
+			bill_doc.save()
+			frappe.db.commit()
+			return { "ADDED" }
 
 
 @frappe.whitelist(allow_guest=True)
@@ -2242,7 +2411,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 
 ## WIP ## PTDC Consolidated Invoices push to ZB
 @frappe.whitelist(allow_guest=True)
-def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
+def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_return):
 	erp_line_items = json.loads(line_items_dict)
 	#frappe.throw(str(erp_line_items))
 	#frappe.throw(str(erp_line_items[0]))
@@ -2270,7 +2439,6 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 		if frappe.db.get_value("Customer", customer, "gstin") == frappe.db.get_value("Company", company, "gstin"):
 			taxable = False
 
-	#if invoice_doc.custom_zoho_invoice_id == None:
 	line_items = []
 
 	for item in erp_line_items:
@@ -2290,7 +2458,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 					"item_id": item_doc.custom_zoho_item_id,
 					"name": item.get("item_name"),
 					"rate": float(item.get("rate")),
-					"quantity": float(item.get("qty")),
+					"quantity": abs(float(item.get("qty"))), # abs used, as section used for returns as well
 					"tax_id": tax_id
 				}
 				line_items.append(line_item)
@@ -2300,16 +2468,14 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 				"item_id": item_doc.custom_zoho_item_id,
 				"name": item.get("item_name"),
 				"rate": float(item.get("rate")),
-				"quantity": float(item.get("qty")),
+				"quantity": abs(float(item.get("qty"))), # abs used, as section used for returns as well
 				'gst_treatment_code': 'out_of_scope'
 			}
 			line_items.append(line_item)
 
-	#if not invoice_doc.is_return:
-	invoice_data = {
+	data = {
 		'customer_id': customer_id,
-		#'invoice_number': invoice[-16:],
-		'invoice_number': consol_inv_pt_account+"--"+date[2:],
+		#'invoice_number': consol_inv_pt_account+"--"+date[2:],
 		'date': date,
 		"is_inclusive_tax": True,
 		#'price_precision': 2,
@@ -2324,20 +2490,42 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date):
 		"line_items": line_items
 	}
 
-	#frappe.throw(str(invoice_data))
+	#frappe.throw(str(data))
 
-	res = api_controller.post_invoice(invoice_data)
-	if res:
-		last_invoice = ""
-		for line in erp_line_items:
-			if line.get("name") != last_invoice:
-				frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_inv_id", res.get('invoice_id'))
-				frappe.db.commit()
-			last_invoice = line.get("name")
+	if is_return:
+		data["creditnote_number"] = consol_inv_pt_account+"-RT-"+date[5:]
+		data["reference_invoice_type"] = "b2c_others" # used when not referring to a return doc
 
-	res2 = api_controller.mark_invoice_as_sent(res.get('invoice_id'))
-	if res2 == "Invoice status has been changed to Sent.":
-		return "ADDED"
+		#frappe.throw(str(data))
+
+		res = api_controller.post_creditnote(data)
+		if res:
+			last_invoice = ""
+			for line in erp_line_items:
+				if line.get("name") != last_invoice:
+					frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_creditnote_id", res.get('creditnote_id'))
+					frappe.db.commit()
+				last_invoice = line.get("name")
+
+			return "ADDED"
+
+	else:
+		data["invoice_number"] = consol_inv_pt_account+"--"+date[2:]
+
+		#frappe.throw(str(data))
+
+		res = api_controller.post_invoice(data)
+		if res:
+			last_invoice = ""
+			for line in erp_line_items:
+				if line.get("name") != last_invoice:
+					frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_inv_id", res.get('invoice_id'))
+					frappe.db.commit()
+				last_invoice = line.get("name")
+
+		res2 = api_controller.mark_invoice_as_sent(res.get('invoice_id'))
+		if res2 == "Invoice status has been changed to Sent.":
+			return "ADDED"
 
 
 @frappe.whitelist(allow_guest=True)

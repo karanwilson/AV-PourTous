@@ -12,7 +12,7 @@ def execute(filters=None):
 	columns, data = [], []
 
 	columns = get_columns()
-	data = get_data(from_date=filters.from_date, to_date = filters.to_date)
+	data = get_data(from_date=filters.from_date, to_date=filters.to_date, is_return=filters.is_return)
 
 	if not data:
 		msgprint(_('No records found'))
@@ -82,18 +82,32 @@ def get_columns():
 	]
 
 
-def get_data(from_date, to_date):
-	query = frappe.db.sql(
-		"""
-		SELECT s.name, s.customer_name, s.customer, s.custom_fs_account_number, s.posting_date, item_code, item_name, qty, rate
-		FROM `tabSales Invoice Item` si, `tabSales Invoice` s
-		WHERE s.docstatus = 1 AND si.parent = s.name AND s.is_return = 0
-		AND s.posting_date BETWEEN '{0}' AND '{1}'
-		AND s.custom_zb_consol_inv_id IS NULL
-		ORDER BY s.custom_fs_account_number
-		""".format(from_date, to_date),
-		as_dict=True
-	)
+def get_data(from_date, to_date, is_return):
+	if is_return:
+		query = frappe.db.sql(
+			"""
+			SELECT s.name, s.customer_name, s.customer, s.custom_fs_account_number, s.posting_date, item_code, item_name, qty, rate
+			FROM `tabSales Invoice Item` si, `tabSales Invoice` s
+			WHERE s.docstatus = 1 AND si.parent = s.name AND s.is_return = 1
+			AND s.posting_date BETWEEN '{0}' AND '{1}'
+			AND s.custom_zb_consol_creditnote_id IS NULL
+			ORDER BY s.custom_fs_account_number
+			""".format(from_date, to_date),
+			as_dict=True
+		)
+
+	else:
+		query = frappe.db.sql(
+			"""
+			SELECT s.name, s.customer_name, s.customer, s.custom_fs_account_number, s.posting_date, item_code, item_name, qty, rate
+			FROM `tabSales Invoice Item` si, `tabSales Invoice` s
+			WHERE s.docstatus = 1 AND si.parent = s.name AND s.is_return = 0
+			AND s.posting_date BETWEEN '{0}' AND '{1}'
+			AND s.custom_zb_consol_inv_id IS NULL
+			ORDER BY s.custom_fs_account_number
+			""".format(from_date, to_date),
+			as_dict=True
+		)
 
 	return query
 
@@ -113,11 +127,11 @@ def update_sync_status(from_date, to_date):
 
 
 @frappe.whitelist()
-def get_participant_monthly_distribution(from_date, to_date):
+def get_participant_monthly_distribution(from_date, to_date, is_return):
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		#return get_data(from_date, to_date)
 
-		consol_list_dict_erp = get_data(from_date, to_date)
+		consol_list_dict_erp = get_data(from_date, to_date, is_return)
 		#frappe.throw(str(len(consol_dict)))
 		#frappe.throw(str(consol_dict[0].get("name")))
 		#frappe.throw(str(consol_dict))
