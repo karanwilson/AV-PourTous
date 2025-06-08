@@ -2537,7 +2537,6 @@ def fetch_unsynced_erp_fs_invoice_list():
 		WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND custom_fs_account_number IS NOT NULL
 		AND custom_zoho_invoice_id IS NULL
-		AND name = "INV-06-25-014958"
 		""",
 		as_dict=True
 	)
