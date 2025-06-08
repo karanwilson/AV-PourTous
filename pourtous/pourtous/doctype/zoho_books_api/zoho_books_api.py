@@ -2536,6 +2536,7 @@ def fetch_unsynced_erp_fs_invoice_list():
 		WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 		AND custom_fs_account_number IS NOT NULL
 		AND custom_zoho_invoice_id IS NULL
+		AND name = "INV-06-25-014958"
 		""",
 		as_dict=True
 	)
@@ -2610,6 +2611,12 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			],
 			"line_items": line_items,
 		}
+
+		# adding delivery charge if any
+		if invoice_doc.posa_delivery_charges:
+			for row in invoice_doc.taxes: # searching in the "Taxes and Charges" table
+				if row.gst_tax_type == None:
+					invoice_data["shipping_charge"] = row.tax_amount
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
@@ -2786,6 +2793,12 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			"line_items": line_items
 		}
 
+		# adding delivery charge if any
+		if invoice_doc.posa_delivery_charges:
+			for row in invoice_doc.taxes: # searching in the "Taxes and Charges" table
+				if row.gst_tax_type == None:
+					invoice_data["shipping_charge"] = row.tax_amount
+
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
@@ -2953,6 +2966,12 @@ def sync_upi_inv_with_zoho_books(invoice):
 			#'price_precision': 2,
 			"line_items": line_items
 		}
+
+		# adding delivery charge if any
+		if invoice_doc.posa_delivery_charges:
+			for row in invoice_doc.taxes: # searching in the "Taxes and Charges" table
+				if row.gst_tax_type == None:
+					invoice_data["shipping_charge"] = row.tax_amount
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
