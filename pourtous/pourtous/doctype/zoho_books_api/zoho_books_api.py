@@ -16,7 +16,8 @@ class ZohoBooksAPI(Document):
 	TIME_FORMAT = "%H:%M:%S.%f"
 	DATETIME_FORMAT = f"{DATE_FORMAT} {TIME_FORMAT}"
 
-	scope = 'ZohoBooks.invoices.CREATE,ZohoBooks.invoices.READ,ZohoBooks.invoices.UPDATE,ZohoBooks.invoices.DELETE'
+	#scope = 'ZohoBooks.invoices.CREATE,ZohoBooks.invoices.READ,ZohoBooks.invoices.UPDATE,ZohoBooks.invoices.DELETE'
+	scope = 'ZohoBooks.banking.ALL'
 
 	def	validate(self):
 		if self.client_id and self.client_secret and self.user_id and self.organization_id:
