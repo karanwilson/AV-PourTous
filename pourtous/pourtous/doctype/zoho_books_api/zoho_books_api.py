@@ -2249,8 +2249,12 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 
 	if frappe.get_value("Customer", customer, "customer_type") == "Company":
 		fs_customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
+	elif invoice_doc.company == "Pour Tous Purchasing Service":
+		fs_customer_id = 2464766000000395217  # PTPS "FS Account Customers" in ZB
+		aurocard_customer_id = 2464766000000395229 # PTPS "Aurocard Customers" in ZB
+		upi_customer_id = 2464766000000395241 # PTPS "UPI Customers" in ZB
 	else:
-		fs_customer_id = 2464766000000395217  # "FS Account Customers" in ZB
+		frappe.throw("Please set the ZB Walk-in Customer IDs for this Company")
 
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
@@ -2316,7 +2320,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 
 		elif customer_group == "Aurocard Payments":
 			creditnote_data = {
-				'customer_id': 2464766000000395229, # "Aurocard Customers" in ZB
+				'customer_id': aurocard_customer_id, # "Aurocard Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
 				"is_inclusive_tax": True,
@@ -2334,7 +2338,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 
 		elif customer_group == "UPI Payments":
 			creditnote_data = {
-				'customer_id': 2464766000000395241, # "UPI Customers" in ZB
+				'customer_id': upi_customer_id, # "UPI Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
 				"is_inclusive_tax": True,
@@ -2556,8 +2560,10 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	if frappe.get_value("Customer", customer, "customer_type") == "Company":
 		customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
+	elif invoice_doc.company == "Pour Tous Purchasing Service":
+		customer_id = 2464766000000395217  # PTPS "FS Account Customers" in ZB
 	else:
-		customer_id = 2464766000000395217  # "FS Account Customers" in ZB
+		frappe.throw("Please set the ZB Walk-in Customer IDs for this Company")
 
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
@@ -2743,6 +2749,11 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
+	if invoice_doc.company == "Pour Tous Purchasing Service":
+		customer_id = 2464766000000395229
+	else:
+		frappe.throw("Please set the ZB Walk-in Customer IDs for this Company")
+
 	if invoice_doc.custom_zoho_invoice_id == None:
 		line_items = []
 
@@ -2782,7 +2793,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 				line_items.append(line_item)	
 
 		invoice_data = {
-			'customer_id': 2464766000000395229, # "Aurocard Customers" in ZB
+			'customer_id': customer_id, # "Aurocard Customers" in ZB
 			'invoice_number': invoice[-16:],
 			'date': date,
 			"is_inclusive_tax": True,
@@ -2825,7 +2836,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 
 			""" if invoice_doc.custom_zoho_payment_id == None:
 				payment_data = {
-					"customer_id": 2464766000000395229, # "Aurocard Customers" in ZB
+					"customer_id": customer_id, # "Aurocard Customers" in ZB
 					"payment_mode": 'Bank Transfer',
 					"amount": float(res.get("total")),
 					"date": date,
@@ -2869,7 +2880,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 
 		if "total" in zb_inv:
 			payment_data = {
-				"customer_id": 2464766000000395229, # "Aurocard Customers" in ZB
+				"customer_id": customer_id, # "Aurocard Customers" in ZB
 				"payment_mode": 'Bank Transfer',
 				"amount": float(zb_inv.get("total")),
 				"date": date,
@@ -2925,6 +2936,11 @@ def sync_upi_inv_with_zoho_books(invoice):
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
+	if invoice_doc.company == "Pour Tous Purchasing Service":
+		customer_id = 2464766000000395241
+	else:
+		frappe.throw("Please set the ZB Walk-in Customer IDs for this Company")
+
 	if invoice_doc.custom_zoho_invoice_id == None:
 		line_items = []
 
@@ -2964,7 +2980,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 				line_items.append(line_item)
 
 		invoice_data = {
-			'customer_id': 2464766000000395241, # "UPI Customers" in ZB
+			'customer_id': customer_id, # "UPI Customers" in ZB
 			'invoice_number': invoice[-16:],
 			'date': date,
 			"is_inclusive_tax": True,
@@ -2999,7 +3015,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 
 			""" if invoice_doc.custom_zoho_payment_id == None:
 				payment_data = {
-					"customer_id": 2464766000000395241, # "UPI Customers" in ZB
+					"customer_id": customer_id, # "UPI Customers" in ZB
 					"payment_mode": 'Bank Transfer',
 					"amount": float(res.get("total")),
 					"date": date,
@@ -3042,7 +3058,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 
 		if "total" in zb_inv:
 			payment_data = {
-				"customer_id": 2464766000000395241, # "UPI Customers" in ZB
+				"customer_id": customer_id, # "UPI Customers" in ZB
 				"payment_mode": 'Bank Transfer',
 				"amount": float(zb_inv.get("total")),
 				"date": date,
@@ -3300,7 +3316,7 @@ def fetch_erp_invoice_list_to_update():
 		as_dict=True
 	)
 
-@frappe.whitelist(allow_guest=True)
+""" @frappe.whitelist(allow_guest=True)
 def update_erp_inv_with_zoho_books(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
@@ -3354,4 +3370,4 @@ def update_erp_inv_with_zoho_books(invoice):
 			invoice_doc.custom_zb_updated = 1
 			invoice_doc.save()
 			frappe.db.commit()
-			return { "ADDED" }
+			return { "ADDED" } """
