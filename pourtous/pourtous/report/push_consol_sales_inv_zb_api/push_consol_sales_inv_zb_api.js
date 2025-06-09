@@ -54,12 +54,12 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 							let counter = 0;
 
 							for (const key in r.message) {
-								//if (counter == 1)
-								//	break;
+								if (counter == 1) // comment this for full run of the loop
+									break; // comment this for full run of the loop
 								//console.log("key: ", key);
 								//console.log("r.message[key]: ", r.message[key]);
 
-								//counter++
+								counter++ // comment this for full run of the loop
 
 								setTimeout(() => {
 									frappe.call({
@@ -70,7 +70,7 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 											date: to_date,
 											is_return: is_return
 										},
-										async: false,
+										//async: false, // comment this for limited/trial runs of the loop
 									}).then(r => {
 										if (r.message == "ADDED")
 											added++;
@@ -81,7 +81,7 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 										console.log("Added ", added, ", of ", length);
 									});
 									//const count = counter+1;
-									counter++
+									//counter++ // comment this for limited/trial runs of the loop
 									const message = "Adding "+counter+" of "+length;
 									frappe.show_progress("Pushing PT Invoices to Zoho Books", counter, length, message);
 								}, 0);

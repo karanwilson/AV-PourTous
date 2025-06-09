@@ -1203,7 +1203,7 @@ def update_contact_in_zoho(doc, method):
 	if doc.customer_type != "Company":
 		return
 
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		return
 
 	#if doc.custom_update_zoho_contact == 0:
@@ -2419,16 +2419,21 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 
 	api_controller = frappe.get_doc("Zoho Books API")
 	#invoice_doc = frappe.get_doc("Sales Invoice", invoice)
-	#if frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "customer_type") == "Company":
-		#customer_id = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "custom_zoho_contact_id")
+
 	customer = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "name")
+	customer_doc = frappe.get_doc("Customer", customer)
+
 	company = frappe.defaults.get_user_default("company")
 
-	if frappe.get_value("Customer", customer, "customer_group") == "Special Case":
+	if customer_doc.customer_group == "Special Case" and customer_doc.customer_type != "Company":
 		return
 		# "Special Case" participants in PT are B2B
 		# returning for now, as these customer GSTIN are not available in the customer records.
 		# the B2B customers would be processed separately, once their GST numbers are updated.
+
+	if customer_doc.customer_type == "Company":
+		#customer_id = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "custom_zoho_contact_id")
+		customer_id = customer_doc.custom_zoho_contact_id
 	else:
 		customer_id = 2407242000000343009  # get the "PT Account Customers" in PTDC ZB
 
@@ -2437,7 +2442,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 
 	taxable = True
 	if frappe.db.get_value("Company", company, "gstin"):
-		if frappe.db.get_value("Customer", customer, "gstin") == frappe.db.get_value("Company", company, "gstin"):
+		if customer_doc.gstin == frappe.db.get_value("Company", company, "gstin"):
 			taxable = False
 
 	line_items = []
@@ -2493,7 +2498,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 
 	#frappe.throw(str(data))
 
-	if is_return:
+	if is_return == 1:
 		data["creditnote_number"] = consol_inv_pt_account+"-RT-"+date[5:]
 		data["reference_invoice_type"] = "b2c_others" # used when not referring to a return doc
 

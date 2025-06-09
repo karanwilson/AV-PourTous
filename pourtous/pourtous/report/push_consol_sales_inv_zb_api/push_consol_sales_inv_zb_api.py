@@ -83,7 +83,7 @@ def get_columns():
 
 
 def get_data(from_date, to_date, is_return):
-	if is_return:
+	if is_return == 1:
 		query = frappe.db.sql(
 			"""
 			SELECT s.name, s.customer_name, s.customer, s.custom_fs_account_number, s.posting_date, item_code, item_name, qty, rate
