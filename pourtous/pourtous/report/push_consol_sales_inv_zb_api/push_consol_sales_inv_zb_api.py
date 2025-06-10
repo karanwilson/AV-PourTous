@@ -112,26 +112,15 @@ def get_data(from_date, to_date, is_return):
 	return query
 
 
-def update_sync_status(from_date, to_date):
-	query = frappe.db.sql(
-		"""
-		SELECT name FROM `tabSales Invoice`
-		WHERE docstatus = 1 AND is_return = 0
-		AND posting_date BETWEEN '{0}' AND '{1}'
-		AND custom_zoho_invoice_id IS NULL AND custom_zb_consol_inv_id IS NULL
-		""".format(from_date, to_date),
-		as_dict=True
-	)
-
-	return query
-
-
 @frappe.whitelist()
 def get_participant_monthly_distribution(from_date, to_date, is_return):
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		#return get_data(from_date, to_date)
 
-		consol_list_dict_erp = get_data(from_date, to_date, is_return)
+		consol_list_dict_erp = get_data(from_date, to_date, int(is_return))
+		#type casting to int as the data received via frappe.call comes as string, 
+		# whereas the internal report above pulls the actual field type int
+
 		#frappe.throw(str(len(consol_dict)))
 		#frappe.throw(str(consol_dict[0].get("name")))
 		#frappe.throw(str(consol_dict))
