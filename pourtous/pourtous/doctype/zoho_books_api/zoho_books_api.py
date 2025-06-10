@@ -1694,7 +1694,10 @@ def update_item_in_zoho(doc, method):
 	try:
 		zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
 		zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
-		zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
+		if not doc.supplier_items:
+			zb_contact_id = None
+		else:
+			zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
 	except Exception as err:
 		msg = "Please verify the Tax-template/Supplier/ZB-tax_id for Item Code " + doc.item_code
 		frappe.msgprint(msg)
