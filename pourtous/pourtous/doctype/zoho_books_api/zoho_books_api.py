@@ -825,6 +825,7 @@ class ZohoBooksAPI(Document):
 				#return r.json().get('invoice').get('invoice_id')
 			else :
 				frappe.msgprint(r.json().get('message'))
+				return r.json()
 				#return
 				#r.raise_for_status()
 
@@ -997,6 +998,67 @@ class ZohoBooksAPI(Document):
 
 			if r.json().get("code") == 0:
 				return r.json().get('creditnote')
+			else:
+				frappe.msgprint(r.json().get('message'))
+			# r.raise_for_status()
+
+
+	def query_credit_note(self, creditnote_number):
+		master = "creditnotes"
+		scope='ZohoBooks.creditnotes.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/creditnotes?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'invoice_number': creditnote_number
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get("code") == 0:
+				return r.json().get('creditnotes')
+			else:
+				frappe.msgprint(r.json().get('message'))
+				return r.json()
+			# r.raise_for_status()
+
+
+	def query_invoice(self, invoice_number):
+		master = "invoices"
+		scope='ZohoBooks.invoices.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/invoices?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'invoice_number': invoice_number
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get("code") == 0:
+				return r.json().get('invoices')
 			else:
 				frappe.msgprint(r.json().get('message'))
 			# r.raise_for_status()
@@ -1904,7 +1966,7 @@ def fetch_ptdc_erp_bills_list():
 		SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
 		AND is_return = 0 AND custom_zoho_bill_id IS NULL
 		AND NOT (posting_date = "2025-04-02" AND owner = "Administrator")
-		AND posting_date < "2025-05-01" AND name != "PR-25-00891"
+		AND posting_date < "2025-06-01" AND name != "PR-25-00891"
 		""",
 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 		as_dict=True
@@ -1917,7 +1979,7 @@ def fetch_ptdc_erp_debitnotes_list():
 		"""
 		SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
 		AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-		AND posting_date < "2025-05-01"
+		AND posting_date < "2025-06-01"
 		""",
 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 		as_dict=True
@@ -2432,11 +2494,11 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 
 	company = frappe.defaults.get_user_default("company")
 
-	if customer_doc.customer_group == "Special Case" and customer_doc.customer_type != "Company":
+	#if customer_doc.customer_group == "Special Case" and customer_doc.customer_type != "Company":
+	if customer_doc.customer_group == "Internal":
 		return
-		# "Special Case" participants in PT are B2B
-		# returning for now, as these customer GSTIN are not available in the customer records.
-		# the B2B customers would be processed separately, once their GST numbers are updated.
+		# "Internal" participants are PT internal accounts
+		# returning for now, as need to understand how to account for these stock movements
 
 	if customer_doc.customer_type == "Company":
 		#customer_id = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "custom_zoho_contact_id")
@@ -2505,18 +2567,28 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 
 	#frappe.throw(str(data))
 
-	if is_return == 1:
+	if is_return == '1': # the value comes as a string
 		data["creditnote_number"] = consol_inv_pt_account+"-RT-"+date[5:]
-		data["reference_invoice_type"] = "b2c_others" # used when not referring to a return doc
 
-		#frappe.throw(str(data))
+		if customer_doc.gst_category == "Registered Regular":
+			data["reference_invoice_type"] = "registered" # used when not referring to a return doc
+		else:
+			data["reference_invoice_type"] = "b2c_others" # used when not referring to a return doc
 
 		res = api_controller.post_creditnote(data)
-		if res:
+
+		if res.get("message") == "Credit note "+data["creditnote_number"]+" already exists":
+			res2 = api_controller.query_credit_note(data["creditnote_number"])
+			if res2:
+				custom_zb_consol_creditnote_id = res2[0].get("creditnote_id")
+		elif res.get('creditnote_id'):
+			custom_zb_consol_creditnote_id = res.get('creditnote_id')
+
+		if custom_zb_consol_creditnote_id:
 			last_invoice = ""
 			for line in erp_line_items:
 				if line.get("name") != last_invoice:
-					frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_creditnote_id", res.get('creditnote_id'))
+					frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_creditnote_id", custom_zb_consol_creditnote_id)
 					frappe.db.commit()
 				last_invoice = line.get("name")
 
@@ -2528,17 +2600,27 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		#frappe.throw(str(data))
 
 		res = api_controller.post_invoice(data)
-		if res:
+		#frappe.throw(res.get("message"))
+
+		if res.get("message") == ("Invoice "+data["invoice_number"]+" already exists"):
+			res2 = api_controller.query_invoice(data["invoice_number"])
+			if res2:
+				custom_zb_consol_inv_id = res2[0].get("invoice_id")
+
+		elif res.get('invoice_id'):
+			custom_zb_consol_inv_id = res.get('invoice_id')
+
+		if custom_zb_consol_inv_id:
 			last_invoice = ""
 			for line in erp_line_items:
 				if line.get("name") != last_invoice:
-					frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_inv_id", res.get('invoice_id'))
+					frappe.db.set_value("Sales Invoice", line.get("name"), "custom_zb_consol_inv_id", custom_zb_consol_inv_id)
 					frappe.db.commit()
 				last_invoice = line.get("name")
 
-		res2 = api_controller.mark_invoice_as_sent(res.get('invoice_id'))
-		if res2 == "Invoice status has been changed to Sent.":
-			return "ADDED"
+			res3 = api_controller.mark_invoice_as_sent(custom_zb_consol_inv_id)
+			if res3 == "Invoice status has been changed to Sent.":
+				return "ADDED"
 
 
 @frappe.whitelist(allow_guest=True)

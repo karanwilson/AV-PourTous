@@ -49,8 +49,8 @@ frappe.listview_settings['Purchase Receipt'] = {
                         console.log("Number of Bills to add: ", length);
 						console.log("Contacts List: ", r.message);
                         //console.log("r.message[0]['name']: ", r.message[0]["name"]);
-                        /* let added = 0;
-                        for (let i = 0; i < 1; i++) {
+                        let added = 0;
+                        for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
                                     method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.add_ptdc_erp_bills_debitnotes_in_zoho',
@@ -71,7 +71,7 @@ frappe.listview_settings['Purchase Receipt'] = {
                                 const message = "Adding "+count+" of "+length;
                                 frappe.show_progress("Pushing Debitnotes to Zoho Books", count, length, message);
                             }, 0);
-                        } */
+                        }
                     }
                 }
             });
