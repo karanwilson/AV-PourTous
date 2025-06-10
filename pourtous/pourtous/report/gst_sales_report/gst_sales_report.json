@@ -1,5 +1,5 @@
 {
- "add_total_row": 0,
+ "add_total_row": 1,
  "columns": [],
  "creation": "2024-12-04 21:39:31.014723",
  "disable_prepared_report": 0,
@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2024-12-04 21:39:53.079550",
+ "modified": "2025-06-10 16:03:06.811718",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "GST Sales Report",
