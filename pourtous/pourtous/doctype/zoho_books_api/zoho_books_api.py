@@ -1761,7 +1761,7 @@ def update_item_in_zoho(doc, method):
 		else:
 			zb_contact_id = frappe.get_value("Supplier", doc.supplier_items[0].supplier, "custom_zoho_contact_id")
 	except Exception as err:
-		msg = "Please verify the Tax-template/Supplier/ZB-tax_id for Item Code " + doc.item_code
+		msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + doc.item_code
 		frappe.msgprint(msg)
 		return
 
