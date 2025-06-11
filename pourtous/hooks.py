@@ -123,6 +123,7 @@ app_include_js = [
 
 doc_events = {
     "Sales Invoice": {
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_sales_invoice",
         "on_submit": "pourtous.api.payment_entry_for_return", # creates 'Payment Entry' for item returns
         "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_invoice_in_zoho" # cancel invoice in ZB
 	},
@@ -154,6 +155,7 @@ doc_events = {
 	},
 	"Purchase Invoice": {
         #"before_insert": "auroville.api.get_purchase_tax_template",
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_purchase_invoice",
         "on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
         "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_bill_in_zoho" # cancel bill in ZB
 	},

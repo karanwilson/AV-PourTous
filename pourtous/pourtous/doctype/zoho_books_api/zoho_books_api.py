@@ -3206,6 +3206,10 @@ def void_invoice_in_zoho(doc, method):
 			doc.custom_zb_creditnote_id = None
 			# if r.json().get('message') != "The credit note has been marked as void.":
 
+def amend_sales_invoice(doc, method):
+	if doc.amended_from and doc.custom_zoho_void_invoice_id:
+		doc.custom_zoho_void_invoice_id = None
+
 
 def void_bill_in_zoho(doc, method):
 	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
@@ -3231,6 +3235,10 @@ def void_bill_in_zoho(doc, method):
 			doc.custom_zoho_void_bill_id = doc.custom_zb_vendor_credit_id
 			doc.custom_zb_vendor_credit_id = None
 			# if r.json().get('message') != "The credit note has been marked as void.":
+
+def amend_purchase_invoice(doc, method):
+	if doc.amended_from:
+		doc.custom_zoho_void_bill_id = None
 
 
 @frappe.whitelist(allow_guest=True)
