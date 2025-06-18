@@ -8,7 +8,7 @@ frappe.query_reports["Stock-In List"] = {
 			"fieldname": "voucher_type",
 			"label": __("Voucher Type"),
 			"fieldtype": "Select",
-			"options": ["", "Purchase Invoice", "Purchase Receipt", "Stock Entry"],
+			"options": ["", "Purchase Invoice", "Purchase Receipt", "Stock Entry", "Repack Stock Entry"],
 			"width": "60px",
 		},
 		{
