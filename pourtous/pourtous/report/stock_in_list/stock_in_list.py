@@ -237,6 +237,20 @@ def get_columns(filters):
 			},
 
 			{
+				"fieldname": "stock_uom",
+				"label": "UOM",
+				"fieldtype": "Data",
+				"width": "80"
+			},
+
+			{
+				"fieldname": "expiry_date",
+				"label": "Use By",
+				"fieldtype": "Date",
+				"width": "100"
+			},
+
+			{
 				"fieldname": "posa_batch_price",
 				"label": "S Price",
 				"fieldtype": "Currency",
@@ -291,7 +305,8 @@ def get_data1(filters):
 		query = frappe.db.sql(
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
+			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty,
+			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
 			AND `tabStock Entry Detail`.t_warehouse != '{1}'
@@ -372,7 +387,8 @@ def get_data2(filters):
 		query = frappe.db.sql(
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
+			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty,
+			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
 			AND `tabStock Entry Detail`.t_warehouse != '{1}'
