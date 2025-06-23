@@ -2717,10 +2717,11 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
-			res = api_controller.delete_invoice(void_invoice_id)
-			#frappe.throw(str(res))
-			if res.get('code') != 0:
-				frappe.msgprint(res.get("message"))
+			if void_invoice_id:
+				res = api_controller.delete_invoice(void_invoice_id)
+				#frappe.throw(str(res))
+				if res.get('code') != 0:
+					frappe.msgprint(res.get("message"))
 
 		res = api_controller.post_invoice(invoice_data)
 		if res:

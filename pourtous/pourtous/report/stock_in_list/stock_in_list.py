@@ -216,6 +216,13 @@ def get_columns(filters):
 			},
 
 			{
+				"fieldname": "custom_barcode",
+				"label": "Barcode",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+
+			{
 				"fieldname": "item_name",
 				"label": "Item Name",
 				"fieldtype": "Data",
@@ -228,6 +235,27 @@ def get_columns(filters):
 				"fieldtype": "Float",
 				"width": "100"
 			},
+
+			{
+				"fieldname": "stock_uom",
+				"label": "UOM",
+				"fieldtype": "Data",
+				"width": "80"
+			},
+
+			{
+				"fieldname": "expiry_date",
+				"label": "Use By",
+				"fieldtype": "Date",
+				"width": "100"
+			},
+
+			{
+				"fieldname": "posa_batch_price",
+				"label": "S Price",
+				"fieldtype": "Currency",
+				"width": "100"
+			}
 		]
 
 
@@ -270,20 +298,44 @@ def get_data1(filters):
 			as_dict=True
 		)
 
+	elif filters.voucher_type == "Repack Stock Entry":
+		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+		# get company abbreviation
+		warehouse = "Sales Order Reserve - " + abbr
+		query = frappe.db.sql(
+			"""
+			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
+			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty,
+			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
+			FROM `tabStock Entry Detail`
+			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
+			AND `tabStock Entry Detail`.t_warehouse != '{1}'
+			AND `tabStock Entry`.stock_entry_type = "Repack"
+			AND `tabStock Entry`.docstatus = 1
+			AND `tabStock Entry`.posting_date = '{0}'
+			AND `tabStock Entry`.posting_time BETWEEN '{2}' AND '{3}'
+			LEFT JOIN tabBatch
+			ON `tabStock Entry Detail`.batch_no = tabBatch.name
+			""".format(filters.posting_date, warehouse, filters.from_time, filters.to_time),
+			as_dict=True
+		)
+
 	else:
 		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
 		# get company abbreviation
 		warehouse = "Sales Order Reserve - " + abbr
 		query = frappe.db.sql(
 			"""
-				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-				item_code, batch_no, `tabStock Entry Detail`.item_name, qty
-				FROM `tabStock Entry Detail`, `tabStock Entry`
-				WHERE `tabStock Entry Detail`.parent = `tabStock Entry`.name
-				AND `tabStock Entry Detail`.t_warehouse != '{1}'
-				AND `tabStock Entry`.docstatus = 1
-				AND `tabStock Entry`.posting_date = '{0}'
-				AND `tabStock Entry`.posting_time BETWEEN '{2}' AND '{3}'
+			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
+			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
+			FROM `tabStock Entry Detail`
+			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
+			AND `tabStock Entry Detail`.t_warehouse != '{1}'
+			AND `tabStock Entry`.docstatus = 1
+			AND `tabStock Entry`.posting_date = '{0}'
+			AND `tabStock Entry`.posting_time BETWEEN '{2}' AND '{3}'
+			LEFT JOIN tabBatch
+			ON `tabStock Entry Detail`.batch_no = tabBatch.name
 			""".format(filters.posting_date, warehouse, filters.from_time, filters.to_time),
 			as_dict=True
 		)
@@ -328,19 +380,42 @@ def get_data2(filters):
 			as_dict=True
 		)
 
+	elif filters.voucher_type == "Repack Stock Entry":
+		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+		# get company abbreviation
+		warehouse = "Sales Order Reserve - " + abbr
+		query = frappe.db.sql(
+			"""
+			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
+			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty,
+			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
+			FROM `tabStock Entry Detail`
+			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
+			AND `tabStock Entry Detail`.t_warehouse != '{1}'
+			AND `tabStock Entry`.stock_entry_type = "Repack"
+			AND `tabStock Entry`.docstatus = 1
+			AND `tabStock Entry`.posting_date = '{0}'
+			LEFT JOIN tabBatch
+			ON `tabStock Entry Detail`.batch_no = tabBatch.name
+			""".format(filters.posting_date, warehouse),
+			as_dict=True
+		)
+
 	else:
 		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
 		# get company abbreviation
 		warehouse = "Sales Order Reserve - " + abbr
 		query = frappe.db.sql(
 			"""
-				SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-				item_code, batch_no, `tabStock Entry Detail`.item_name, qty
-				FROM `tabStock Entry Detail`, `tabStock Entry`
-				WHERE `tabStock Entry Detail`.parent = `tabStock Entry`.name
-				AND `tabStock Entry Detail`.t_warehouse != '{1}'
-				AND `tabStock Entry`.docstatus = 1
-				AND `tabStock Entry`.posting_date = '{0}'
+			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
+			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
+			FROM `tabStock Entry Detail`
+			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
+			AND `tabStock Entry Detail`.t_warehouse != '{1}'
+			AND `tabStock Entry`.docstatus = 1
+			AND `tabStock Entry`.posting_date = '{0}'
+			LEFT JOIN tabBatch
+			ON `tabStock Entry Detail`.batch_no = tabBatch.name
 			""".format(filters.posting_date, warehouse),
 			as_dict=True
 		)

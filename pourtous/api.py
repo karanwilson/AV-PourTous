@@ -720,10 +720,10 @@ def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
 
 
 def update_price_lists(doc, method):
-	for item in doc.items:
-		if doc.doctype == "Purchase Invoice" and not doc.update_stock:
-			return
+	if doc.doctype == "Purchase Invoice" and not doc.update_stock:
+		return
 
+	for item in doc.items:
 		if item.batch_no:
 			if item.custom_selling_price > 0:
 				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
@@ -761,8 +761,11 @@ def update_price_lists(doc, method):
 
 
 def opening_stock_update_price_lists(doc, method):
-	if doc.stock_entry_type == "Material Receipt":
+	if doc.stock_entry_type == "Repack" or doc.stock_entry_type == "Material Receipt":
 		for item in doc.items:
+
+			if item.custom_selling_price:
+				item.valuation_rate = item.custom_selling_price
 
 			if item.batch_no:
 				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
