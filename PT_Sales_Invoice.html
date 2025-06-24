@@ -19,10 +19,12 @@
 
 <p class="text-center" style="margin-bottom: 1rem; font-size: smaller;">
 	{{ doc.company }}<br>
-	{%- if doc.company == "Pour Tous Purchasing Service" -%}
-		{{ _("GSTIN/UIN: 33AAATA0037BPZ3") }}<br>
-	{%- endif -%}
-	<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
+	{{ _("GSTIN/UIN") }}: {{ doc.company_gstin }}<br>
+	{% if doc.doctype == "Sales Invoice" %}
+		<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
+	{% else %}
+		<b>{{ doc.select_print_heading or _("Sales Order") }}</b><br>
+	{% endif %}
 </p>
 <p style="font-size: smaller;">
 	<b>{{ _("Receipt No") }}:</b> {{ doc.name }}<br>
@@ -101,6 +103,10 @@
 	{%- endfor -%}
 
 	<b>{{ _("Paid Amount") }}:</b> {{ doc.get_formatted("paid_amount") }}<br>
+
+	{%- if doc.total_advance -%}
+		<b>{{ _("Total Advance") }}:</b> {{ doc.get_formatted("total_advance") }}<br>
+	{%- endif -%}
 
 	{%- if doc.change_amount -%}
 		<b>{{ _("Change Amount") }}:</b> {{ doc.get_formatted("change_amount") }}<br>
