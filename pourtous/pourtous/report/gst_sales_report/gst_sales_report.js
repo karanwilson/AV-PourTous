@@ -25,5 +25,21 @@ frappe.query_reports["GST Sales Report"] = {
 			"options": "Customer",
 			"width": "60px",
 		},
+
+		{
+			"fieldname": "customer_type",
+			"label": __("Participant Type"),
+			"fieldtype": "Select",
+			"options": "\nIndividual\nCompany",
+			"width": "60px",
+		},
+
+		{
+			"fieldname": "customer_group",
+			"label": __("Participant Group"),
+			"fieldtype": "Link",
+			"options": "Customer Group",
+			"width": "60px",
+		},
 	]
 };

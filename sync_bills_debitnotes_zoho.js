@@ -10,7 +10,7 @@ frappe.listview_settings['Purchase Invoice'] = {
                         console.log("Number of Bills to add: ", length);
 						console.log("Bills List: ", r.message);
                         //console.log("r.message[0]['name']: ", r.message[0]["name"]);
-                        let added = 0;
+                        /* let added = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
@@ -32,7 +32,7 @@ frappe.listview_settings['Purchase Invoice'] = {
                                 const message = "Adding "+count+" of "+length;
                                 frappe.show_progress("Pushing Bills to Zoho Books", count, length, message);
                             }, 0);
-                        }
+                        } */
                     }
                 }
             });
@@ -49,7 +49,7 @@ frappe.listview_settings['Purchase Invoice'] = {
                         console.log("Number of Bills to add: ", length);
 						console.log("Contacts List: ", r.message);
                         //console.log("r.message[0]['name']: ", r.message[0]["name"]);
-                        let added = 0;
+                        /* let added = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
@@ -71,7 +71,7 @@ frappe.listview_settings['Purchase Invoice'] = {
                                 const message = "Adding "+count+" of "+length;
                                 frappe.show_progress("Pushing Debitnotes to Zoho Books", count, length, message);
                             }, 0);
-                        }
+                        } */
                     }
                 }
             });
