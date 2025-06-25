@@ -237,6 +237,13 @@ def get_columns(filters):
 			},
 
 			{
+				"fieldname": "net_qty",
+				"label": "Net Qty",
+				"fieldtype": "Data",
+				"width": "100"
+			},
+
+			{
 				"fieldname": "stock_uom",
 				"label": "UOM",
 				"fieldtype": "Data",
