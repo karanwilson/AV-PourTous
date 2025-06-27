@@ -653,6 +653,11 @@ class ZohoBooksAPI(Document):
 				return r.json().get('bill').get('bill_id')
 
 			else:
+				error_log = frappe.new_doc("Zoho Sync Err Logs")
+				error_log.document_name = data["bill_number"]
+				error_log.error = str(r.json())
+				error_log.insert()
+
 				frappe.msgprint(str(r.json()))
 				#with open('tax_info_list_exception_err.txt', 'w') as file:
 				#	file.write(r.json().get('message'))
@@ -793,6 +798,11 @@ class ZohoBooksAPI(Document):
 				return r.json().get('vendor_credit').get('vendor_credit_id')
 				#return r.json().get('invoice').get('invoice_id')
 			else :
+				error_log = frappe.new_doc("Zoho Sync Err Logs")
+				error_log.document_name = data["vendor_credit_number"]
+				error_log.error = str(r.json())
+				error_log.insert()
+
 				frappe.msgprint(r.json().get('message'))
 				#r.raise_for_status()
 
@@ -2091,7 +2101,7 @@ def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
 		#if bill_doc.bill_no:
 		#	data["vendor_credit_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
 		#else:
-		data["vendor_credit_number"] = bill_doc.name # Supplier/Vendor Bill Number
+		data["vendor_credit_number"] = bill_doc.name[-16:] # ERPNext Bill Number
 		
 		data["reference_invoice_type"] = reference_invoice_type
 
@@ -2107,7 +2117,7 @@ def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
 		#if bill_doc.bill_no:
 		#	data["bill_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
 		#else:
-		data["bill_number"] = bill_doc.name # Supplier/Vendor Bill Number
+		data["bill_number"] = bill_doc.name[-16:] # ERPNext Bill Number
 
 		#frappe.throw(str(data))
 		if bill_doc.amended_from:
@@ -2129,6 +2139,8 @@ def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
 
 @frappe.whitelist(allow_guest=True)
 def fetch_erp_bills_list():
+	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
+
 	return frappe.db.sql(
 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 		"""
@@ -2142,6 +2154,8 @@ def fetch_erp_bills_list():
 
 @frappe.whitelist(allow_guest=True)
 def fetch_erp_debitnotes_list():
+	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
+
 	return frappe.db.sql(
 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 		"""
@@ -2255,10 +2269,10 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		# ZB is asking for Bill number to return against.. hence skipping this section for now.
 		#return
 		if bill_doc.bill_no:
-			data["vendor_credit_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
+			data["vendor_credit_number"] = bill_doc.bill_no[:16] # Supplier/Vendor Bill Number
 		else:
-			data["vendor_credit_number"] = bill_doc.name # Supplier/Vendor Bill Number
-		
+			data["vendor_credit_number"] = bill_doc.name[-16:] # ERPNext Bill Number
+
 		data["reference_invoice_type"] = reference_invoice_type
 
 		#frappe.throw(str(data))
@@ -2271,17 +2285,18 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 
 	elif bill_doc.custom_zoho_bill_id == None:
 		if bill_doc.bill_no:
-			data["bill_number"] = bill_doc.bill_no # Supplier/Vendor Bill Number
+			data["bill_number"] = bill_doc.bill_no[:16] # Supplier/Vendor Bill Number
 		else:
-			data["bill_number"] = bill_doc.name # Supplier/Vendor Bill Number
+			data["bill_number"] = bill_doc.name[-16:] # Supplier/Vendor Bill Number invoice[-16:]
 
 		#frappe.throw(str(data))
 		if bill_doc.amended_from:
 			void_bill_id = frappe.get_value("Purchase Invoice", bill_doc.amended_from, "custom_zoho_void_bill_id")
-			res = api_controller.delete_bill(void_bill_id)
-			#frappe.throw(str(res))
-			if res.get('code') != 0:
-				frappe.msgprint(res.get("message"))
+			if void_bill_id:
+				res = api_controller.delete_bill(void_bill_id)
+				#frappe.throw(str(res))
+				if res.get('code') != 0:
+					frappe.msgprint(res.get("message"))
 
 		res = api_controller.post_bill(data)
 		if res:

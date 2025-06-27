@@ -68,16 +68,10 @@ def get_columns(filters):
 				"width": "80"
 			},
 			{
-				"fieldname": "so_reserve",
-				"label": "SO Reserve",
-				"fieldtype": "Float",
-				"width": "100"
-			},
-			{
 				"fieldname": "buying_price",
-				"label": "B.Price",
+				"label": "Last Buy.Price",
 				"fieldtype": "Currency",
-				"width": "80"
+				"width": "120"
 			},
 			{
 				"fieldname": "batch_buying_price",
@@ -87,11 +81,17 @@ def get_columns(filters):
 			},
 			{
 				"fieldname": "selling_price",
-				"label": "S.Price",
+				"label": "Batch S.Price",
 				"fieldtype": "Currency",
-				"width": "80"
+				"width": "110"
 			},
 		]
+		""" {
+			"fieldname": "so_reserve",
+			"label": "SO Reserve",
+			"fieldtype": "Float",
+			"width": "100"
+		}, """
 
 	else:
 		return [
@@ -126,12 +126,6 @@ def get_columns(filters):
 				"width": "100"
 			},
 			{
-				"fieldname": "so_reserve",
-				"label": "SO Reserve",
-				"fieldtype": "Float",
-				"width": "100"
-			},
-			{
 				"fieldname": "buying_price",
 				"label": "B.Price",
 				"fieldtype": "Currency",
@@ -144,6 +138,12 @@ def get_columns(filters):
 				"width": "80"
 			},
 		]
+		""" {
+			"fieldname": "so_reserve",
+			"label": "SO Reserve",
+			"fieldtype": "Float",
+			"width": "100"
+		}, """
 
 
 def get_data(filters):
