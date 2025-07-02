@@ -20,6 +20,11 @@
 <p class="text-center" style="margin-bottom: 1rem; font-size: smaller;">
 	{{ doc.company }}<br>
 	{{ _("GSTIN/UIN") }}: {{ doc.company_gstin }}<br>
+	{%- if doc.company_address -%}
+		{{ _("Phone") }}: {{ frappe.db.get_value("Address", doc.company_address, "phone") }}<br>
+		{{ _("Email") }}: {{ frappe.db.get_value("Address", doc.company_address, "email_id") }}<br>
+	{%- endif -%}
+
 	{% if doc.doctype == "Sales Invoice" %}
 		<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
 	{% else %}
@@ -27,17 +32,26 @@
 	{% endif %}
 </p>
 <p style="font-size: smaller;">
-	<b>{{ _("Receipt No") }}:</b> {{ doc.name }}<br>
+	{% if doc.doctype == "Sales Invoice" %}
+		<b>{{ _("Receipt No") }}:</b> {{ doc.name }}<br>
+	{% else %}
+		<b>{{ _("Order No") }}:</b> {{ doc.name }}<br>
+	{% endif %}
 	<b>{{ _("Cashier") }}:</b> {{ doc.owner }}<br>
 	<b>{{ _("Customer") }}:</b> {{ doc.customer_name }}<br>
 	{%- if doc.custom_fs_account_number -%}
 		<b>{{ _("FS Account") }}:</b>
 		{{ doc.custom_fs_account_number }}<br>
 	{%- endif -%}
-	<b>{{ _("Posting Date") }}:</b> {{ doc.get_formatted("posting_date") }},&nbsp;
-	<b>{{ _("Time") }}:</b> {{  doc.get_formatted("posting_time") }}<br>
-	{%- if doc.custom_transaction_date -%}
-		<b>{{ _("Transaction Date") }}:</b> {{ doc.get_formatted("custom_transaction_date") }}
+	{%- if doc.doctype == "Sales Invoice" and doc.custom_transaction_date -%}
+		<b>{{ _("Transaction Date") }}:</b> {{ doc.get_formatted("custom_transaction_date") }},&nbsp;
+		<b>{{ _("Time") }}:</b> {{  doc.get_formatted("posting_time") }}<br>
+	{% elif doc.doctype == "Sales Invoice" %}
+		<b>{{ _("Posting Date") }}:</b> {{ doc.get_formatted("posting_date") }},&nbsp;
+		<b>{{ _("Time") }}:</b> {{  doc.get_formatted("posting_time") }}<br>
+	{%- endif -%}
+	{%- if doc.doctype == "Sales Order" -%}
+		<b>{{ _("Date") }}:</b> {{ doc.get_formatted("transaction_date") }}
 	{%- endif -%}
 </p>
 
@@ -54,7 +68,7 @@
 		<td style="font-size: x-small;">
 			<b>{{ item.item_code }}</b>:&nbsp;
 			{%- if item.item_name != item.item_code -%}
-				<!-- string[0:5] extracts the first 5 chars of the string -->
+			<!-- string[0:5] extracts the first 5 chars of the string -->
 				<b>{{ item.item_name }}</b>
 			{%- endif -%}
 			{%- if item.serial_no -%}
