@@ -719,6 +719,11 @@ def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
 	)
 
 
+def update_selling_price(doc, method):
+	for item in doc.items:
+		if item.custom_selling_price == 0:
+			item.custom_selling_price = item.price_list_rate
+
 def update_price_lists(doc, method):
 	if doc.doctype == "Purchase Invoice" and not doc.update_stock:
 		return
@@ -731,7 +736,6 @@ def update_price_lists(doc, method):
 				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.price_list_rate)
 
 			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
-			frappe.db.commit()
 			""" item_price = frappe.get_doc({
 				"doctype": "Item Price",
 				"item_code": item.item_code,
@@ -745,19 +749,35 @@ def update_price_lists(doc, method):
 		else:
 			existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
 			if existing_item_price_entry:
-				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
-				frappe.db.commit()
+				if item.custom_selling_price > 0:
+					frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
+				else:
+					frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.price_list_rate)
 
 			else:
-				item_price = frappe.get_doc({
-					"doctype": "Item Price",
-					"item_code": item.item_code,
-					"uom": item.uom,
-					"price_list": "Standard Selling",
-					"price_list_rate": item.custom_selling_price,
-					#"batch_no": item.batch_no
-				})
+				if item.custom_selling_price > 0:
+					item_price = frappe.get_doc({
+						"doctype": "Item Price",
+						"item_code": item.item_code,
+						"uom": item.uom,
+						"price_list": "Standard Selling",
+						"price_list_rate": item.custom_selling_price,
+						#"batch_no": item.batch_no
+					})
+
+				else:
+					item_price = frappe.get_doc({
+						"doctype": "Item Price",
+						"item_code": item.item_code,
+						"uom": item.uom,
+						"price_list": "Standard Selling",
+						"price_list_rate": item.price_list_rate,
+						#"batch_no": item.batch_no
+					})
+
 				item_price.insert()
+
+	frappe.db.commit()
 
 
 def opening_stock_update_price_lists(doc, method):

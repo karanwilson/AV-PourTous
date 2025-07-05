@@ -20,6 +20,11 @@
 <p class="text-center" style="margin-bottom: 1rem; font-size: smaller;">
 	{{ doc.company }}<br>
 	{{ _("GSTIN/UIN") }}: {{ doc.company_gstin }}<br>
+	{%- if doc.company_address -%}
+		{{ _("Phone") }}: {{ frappe.db.get_value("Address", doc.company_address, "phone") }},&nbsp;
+		{{ _("Email") }}: {{ frappe.db.get_value("Address", doc.company_address, "email_id") }}<br>
+	{%- endif -%}
+
 	{% if doc.doctype == "Sales Invoice" %}
 		<b>{{ doc.select_print_heading or _("Invoice") }}</b><br>
 	{% else %}
