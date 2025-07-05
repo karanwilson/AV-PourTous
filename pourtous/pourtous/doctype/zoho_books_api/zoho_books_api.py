@@ -2156,16 +2156,29 @@ def fetch_erp_bills_list():
 def fetch_erp_debitnotes_list():
 	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
 
-	return frappe.db.sql(
-		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
-		"""
-		SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
-		AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-		AND posting_date > "2025-05-31"
-		""",
-		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
-		as_dict=True
-	)
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		return frappe.db.sql(
+			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+			"""
+			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
+			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
+			AND posting_date > "2025-04-30"
+			""",
+			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+			as_dict=True
+		)
+
+	else:
+		return frappe.db.sql(
+			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+			"""
+			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
+			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
+			AND posting_date > "2025-05-31"
+			""",
+			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+			as_dict=True
+		)
 
 @frappe.whitelist(allow_guest=True)
 def add_erp_bills_debitnotes_in_zoho(bill):
