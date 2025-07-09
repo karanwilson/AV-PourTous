@@ -2752,8 +2752,20 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 					frappe.msgprint(res.get("message"))
 
 		res = api_controller.post_invoice(invoice_data)
-		if res:
+
+		if "invoice_id" in res:
 			zb_invoice_id = res.get('invoice_id')
+
+		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
+			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
+			#frappe.throw(str(res2))
+			if res2:
+				#frappe.throw(res2[0].get("invoice_id"))
+				zb_invoice_id = res2[0].get("invoice_id")
+
+		#if "invoice_id" in res:
+		if zb_invoice_id:
+			#zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
 			frappe.db.commit()
@@ -2938,7 +2950,19 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 				frappe.msgprint(res.get("message"))
 
 		res = api_controller.post_invoice(invoice_data)
-		if res:
+
+		zb_invoice_id = None
+
+		if "invoice_id" in res:
+			zb_invoice_id = res.get('invoice_id')
+
+		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
+			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
+			if res2:
+				zb_invoice_id = res2[0].get("invoice_id")
+
+		#if "invoice_id" in res:
+		if zb_invoice_id:
 			zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
@@ -3117,7 +3141,19 @@ def sync_upi_inv_with_zoho_books(invoice):
 				frappe.msgprint(res.get("message"))
 
 		res = api_controller.post_invoice(invoice_data)
-		if res:
+
+		zb_invoice_id = None
+
+		if "invoice_id" in res:
+			zb_invoice_id = res.get('invoice_id')
+
+		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
+			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
+			if res2:
+				zb_invoice_id = res2[0].get("invoice_id")
+
+		#if "invoice_id" in res:
+		if zb_invoice_id:
 			zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
