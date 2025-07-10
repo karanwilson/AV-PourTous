@@ -163,7 +163,8 @@ class ZohoBooksAPI(Document):
 				return self.post_contact(data)
 
 			else:
-				r.raise_for_status()
+				frappe.msgprint(r.json().get('message'))
+				#r.raise_for_status()
 				return {
 					"message": r.json().get('message')
 				}
