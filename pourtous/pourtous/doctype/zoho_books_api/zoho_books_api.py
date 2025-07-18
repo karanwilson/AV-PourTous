@@ -3305,6 +3305,8 @@ def void_bill_in_zoho(doc, method):
 def amend_purchase_invoice(doc, method):
 	if doc.amended_from:
 		doc.custom_zoho_void_bill_id = None
+	if doc.is_return:
+		doc.custom_zoho_bill_id = None
 
 
 @frappe.whitelist(allow_guest=True)
