@@ -156,7 +156,7 @@ doc_events = {
 	},
 	"Purchase Invoice": {
         #"before_insert": "pourtous.api.get_purchase_tax_template",
-        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_purchase_invoice",
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_return_purchase_invoice",
         "on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
         "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_bill_in_zoho" # cancel bill in ZB
 	},

@@ -3302,7 +3302,7 @@ def void_bill_in_zoho(doc, method):
 			doc.custom_zb_vendor_credit_id = None
 			# if r.json().get('message') != "The credit note has been marked as void.":
 
-def amend_purchase_invoice(doc, method):
+def amend_return_purchase_invoice(doc, method):
 	if doc.amended_from:
 		doc.custom_zoho_void_bill_id = None
 	if doc.is_return:
