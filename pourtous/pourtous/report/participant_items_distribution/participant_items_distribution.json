@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2025-04-26 17:31:38.837154",
+ "modified": "2025-08-11 15:25:15.106517",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Participant Items Distribution",
@@ -24,6 +24,9 @@
   },
   {
    "role": "Accounts User"
+  },
+  {
+   "role": "Customer"
   }
  ]
 }

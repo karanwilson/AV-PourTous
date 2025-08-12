@@ -82,7 +82,7 @@ def fetch_orders_to_invoice():
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		return frappe.db.sql(
 			"""
-			SELECT name FROM `tabSales Order`
+			SELECT name, custom_pos_profile, transaction_date, custom_posting_time FROM `tabSales Order`
 			WHERE
 				docstatus = 1
 				AND status not in ("Closed", "On Hold")
@@ -112,6 +112,40 @@ def fetch_orders_to_invoice():
 			#as_dict=1,
 			# AND transaction_date > "2025-04-05"
 		)
+
+
+@frappe.whitelist(allow_guest=True)
+def process_orders_to_invoice_ptdc(order, pos_profile, order_date, order_time):
+
+	si = make_sales_invoice(order, ignore_permissions=True)
+	si.pos_profile = pos_profile
+	si.set_posting_time = 1
+	si.posting_date = order_date
+	si.posting_time = order_time
+	si.allocate_advances_automatically = True
+	si.update_stock = 1
+
+	if si.get("taxes"):
+		for tax in si.taxes:
+			tax.included_in_print_rate = 1
+
+	try:
+		si = si.insert(ignore_permissions=True)
+		si.submit()
+
+	except Exception as err:
+		error_log = frappe.new_doc("Order Invoice Map Err")
+		error_log.sales_order = order
+		error_log.error = str(err)
+		error_log.insert()
+
+		if si.docstatus == 1:
+			return "DONE"
+		else:
+			return "ERROR"
+
+	else:
+		return "DONE"
 
 
 @frappe.whitelist(allow_guest=True)
@@ -728,6 +762,9 @@ def update_price_lists(doc, method):
 	if doc.doctype == "Purchase Invoice" and not doc.update_stock:
 		return
 
+	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
+		return update_price_lists_ptdc(doc, method)
+
 	for item in doc.items:
 		if item.batch_no:
 			if item.custom_selling_price > 0:
@@ -776,6 +813,61 @@ def update_price_lists(doc, method):
 					})
 
 				item_price.insert()
+
+	frappe.db.commit()
+
+def update_price_lists_ptdc(doc, method):
+	#if doc.doctype == "Purchase Invoice" and not doc.update_stock:
+	#	return
+
+	for item in doc.items:
+		#if item.batch_no:
+		if item.custom_selling_price > 0:
+			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
+		else:
+			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.price_list_rate)
+
+		frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
+		""" item_price = frappe.get_doc({
+			"doctype": "Item Price",
+			"item_code": item.item_code,
+			"uom": item.uom,
+			"price_list": "Standard Selling",
+			"price_list_rate": item.custom_selling_price,
+			"batch_no": item.batch_no
+		})
+		item_price.insert() """
+
+		#else:
+		existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
+		if existing_item_price_entry:
+			if item.custom_selling_price > 0:
+				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
+			else:
+				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.price_list_rate)
+
+		else:
+			if item.custom_selling_price > 0:
+				item_price = frappe.get_doc({
+					"doctype": "Item Price",
+					"item_code": item.item_code,
+					"uom": item.uom,
+					"price_list": "Standard Selling",
+					"price_list_rate": item.custom_selling_price,
+					#"batch_no": item.batch_no
+				})
+
+			else:
+				item_price = frappe.get_doc({
+					"doctype": "Item Price",
+					"item_code": item.item_code,
+					"uom": item.uom,
+					"price_list": "Standard Selling",
+					"price_list_rate": item.price_list_rate,
+					#"batch_no": item.batch_no
+				})
+
+			item_price.insert()
 
 	frappe.db.commit()
 

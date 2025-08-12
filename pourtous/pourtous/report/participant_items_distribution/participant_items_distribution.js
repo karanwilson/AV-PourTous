@@ -11,6 +11,13 @@ frappe.query_reports["Participant Items Distribution"] = {
 			"width": "60px",
 		},
 		{
+			"fieldname": "voucher_type",
+			"label": __("Voucher Type"),
+			"fieldtype": "Select",
+			"options": ["", "Checkout Notes", "Orders"],
+			"width": "60px",
+		},
+		{
 			"fieldname": "from_date",
 			"label": __("From Date*"),
 			"fieldtype": "Date",

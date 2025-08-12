@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2025-04-09 16:00:38.010471",
+ "modified": "2025-08-11 14:07:09.376620",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Participant Usage",
@@ -39,6 +39,9 @@
   },
   {
    "role": "Accounts Manager"
+  },
+  {
+   "role": "Customer"
   }
  ]
 }

@@ -5,9 +5,9 @@
 frappe.query_reports["Participant Usage"] = {
 	"filters": [
 		{
-			"fieldname": "show_breakup",
-			"label": __("Show Contribution Breakup"),
-			"fieldtype": "Check",
+			"fieldname": "custom_fs_account_number",
+			"label": __("PT/FS Account No."),
+			"fieldtype": "Data",
 			"width": "60px",
 		},
 		{
@@ -21,6 +21,12 @@ frappe.query_reports["Participant Usage"] = {
 			"label": __("To Date*"),
 			"fieldtype": "Date",
 			"width": "60px",
-		}
+		},
+		/* {
+			"fieldname": "show_breakup",
+			"label": __("Show Contribution Breakup"),
+			"fieldtype": "Check",
+			"width": "60px",
+		} */
 	]
 };
