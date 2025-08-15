@@ -765,8 +765,8 @@ def update_price_lists(doc, method):
 	if doc.doctype == "Purchase Invoice" and not doc.update_stock:
 		return
 
-	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
-		return update_price_lists_ptdc(doc, method)
+	#if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
+	#	return update_price_lists_ptdc(doc, method)
 
 	for item in doc.items:
 		if item.batch_no:
@@ -819,7 +819,7 @@ def update_price_lists(doc, method):
 
 	frappe.db.commit()
 
-def update_price_lists_ptdc(doc, method):
+""" def update_price_lists_ptdc(doc, method):
 	#if doc.doctype == "Purchase Invoice" and not doc.update_stock:
 	#	return
 
@@ -831,15 +831,6 @@ def update_price_lists_ptdc(doc, method):
 			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.price_list_rate)
 
 		frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
-		""" item_price = frappe.get_doc({
-			"doctype": "Item Price",
-			"item_code": item.item_code,
-			"uom": item.uom,
-			"price_list": "Standard Selling",
-			"price_list_rate": item.custom_selling_price,
-			"batch_no": item.batch_no
-		})
-		item_price.insert() """
 
 		#else:
 		existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
@@ -872,7 +863,7 @@ def update_price_lists_ptdc(doc, method):
 
 			item_price.insert()
 
-	frappe.db.commit()
+	frappe.db.commit() """
 
 
 def opening_stock_update_price_lists(doc, method):
