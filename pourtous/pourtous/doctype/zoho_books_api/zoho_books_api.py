@@ -3308,6 +3308,11 @@ def amend_return_purchase_invoice(doc, method):
 	if doc.is_return:
 		doc.custom_zoho_bill_id = None
 
+	""" if doc.price_list_rate != doc.rate and frappe.session.user not in [
+		'Administrator', 'karan@pourtous-av.in', 'iyyappan@pourtous-av.in', 'kumaran@pourtous-av.in', 'accounts-server@pourtous-av.in'
+	]:
+		return """
+
 
 @frappe.whitelist(allow_guest=True)
 def fetch_bills_to_delete():

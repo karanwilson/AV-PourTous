@@ -160,6 +160,9 @@ doc_events = {
         "on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
         "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_bill_in_zoho" # cancel bill in ZB
 	},
+    #"Delivery Note": {
+    #    "before_save": "pourtous.api.check_user", # for testing/checking frappe.session.user
+    #},
 	"Stock Entry": {
 		"on_submit": "pourtous.api.opening_stock_update_price_lists", # Add the 'Item Price'
 	},

@@ -5,6 +5,9 @@ from frappe.utils import nowdate, get_first_day #, flt
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 
+# for testing/checking frappe.session.user
+#def check_user(doc, method):
+#	frappe.throw(str(frappe.session.user))
 
 @frappe.whitelist(allow_guest=True)
 def tax_exception_fetch_orders_to_invoice():
