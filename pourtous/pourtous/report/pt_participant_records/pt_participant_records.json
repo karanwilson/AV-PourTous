@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2025-04-10 13:46:32.574717",
+ "modified": "2025-08-11 14:06:07.718223",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "PT Participant Records",
@@ -54,6 +54,9 @@
   },
   {
    "role": "All"
+  },
+  {
+   "role": "Customer"
   }
  ]
 }

@@ -195,7 +195,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        })
+        });
 
         listview.page.add_inner_button("Process FS Credits", () => {
             frappe.call({

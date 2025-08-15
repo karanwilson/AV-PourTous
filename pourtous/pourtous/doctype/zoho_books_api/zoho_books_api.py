@@ -5,6 +5,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import nowtime, nowdate
 from datetime import datetime, timedelta
+import random
 
 import requests, json, re
 #import urllib
@@ -2631,10 +2632,23 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		res = api_controller.post_invoice(data)
 		#frappe.throw(res.get("message"))
 
+		custom_zb_consol_inv_id = None
+
 		if res.get("message") == ("Invoice "+data["invoice_number"]+" already exists"):
-			res2 = api_controller.query_invoice(data["invoice_number"])
-			if res2:
-				custom_zb_consol_inv_id = res2[0].get("invoice_id")
+			amended_from = frappe.db.get_value("Sales Invoice", erp_line_items[0].get("name"), "amended_from")
+			if amended_from and not frappe.db.get_value("Sales Invoice", amended_from, "custom_fs_account_number"):
+				# Checking if this Invoice was amended to add the missing FS account number
+				data["invoice_number"] = consol_inv_pt_account+"/"+date[5:]+"/"+str(random.randint(100,999))
+				# generating a unique "invoice number"
+				res3 = api_controller.post_invoice(data)
+
+				if res3.get('invoice_id'):
+					custom_zb_consol_inv_id = res3.get('invoice_id')
+
+			else:
+				res2 = api_controller.query_invoice(data["invoice_number"])
+				if res2:
+					custom_zb_consol_inv_id = res2[0].get("invoice_id")
 
 		elif res.get('invoice_id'):
 			custom_zb_consol_inv_id = res.get('invoice_id')

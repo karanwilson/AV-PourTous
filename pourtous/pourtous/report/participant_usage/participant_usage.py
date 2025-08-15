@@ -242,20 +242,61 @@ def get_columns(filters):
 
 def get_data(filters):
 	if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center"):
-		if filters.show_breakup and filters.from_date and filters.to_date:
-			# Customer/Family account Payment Entries breakup
+		#if filters.show_breakup and filters.from_date and filters.to_date:
+		#	# Customer/Family account Payment Entries breakup
+		#	query = frappe.db.sql(
+		#		"""
+		#		SELECT customer_name, c.customer_group, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
+		#		a.address_title, pe.paid_amount AS contribution, pe.posting_date
+
+		#		FROM `tabPayment Entry` pe
+		#		JOIN tabCustomer c ON pe.party = c.name
+		#		LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
+		#		LEFT JOIN tabAddress a ON dl.parent = a.name
+
+		#		WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}' AND c.custom_fs_account_number = '{2}'
+		#		""".format(filters.from_date, filters.to_date, filters.custom_fs_account_number),
+		#		as_dict=True
+		#	)
+
+		if filters.custom_fs_account_number and filters.from_date and filters.to_date:
+			# Customer/Family-account Payment Entries, summed per customer/family-account
 			query = frappe.db.sql(
 				"""
-				SELECT customer_name, c.customer_group, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
-				a.address_title, pe.paid_amount AS contribution, pe.posting_date
+				SELECT table1.*,
+				(IF((table1.total_contribution IS NULL), 0, table1.total_contribution) - IF((table1.usage_invoice IS NULL), 0, table1.usage_invoice) - IF((table1.usage_order IS NULL), 0, table1.usage_order))
+				AS balance
 
-				FROM `tabPayment Entry` pe
-				JOIN tabCustomer c ON pe.party = c.name
+				FROM
+				(SELECT c.customer_name, c.customer_group, c.name AS customer, c.custom_fs_account_number, a.address_title,
+				(
+					SELECT SUM(sub1_pe.paid_amount) FROM `tabPayment Entry` sub1_pe
+					WHERE sub1_pe.docstatus = 1
+					AND sub1_pe.mode_of_payment = "FS"
+					AND sub1_pe.posting_date between '{0}' and '{1}'
+					AND sub1_pe.party = c.name
+				) AS total_contribution,
+				(
+					SELECT SUM(si.grand_total) FROM `tabSales Invoice` si
+					WHERE docstatus = 1
+					AND si.customer = c.name
+					AND si.posting_date between '{0}' and '{1}'
+				) AS usage_invoice,
+				(
+					SELECT SUM(so.grand_total) FROM `tabSales Order` so
+					WHERE so.docstatus = 1
+					AND so.status NOT IN ("Closed", "On Hold")
+					AND so.per_billed < 99.99
+					AND so.customer = c.name
+					AND so.transaction_date between '{0}' and '{1}'
+				) AS usage_order
+				FROM tabCustomer c
 				LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
 				LEFT JOIN tabAddress a ON dl.parent = a.name
 
-				WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
-				""".format(filters.from_date, filters.to_date),
+				WHERE c.custom_fs_account_number = '{2}'
+				GROUP BY c.name) table1
+				""".format(filters.from_date, filters.to_date, filters.custom_fs_account_number),
 				as_dict=True
 			)
 
@@ -307,18 +348,57 @@ def get_data(filters):
 			) AS returns_credit, """
 
 	else:
-		if filters.show_breakup and filters.from_date and filters.to_date:
-			# Customer/Family account Payment Entries breakup
+		#if filters.show_breakup and filters.from_date and filters.to_date:
+		#	# Customer/Family account Payment Entries breakup
+		#	query = frappe.db.sql(
+		#		"""
+		#		SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
+		#		pe.paid_amount AS contribution, pe.posting_date
+
+		#		FROM `tabPayment Entry` pe
+		#		JOIN tabCustomer c ON pe.party = c.name
+
+		#		WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}' AND C.custom_fs_account_number = '{2}'
+		#		""".format(filters.from_date, filters.to_date, filters.custom_fs_account_number),
+		#		as_dict=True
+		#	)
+
+		if filters.custom_fs_account_number and filters.from_date and filters.to_date:
+			# Customer/Family-account Payment Entries, summed per customer/family-account
 			query = frappe.db.sql(
 				"""
-				SELECT customer_name, c.name AS customer, c.custom_fs_account_number, pe.name AS voucher_name,
-				pe.paid_amount AS contribution, pe.posting_date
+				SELECT table1.*,
+				(IF((table1.total_contribution IS NULL), 0, table1.total_contribution) - IF((table1.usage_invoice IS NULL), 0, table1.usage_invoice) - IF((table1.usage_order IS NULL), 0, table1.usage_order))
+				AS balance
 
-				FROM `tabPayment Entry` pe
-				JOIN tabCustomer c ON pe.party = c.name
+				FROM
+				(SELECT c.customer_name, c.customer_group, c.name AS customer, c.custom_fs_account_number,
+				(
+					SELECT SUM(sub1_pe.paid_amount) FROM `tabPayment Entry` sub1_pe
+					WHERE sub1_pe.docstatus = 1
+					AND sub1_pe.mode_of_payment = "FS"
+					AND sub1_pe.posting_date between '{0}' and '{1}'
+					AND sub1_pe.party = c.name
+				) AS total_contribution,
+				(
+					SELECT SUM(si.grand_total) FROM `tabSales Invoice` si
+					WHERE docstatus = 1
+					AND si.customer = c.name
+					AND si.posting_date between '{0}' and '{1}'
+				) AS usage_invoice,
+				(
+					SELECT SUM(so.grand_total) FROM `tabSales Order` so
+					WHERE so.docstatus = 1
+					AND so.status NOT IN ("Closed", "On Hold")
+					AND so.per_billed < 99.99
+					AND so.customer = c.name
+					AND so.transaction_date between '{0}' and '{1}'
+				) AS usage_order
+				FROM tabCustomer c
 
-				WHERE pe.docstatus = 1 AND pe.posting_date between '{0}' and '{1}'
-				""".format(filters.from_date, filters.to_date),
+				WHERE c.custom_fs_account_number = '{2}'
+				GROUP BY c.name) table1
+				""".format(filters.from_date, filters.to_date, filters.custom_fs_account_number),
 				as_dict=True
 			)
 
