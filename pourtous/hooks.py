@@ -132,7 +132,7 @@ doc_events = {
         #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
 	#},
 	"Item": {
-		"before_insert": "pourtous.api.verify_tax_template", # verifies whether a tax template was added
+		"before_insert": "pourtous.api.verify_item_prerequisites",
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho", # update Zoho Books
         "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_item_in_zoho" # update Zoho Books
 	},

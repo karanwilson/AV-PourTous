@@ -623,9 +623,11 @@ def create_barcode(doc, method):
 	doc.save()
 
 
-def verify_tax_template(doc, method):
+def verify_item_prerequisites(doc, method):
 	if not doc.taxes:
 		frappe.throw("Please enter a Tax Template")
+	if not doc.valuation_rate:
+		frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
 
 
 @frappe.whitelist(allow_guest=True)
@@ -776,63 +778,7 @@ def update_price_lists(doc, method):
 				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.price_list_rate)
 
 			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
-			""" item_price = frappe.get_doc({
-				"doctype": "Item Price",
-				"item_code": item.item_code,
-				"uom": item.uom,
-				"price_list": "Standard Selling",
-				"price_list_rate": item.custom_selling_price,
-				"batch_no": item.batch_no
-			})
-			item_price.insert() """
 
-		else:
-			existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
-			if existing_item_price_entry:
-				if item.custom_selling_price > 0:
-					frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
-				else:
-					frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.price_list_rate)
-
-			else:
-				if item.custom_selling_price > 0:
-					item_price = frappe.get_doc({
-						"doctype": "Item Price",
-						"item_code": item.item_code,
-						"uom": item.uom,
-						"price_list": "Standard Selling",
-						"price_list_rate": item.custom_selling_price,
-						#"batch_no": item.batch_no
-					})
-
-				else:
-					item_price = frappe.get_doc({
-						"doctype": "Item Price",
-						"item_code": item.item_code,
-						"uom": item.uom,
-						"price_list": "Standard Selling",
-						"price_list_rate": item.price_list_rate,
-						#"batch_no": item.batch_no
-					})
-
-				item_price.insert()
-
-	frappe.db.commit()
-
-""" def update_price_lists_ptdc(doc, method):
-	#if doc.doctype == "Purchase Invoice" and not doc.update_stock:
-	#	return
-
-	for item in doc.items:
-		#if item.batch_no:
-		if item.custom_selling_price > 0:
-			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
-		else:
-			frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.price_list_rate)
-
-		frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
-
-		#else:
 		existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
 		if existing_item_price_entry:
 			if item.custom_selling_price > 0:
@@ -862,6 +808,43 @@ def update_price_lists(doc, method):
 				})
 
 			item_price.insert()
+
+	frappe.db.commit()
+
+
+""" def update_item_price_lists(item):
+	#if doc.doctype == "Purchase Invoice" and not doc.update_stock:
+	#	return
+
+	existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
+	if existing_item_price_entry:
+		if item.custom_selling_price > 0:
+			frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
+		else:
+			frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.price_list_rate)
+
+	else:
+		if item.custom_selling_price > 0:
+			item_price = frappe.get_doc({
+				"doctype": "Item Price",
+				"item_code": item.item_code,
+				"uom": item.uom,
+				"price_list": "Standard Selling",
+				"price_list_rate": item.custom_selling_price,
+				#"batch_no": item.batch_no
+			})
+
+		else:
+			item_price = frappe.get_doc({
+				"doctype": "Item Price",
+				"item_code": item.item_code,
+				"uom": item.uom,
+				"price_list": "Standard Selling",
+				"price_list_rate": item.price_list_rate,
+				#"batch_no": item.batch_no
+			})
+
+		item_price.insert()
 
 	frappe.db.commit() """
 
