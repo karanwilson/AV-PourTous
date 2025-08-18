@@ -168,6 +168,7 @@ frappe.listview_settings['Sales Invoice'] = {
                         const length = r.message.length;
                         console.log("Number of SO to process: ", length);
 						console.log("Sales Orders to Invoice: ", r.message);
+                        //console.log("is_tax_inclusive: ", r.message[1]);
                         //console.log("r.message[0][0]: ", r.message[0][0]);
                         let done = 0, error = 0;
                         for (let i = 0; i < length; i++) {
@@ -178,7 +179,8 @@ frappe.listview_settings['Sales Invoice'] = {
                                         order: r.message[i][0],
                                         pos_profile: r.message[i][1],
                                         order_date: r.message[i][2],
-                                        order_time: r.message[i][3]
+                                        order_time: r.message[i][3],
+                                        is_tax_inclusive: r.message[1],
                                     },
                                     async: false,
                                 }).then(r => {

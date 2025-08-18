@@ -82,6 +82,8 @@ def tax_exception_process_orders_to_invoice(order):
 def fetch_orders_to_invoice():
 	frappe.db.delete("Order Invoice Map Err") # deletes the old logs (used in the process_orders_to_invoice method below)
 
+	is_tax_inclusive = frappe.get_value("POS Profile", {'owner': frappe.session.user}, "posa_tax_inclusive")
+
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		return frappe.db.sql(
 			"""
@@ -96,7 +98,7 @@ def fetch_orders_to_invoice():
 				customer
 			""".format(frappe.defaults.get_user_default("company")),
 			#as_dict=1,
-		)
+		), is_tax_inclusive
 
 	else:
 		# "AND grand_total = advance_paid" is needed to only match Order for which payments have been processed by the script
@@ -114,11 +116,11 @@ def fetch_orders_to_invoice():
 			""".format(frappe.defaults.get_user_default("company")),
 			#as_dict=1,
 			# AND transaction_date > "2025-04-05"
-		)
+		), is_tax_inclusive
 
 
 @frappe.whitelist(allow_guest=True)
-def process_orders_to_invoice_ptdc(order, pos_profile, order_date, order_time):
+def process_orders_to_invoice(order, pos_profile, order_date, order_time, is_tax_inclusive):
 
 	si = make_sales_invoice(order, ignore_permissions=True)
 	si.pos_profile = pos_profile
@@ -127,8 +129,6 @@ def process_orders_to_invoice_ptdc(order, pos_profile, order_date, order_time):
 	si.posting_time = order_time
 	si.allocate_advances_automatically = True
 	si.update_stock = 1
-
-	is_tax_inclusive = frappe.get_value("POS Profile", {'owner': frappe.session.user}, "posa_tax_inclusive")
 
 	if si.get("taxes"):
 		for tax in si.taxes:
@@ -153,7 +153,7 @@ def process_orders_to_invoice_ptdc(order, pos_profile, order_date, order_time):
 		return "DONE"
 
 
-@frappe.whitelist(allow_guest=True)
+""" @frappe.whitelist(allow_guest=True)
 def process_orders_to_invoice(order):
 
 	si = make_sales_invoice(order, ignore_permissions=True)
@@ -180,7 +180,7 @@ def process_orders_to_invoice(order):
 			return "ERROR"
 
 	else:
-		return "DONE"
+		return "DONE" """
 
 
 # PTDC
