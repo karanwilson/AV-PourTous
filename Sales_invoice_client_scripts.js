@@ -174,7 +174,12 @@ frappe.listview_settings['Sales Invoice'] = {
                             setTimeout(() => {
                                 frappe.call({
                                     method: 'pourtous.api.process_orders_to_invoice',
-                                    args: { order: r.message[i][0] },
+                                    args: {
+                                        order: r.message[i][0],
+                                        pos_profile: r.message[i][1],
+                                        order_date: r.message[i][2],
+                                        order_time: r.message[i][3]
+                                    },
                                     async: false,
                                 }).then(r => {
                                     if (r.message == "DONE")

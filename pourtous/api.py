@@ -6,8 +6,8 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_a
 from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 
 # for testing/checking frappe.session.user
-#def check_user(doc, method):
-#	frappe.throw(str(frappe.session.user))
+def check_user(doc, method):
+	frappe.throw(str(frappe.session.user))
 
 @frappe.whitelist(allow_guest=True)
 def tax_exception_fetch_orders_to_invoice():
@@ -102,7 +102,7 @@ def fetch_orders_to_invoice():
 		# "AND grand_total = advance_paid" is needed to only match Order for which payments have been processed by the script
 		return frappe.db.sql(
 			"""
-			SELECT name FROM `tabSales Order`
+			SELECT name, custom_pos_profile, transaction_date, custom_posting_time FROM `tabSales Order`
 			WHERE
 				docstatus = 1
 				AND status not in ("Closed", "On Hold")
@@ -128,9 +128,11 @@ def process_orders_to_invoice_ptdc(order, pos_profile, order_date, order_time):
 	si.allocate_advances_automatically = True
 	si.update_stock = 1
 
+	is_tax_inclusive = frappe.get_value("POS Profile", {'owner': frappe.session.user}, "posa_tax_inclusive")
+
 	if si.get("taxes"):
 		for tax in si.taxes:
-			tax.included_in_print_rate = 1
+			tax.included_in_print_rate = is_tax_inclusive
 
 	try:
 		si = si.insert(ignore_permissions=True)
