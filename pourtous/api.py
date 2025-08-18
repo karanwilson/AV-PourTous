@@ -123,8 +123,9 @@ def fetch_orders_to_invoice():
 def process_orders_to_invoice(order, pos_profile, order_date, order_time, is_tax_inclusive):
 
 	si = make_sales_invoice(order, ignore_permissions=True)
-	si.is_pos = 1
-	si.pos_profile = pos_profile
+	if pos_profile:
+		si.is_pos = 1
+		si.pos_profile = pos_profile
 	si.set_posting_time = 1
 	si.posting_date = order_date
 	si.posting_time = order_time
