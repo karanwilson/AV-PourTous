@@ -22,6 +22,13 @@ def get_columns(filters):
 	if filters.view_so:
 		return [
 			{
+				"fieldname": "sales_invoice",
+				"label": "Sales Invoice",
+				"fieldtype": "Link",
+				"options": "Sales Invoice",
+				"width": "200"
+			},
+			{
 				"fieldname": "item_code",
 				"label": "Item Code",
 				"fieldtype": "Data",
@@ -46,19 +53,6 @@ def get_columns(filters):
 				"options": "Sales Order",
 				"width": "200"
 			},
-			{
-				"fieldname": "customer",
-				"label": "Customer ID",
-				"fieldtype": "Link",
-				"options": "Customer",
-				"width": "150"
-			},
-			{
-				"fieldname": "customer_name",
-				"label": "Customer Name",
-				"fieldtype": "Data",
-				"width": "200"
-			}
 		]
 
 	else:
@@ -88,57 +82,48 @@ def get_data(filters):
 	if filters.item and filters.view_so:
 		query = frappe.db.sql(
 			"""
-			SELECT item_code, item_name, qty, parent AS sales_order,
-			`tabSales Order`.customer, `tabSales Order`.customer_name
-			FROM `tabSales Order Item`, `tabSales Order`
-			WHERE parent = `tabSales Order`.name AND `tabSales Order`.docstatus = 1
-			AND item_code = '{0}'
-			AND parent NOT IN ( SELECT sales_order FROM `tabSales Invoice Item` WHERE sales_order != "NULL" )
+			select si.name as sales_invoice, sii.item_code, sii.item_name, sii.qty, sii.sales_order as sales_order
+			from `tabSales Invoice` si, `tabSales Invoice Item` sii
+			where date(si.creation) = "2025-08-19" and si.owner = "arulkumarsankar@auroville.org.in"
+			and sii.sales_order is not null and sii.parent = si.name and sii.item_code = '{0}'
 			""".format(filters.item),
 			as_dict=True
 		)
 
-		return query
-	
 	elif filters.item and not filters.view_so:
 		query = frappe.db.sql(
 			"""
-			SELECT item_code, item_name, SUM(qty) AS qty
-			FROM `tabSales Order Item`, `tabSales Order`
-			WHERE parent = `tabSales Order`.name AND `tabSales Order`.docstatus = 1
-			AND item_code = '{0}'
-			AND parent NOT IN ( SELECT sales_order FROM `tabSales Invoice Item` WHERE sales_order != "NULL" )
-			GROUP BY item_code
+			select sii.item_code, sii.item_name, sum(sii.qty) as qty
+			from `tabSales Invoice` si, `tabSales Invoice Item` sii
+			where date(si.creation) = "2025-08-19" and si.owner = "arulkumarsankar@auroville.org.in"
+			and sii.sales_order is not null and sii.parent = si.name
+			and sii.item_code = '{0}'
+			group by sii.item_code
 			""".format(filters.item),
 			as_dict=True
 		)
-
-		return query
 
 	elif not filters.item and filters.view_so:
 		query = frappe.db.sql(
 			"""
-			SELECT item_code, item_name, qty, parent AS sales_order,
-			`tabSales Order`.customer, `tabSales Order`.customer_name
-			FROM `tabSales Order Item`, `tabSales Order`
-			WHERE parent = `tabSales Order`.name AND `tabSales Order`.docstatus = 1
-			AND parent NOT IN ( SELECT sales_order FROM `tabSales Invoice Item` WHERE sales_order != "NULL" )
+			select si.name as sales_invoice, sii.item_code, sii.item_name, sii.qty, sii.sales_order as sales_order
+			from `tabSales Invoice` si, `tabSales Invoice Item` sii
+			where date(si.creation) = "2025-08-19" and si.owner = "arulkumarsankar@auroville.org.in"
+			and sii.sales_order is not null and sii.parent = si.name;
 			""",
 			as_dict=True
 		)
-
-		return query
 
 	else:
 		query = frappe.db.sql(
 			"""
-			SELECT item_code, item_name, SUM(qty) AS qty
-			FROM `tabSales Order Item`, `tabSales Order`
-			WHERE parent = `tabSales Order`.name AND `tabSales Order`.docstatus = 1
-			AND parent NOT IN ( SELECT sales_order FROM `tabSales Invoice Item` WHERE sales_order != "NULL" )
-			GROUP BY item_code
+			select sii.item_code, sii.item_name, sum(sii.qty) as qty
+			from `tabSales Invoice` si, `tabSales Invoice Item` sii
+			where date(si.creation) = "2025-08-19" and si.owner = "arulkumarsankar@auroville.org.in"
+			and sii.sales_order is not null and sii.parent = si.name group by sii.item_code;
 			""",
 			as_dict=True
 		)
 
-		return query
+
+	return query
