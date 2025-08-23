@@ -1970,34 +1970,34 @@ def sync_zb_item_id_with_erp(item_id, item_name):
 		return { "UPDATED" }
 
 
-@frappe.whitelist(allow_guest=True)
-def fetch_ptdc_erp_bills_list():
-	return frappe.db.sql(
-		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
-		"""
-		SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
-		AND is_return = 0 AND custom_zoho_bill_id IS NULL
-		AND NOT (posting_date = "2025-04-02" AND owner = "Administrator")
-		AND posting_date < "2025-06-01" AND name != "PR-25-00891"
-		""",
-		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
-		as_dict=True
-	)
+# @frappe.whitelist(allow_guest=True)
+# def fetch_ptdc_erp_bills_list():
+# 	return frappe.db.sql(
+# 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+# 		"""
+# 		SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
+# 		AND is_return = 0 AND custom_zoho_bill_id IS NULL
+# 		AND NOT (posting_date = "2025-04-02" AND owner = "Administrator")
+# 		AND posting_date < "2025-06-01" AND name != "PR-25-00891"
+# 		""",
+# 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+# 		as_dict=True
+# 	)
 
-@frappe.whitelist(allow_guest=True)
-def fetch_ptdc_erp_debitnotes_list():
-	return frappe.db.sql(
-		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
-		"""
-		SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
-		AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-		AND posting_date < "2025-06-01"
-		""",
-		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
-		as_dict=True
-	)
+# @frappe.whitelist(allow_guest=True)
+# def fetch_ptdc_erp_debitnotes_list():
+# 	return frappe.db.sql(
+# 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+# 		"""
+# 		SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
+# 		AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
+# 		AND posting_date < "2025-06-01"
+# 		""",
+# 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+# 		as_dict=True
+# 	)
 
-@frappe.whitelist(allow_guest=True)
+""" @frappe.whitelist(allow_guest=True)
 def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
 	bill_doc = frappe.get_doc("Purchase Receipt", bill)
 	#bill_doc = frappe.get_doc("Purchase Invoice", bill)
@@ -2136,7 +2136,7 @@ def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
 			bill_doc.custom_zoho_bill_id = res
 			bill_doc.save()
 			frappe.db.commit()
-			return { "ADDED" }
+			return { "ADDED" } """
 
 
 @frappe.whitelist(allow_guest=True)
@@ -2148,7 +2148,7 @@ def fetch_erp_bills_list():
 		"""
 		SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 		AND is_return = 0 AND custom_zoho_bill_id IS NULL
-		AND posting_date > "2025-05-31"
+		AND posting_date >= "2025-06-01"
 		""",
 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 		as_dict=True
@@ -2164,7 +2164,7 @@ def fetch_erp_debitnotes_list():
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-			AND posting_date > "2025-04-30"
+			AND posting_date >= "2025-05-01"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
@@ -2176,7 +2176,7 @@ def fetch_erp_debitnotes_list():
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-			AND posting_date > "2025-05-31"
+			AND posting_date >= "2025-06-01"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
@@ -3267,24 +3267,30 @@ def void_invoice_in_zoho(doc, method):
 	if doc.is_return == 0 and doc.custom_zoho_invoice_id:
 		api_controller = frappe.get_doc("Zoho Books API")
 		res = api_controller.void_invoice(doc.custom_zoho_invoice_id)
-		if res:
+		if res == "Invoice status has been changed to Void.":
 			msg = "Zoho Books Response: " + res
 			frappe.msgprint(msg)
 			# setting the invoice ids to null here, to avoid checking for amends in the highly subscribed "Sales Invoice" before_save hook
 			doc.custom_zoho_void_invoice_id = doc.custom_zoho_invoice_id
 			doc.custom_zoho_invoice_id = None
 			# if r.json().get('message') != "Invoice status has been changed to Void.":
+		else:
+			msg = "Zoho Books Response: " + res
+			frappe.throw(msg)
 
 	elif doc.is_return == 1 and doc.custom_zb_creditnote_id:
 		api_controller = frappe.get_doc("Zoho Books API")
 		res = api_controller.void_creditnote(doc.custom_zb_creditnote_id)
-		if res:
+		if res == "The credit note has been marked as void.":
 			msg = "Zoho Books Response: " + res
 			frappe.msgprint(msg)
 			# setting the invoice ids to null here, to avoid checking for amends in the highly subscribed "Sales Invoice" before_save hook
 			doc.custom_zoho_void_invoice_id = doc.custom_zb_creditnote_id
 			doc.custom_zb_creditnote_id = None
 			# if r.json().get('message') != "The credit note has been marked as void.":
+		else:
+			msg = "Zoho Books Response: " + res
+			frappe.throw(msg)
 
 def amend_sales_invoice(doc, method):
 	if doc.amended_from and doc.custom_zoho_void_invoice_id:
@@ -3292,8 +3298,7 @@ def amend_sales_invoice(doc, method):
 
 
 def void_bill_in_zoho(doc, method):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
-	#if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		return
 
 	api_controller = frappe.get_doc("Zoho Books API")
