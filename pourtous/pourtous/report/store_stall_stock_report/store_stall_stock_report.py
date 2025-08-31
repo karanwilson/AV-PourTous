@@ -113,10 +113,9 @@ def get_data(filters, abbr):
 			) AS so_reserve
 			FROM tabItem WHERE tabItem.item_group = '{2}'
 			) table1
-
-			WHERE table1.qty > 0
 			""".format(filters.warehouse, "Sales Order Reserve - "+abbr, filters.item_group),
 			as_dict=True
+			#WHERE table1.qty > 0
 		)
 		return query
 
@@ -145,10 +144,9 @@ def get_data(filters, abbr):
 			) AS so_reserve
 			FROM tabItem
 			) table1
-
-			WHERE table1.qty > 0
 			""".format(filters.warehouse, "Sales Order Reserve - "+abbr),
 			as_dict=True
+			#WHERE table1.qty > 0
 		)
 		return query
 
@@ -170,10 +168,9 @@ def get_data(filters, abbr):
 			) AS qty
 			FROM tabItem WHERE tabItem.item_group = '{1}'
 			) table1
-
-			WHERE table1.qty > 0
 			""".format(filters.warehouse, filters.item_group),
 			as_dict=True
+			#WHERE table1.qty > 0
 		)
 		return query
 
@@ -195,9 +192,8 @@ def get_data(filters, abbr):
 			) AS qty
 			FROM tabItem
 			) table1
-
-			WHERE table1.qty > 0
 			""".format(filters.warehouse),
 			as_dict=True
+			#WHERE table1.qty > 0
 		)
 		return query
