@@ -104,7 +104,7 @@ def fetch_orders_to_invoice():
 		# "AND grand_total = advance_paid" is needed to only match Order for which payments have been processed by the script
 		return frappe.db.sql(
 			"""
-			SELECT name, custom_pos_profile, transaction_date, custom_posting_time FROM `tabSales Order`
+			SELECT name, custom_pos_profile, delivery_date, custom_posting_time FROM `tabSales Order`
 			WHERE
 				docstatus = 1
 				AND status not in ("Closed", "On Hold")
