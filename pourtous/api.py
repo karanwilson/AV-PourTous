@@ -852,7 +852,50 @@ def update_price_lists(doc, method):
 
 
 def opening_stock_update_price_lists(doc, method):
-	if doc.stock_entry_type == "Repack" or doc.stock_entry_type == "Material Receipt":
+	for item in doc.items:
+		if item.batch_no:
+			if item.custom_selling_price > 0:
+				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
+				item.valuation_rate = item.custom_selling_price
+			else:
+				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.price_list_rate)
+				item.valuation_rate = item.price_list_rate
+
+			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
+
+		existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
+		if existing_item_price_entry:
+			if item.custom_selling_price > 0:
+				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
+			else:
+				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.price_list_rate)
+
+		else:
+			if item.custom_selling_price > 0:
+				item_price = frappe.get_doc({
+					"doctype": "Item Price",
+					"item_code": item.item_code,
+					"uom": item.uom,
+					"price_list": "Standard Selling",
+					"price_list_rate": item.custom_selling_price,
+					#"batch_no": item.batch_no
+				})
+
+			else:
+				item_price = frappe.get_doc({
+					"doctype": "Item Price",
+					"item_code": item.item_code,
+					"uom": item.uom,
+					"price_list": "Standard Selling",
+					"price_list_rate": item.price_list_rate,
+					#"batch_no": item.batch_no
+				})
+
+			item_price.insert()
+
+	frappe.db.commit()
+
+	""" if doc.stock_entry_type == "Repack" or doc.stock_entry_type == "Material Receipt":
 		for item in doc.items:
 
 			if item.custom_selling_price:
@@ -877,7 +920,7 @@ def opening_stock_update_price_lists(doc, method):
 						"price_list": "Standard Selling",
 						"price_list_rate": item.custom_selling_price,
 					})
-					item_price.insert()
+					item_price.insert() """
 
 
 # creates credit vouchers for returns at PTDC (for pre-paid member accounts)
