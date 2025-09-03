@@ -164,8 +164,12 @@ doc_events = {
     #    "before_save": "pourtous.api.check_user", # for testing/checking frappe.session.user
     #},
 	"Stock Entry": {
-		"on_submit": "pourtous.api.opening_stock_update_price_lists", # Add the 'Item Price'
+		"on_submit": "pourtous.api.stock_entry_update_price_lists", # Add the 'Item Price'
+        "before_validate": "pourtous.api.update_difference_account"
 	},
+    "Stock Reconciliation": {
+        "on_submit": "pourtous.api.stock_recon_update_price_lists"
+    },
     "Batch": {
         "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
     },
@@ -363,7 +367,11 @@ fixtures = [
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
                     "Purchase Invoice Item-custom_selling_price", # for setting the Selling Price
 
+                    "Stock Entry Detail-custom_buying_price",
+                    "Stock Entry Detail-custom_selling_price",
+
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
+                    "Stock Reconciliation Item-custom_selling_price",
 
                     "Batch-custom_barcode", # for adding a batch barcode
                     "Batch-custom_buying_price", # for recording batch wise buying price
