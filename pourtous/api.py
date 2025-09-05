@@ -623,6 +623,24 @@ def create_barcode(doc, method):
 	pre_barcode = '890' + doc.name
 	doc.custom_barcode = pre_barcode + ean.calc_check_digit(pre_barcode)
 	doc.save()
+	#save the barcode in the Item table's barcode child-table
+	item_doc = frappe.get_doc("Item", doc.item)
+	item_doc.append("barcodes",
+				 {
+					 "barcode": doc.custom_barcode,
+					 "barcode_type": "EAN"
+				 }
+	)
+	item_doc.save()
+
+
+def verify_batch_qty_for_barcode(doc, method):
+	if doc.batch_qty == 0: #drop batch barcode from Item batch table, wben batch becomes empty
+		existing_item_barcode = frappe.db.get_value("Item Barcode", {"barcode": doc.custom_barcode}, "name")
+		if existing_item_barcode:
+			item_barcode_doc = frappe.get_doc("Item Barcode", existing_item_barcode)
+			item_barcode_doc.delete()
+			frappe.db.commit()
 
 
 def verify_item_prerequisites(doc, method):

@@ -172,6 +172,7 @@ doc_events = {
     },
     "Batch": {
         "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
+        "before_save": "pourtous.api.verify_batch_qty_for_barcode",
     },
     "Sales Order": {
         #"before_insert": "pourtous.api.get_sales_tax_template",
