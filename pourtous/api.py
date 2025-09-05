@@ -794,8 +794,8 @@ def update_price_lists(doc, method):
 		if item.batch_no:
 			if item.custom_selling_price > 0:
 				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
-			else:
-				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.price_list_rate)
+			# else:
+			# 	frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.price_list_rate)
 
 			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
 
@@ -803,8 +803,8 @@ def update_price_lists(doc, method):
 		if existing_item_price_entry:
 			if item.custom_selling_price > 0:
 				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
-			else:
-				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.price_list_rate)
+			# else:
+			# 	frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.price_list_rate)
 
 		else:
 			if item.custom_selling_price > 0:
@@ -817,7 +817,7 @@ def update_price_lists(doc, method):
 					#"batch_no": item.batch_no
 				})
 
-			else:
+			""" else:
 				item_price = frappe.get_doc({
 					"doctype": "Item Price",
 					"item_code": item.item_code,
@@ -825,7 +825,7 @@ def update_price_lists(doc, method):
 					"price_list": "Standard Selling",
 					"price_list_rate": item.price_list_rate,
 					#"batch_no": item.batch_no
-				})
+				}) """
 
 			item_price.insert()
 
