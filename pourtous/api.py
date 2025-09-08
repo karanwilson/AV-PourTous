@@ -10,6 +10,11 @@ from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 #	frappe.throw(str(frappe.session.user))
 
 @frappe.whitelist(allow_guest=True)
+def set_customer_from_fs_account(custom_fs_account_number):
+	return frappe.db.get_value("Customer", {"custom_fs_account_number": custom_fs_account_number}, "name")
+
+
+@frappe.whitelist(allow_guest=True)
 def tax_exception_fetch_orders_to_invoice():
 	frappe.db.delete("Order Invoice Map Err") # deletes the old logs (used in the process_orders_to_invoice method below)
 
