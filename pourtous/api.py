@@ -856,7 +856,7 @@ def stock_recon_update_price_lists(doc, method):
 						#"batch_no": item.batch_no
 					})
 
-				item_price.insert()
+					item_price.insert()
 
 	frappe.db.commit()
 
