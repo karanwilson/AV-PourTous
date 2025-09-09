@@ -6,8 +6,8 @@ from frappe import _, msgprint
 
 
 def execute(filters=None):
-	if not (filters): # don't execute until filters are set
-		return [], []
+	# if not (filters): # don't execute until filters are set
+	# 	return [], []
 	columns, data = [], []
 
 	columns = get_columns()
@@ -68,40 +68,77 @@ def get_columns():
 
 
 def get_data(filters):
-	query = frappe.db.sql(
-		"""
-		SELECT table1.*
-		FROM
+	if filters.supplier:
+		query = frappe.db.sql(
+			"""
+			SELECT table1.*
+			FROM
 
-		(
-		SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier,
-		(
-			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
-			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
-			and warehouse like '{0}'
-			order by posting_date desc, posting_time desc, creation desc
-			limit 1
-		) AS store_qty,
-		(
-			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
-			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
-			and warehouse like '{1}'
-			order by posting_date desc, posting_time desc, creation desc
-			limit 1
-		) AS stall_qty,
-		(
-			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
-			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
-			and warehouse like '{2}'
-			order by posting_date desc, posting_time desc, creation desc
-			limit 1
-		) AS so_reserve
-		FROM tabItem, `tabItem Supplier`
-		WHERE tabItem.item_code = `tabItem Supplier`.parent
-		AND `tabItem Supplier`.supplier = '{3}'
-		) table1
-		""".format("Stores%", "Stall%", "Sales Order Reserve%", filters.supplier),
-		as_dict=True
-	)
+			(
+			SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier,
+			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{0}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS store_qty,
+			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{1}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS stall_qty,
+			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{2}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS so_reserve
+			FROM tabItem, `tabItem Supplier`
+			WHERE tabItem.item_code = `tabItem Supplier`.parent
+			AND `tabItem Supplier`.supplier = '{3}'
+			) table1
+			""".format("Stores%", "Stall%", "Sales Order Reserve%", filters.supplier),
+			as_dict=True
+		)
+
+	else:
+		query = frappe.db.sql(
+			"""
+			SELECT table1.*
+			FROM
+
+			(
+			SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier,
+			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{0}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS store_qty,
+			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{1}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS stall_qty,
+			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{2}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS so_reserve
+			FROM tabItem, `tabItem Supplier`
+			WHERE tabItem.item_code = `tabItem Supplier`.parent
+			) table1
+			""".format("Stores%", "Stall%", "Sales Order Reserve%"),
+			as_dict=True
+		)
 
 	return query
