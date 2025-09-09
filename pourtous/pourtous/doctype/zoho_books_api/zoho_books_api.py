@@ -2281,8 +2281,6 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 	}
 
 	if bill_doc.is_return and bill_doc.custom_zb_vendor_credit_id == None:
-		# ZB is asking for Bill number to return against.. hence skipping this section for now.
-		#return
 		if bill_doc.bill_no:
 			data["vendor_credit_number"] = bill_doc.bill_no[:16] # Supplier/Vendor Bill Number
 		else:
@@ -2302,7 +2300,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		if bill_doc.bill_no:
 			data["bill_number"] = bill_doc.bill_no[:16] # Supplier/Vendor Bill Number
 		else:
-			data["bill_number"] = bill_doc.name[-16:] # Supplier/Vendor Bill Number invoice[-16:]
+			data["bill_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
 
 		#frappe.throw(str(data))
 		if bill_doc.amended_from:
