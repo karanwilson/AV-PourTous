@@ -1381,6 +1381,22 @@ def update_supplier_contact_in_zoho(doc, method):
 		"gst_treatment": gst_treatment[doc.gst_category]
 	}
 
+	if doc.supplier_primary_address:
+		address_doc = frappe.get_doc("Address", doc.supplier_primary_address)
+		billing_address = {
+            #"attention": "Mr.John",
+            "address": address_doc.address_line1,
+            "street2": address_doc.address_line2,
+            #"state_code": "CA",
+            "city": address_doc.city,
+            "state": address_doc.state,
+            "zip": address_doc.pincode,
+            "country": address_doc.country,
+            "phone": doc.mobile_no
+		}
+
+		data["billing_address"] = billing_address
+
 	if doc.custom_zoho_contact_id == None:
 		res = api_controller.post_contact(data)
 		if res.get("custom_zoho_contact_id"):
