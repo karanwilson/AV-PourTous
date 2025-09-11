@@ -1358,6 +1358,8 @@ def delete_contact_in_zoho(doc, method):
 def update_supplier_contact_in_zoho(doc, method):
 	if not doc.gstin:
 		doc.is_reverse_charge_applicable = 1
+	else:
+		doc.is_reverse_charge_applicable = 0
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		return
