@@ -2218,6 +2218,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 	contact_id = frappe.get_value("Supplier", bill_doc.supplier, "custom_zoho_contact_id")
 	is_reverse_charge_applied = False # default value initialised here (context: GST-unregistered Vendors)
 
+	# for better design: need to fetch the is_inclusive_tax from the settings in the ERP tax table
 	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
 		is_inclusive_tax = False
 	else:
