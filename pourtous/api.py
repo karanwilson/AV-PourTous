@@ -789,7 +789,7 @@ def update_selling_price(doc, method):
 			item.custom_selling_price = item.price_list_rate
 
 def update_price_lists(doc, method):
-	if doc.doctype == "Purchase Invoice" and not doc.update_stock:
+	if (doc.doctype == "Purchase Invoice" and not doc.update_stock) or doc.is_return:
 		return
 
 	#if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
@@ -804,10 +804,19 @@ def update_price_lists(doc, method):
 
 			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
 
-		existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
+		#existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
+		existing_item_price_entry = frappe.db.get_list(
+			"Item Price",
+			filters={"price_list": "Standard Selling", "item_code": item.item_code},
+			fields = ["name"],
+			order_by='creation desc',
+		)
+		if len(existing_item_price_entry) > 1:
+			frappe.db.delete("Item Price", {"name": existing_item_price_entry[1]['name']})
+
 		if existing_item_price_entry:
 			if item.custom_selling_price > 0:
-				frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.custom_selling_price)
+				frappe.db.set_value("Item Price", existing_item_price_entry[0]['name'], "price_list_rate", item.custom_selling_price)
 			# else:
 			# 	frappe.db.set_value("Item Price", existing_item_price_entry, "price_list_rate", item.price_list_rate)
 
