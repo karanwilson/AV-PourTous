@@ -128,8 +128,16 @@ class ZohoBooksAPI(Document):
 			r = s.post(api_url, data=json.dumps(data))
 			#frappe.throw(str(r.json()))
 
+			# if data["contact_type"] == "vendor" and r.json().get('message') == 'A vendor with the name, "{0}", already exists To proceed, either update your preferences to allow duplicate vendor names or enter a unique vendor name.'.format(data["contact_name"]):
+			# 	if not frappe.db.get_value("Supplier", {"supplier_name": data["contact_name"]}, 'supplier_name'):
+			# 		return self.put_contact(data)
+
+			# elif data["contact_type"] == "customer" and r.json().get('message') == 'The customer '{0}' already exists. Please specify a different name.'.format(data["contact_name"]):
+			# 	if not frappe.db.get_value("Customer", {"customer_name": data["contact_name"]}, 'customer_name'):
+			# 		return self.put_contact(data)
 			#if r.json().get('message') == 'The contact has been added.':
 			if r.json().get('code') == 0:
+				frappe.msgprint(r.json().get('message'))
 				return {
 					"custom_zoho_contact_id": r.json().get('contact').get('contact_id'),
 				}
