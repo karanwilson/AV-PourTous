@@ -1,5 +1,5 @@
 {
- "add_total_row": 0,
+ "add_total_row": 1,
  "columns": [],
  "creation": "2025-01-13 19:14:57.744993",
  "disable_prepared_report": 0,
@@ -7,9 +7,9 @@
  "docstatus": 0,
  "doctype": "Report",
  "filters": [],
- "idx": 0,
+ "idx": 12,
  "is_standard": "Yes",
- "modified": "2025-01-13 19:14:57.744993",
+ "modified": "2025-09-16 15:36:34.787392",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Item Batch Qty Price",
