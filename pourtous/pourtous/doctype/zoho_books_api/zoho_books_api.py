@@ -652,15 +652,11 @@ class ZohoBooksAPI(Document):
 			#if r.json().get('message') == 'The bill has been created.':
 			if r.json().get('code') == 0:
 				#frappe.msgprint(r.json().get('message'))
-				return r.json().get('bill').get('bill_id')
+				return r.json().get('bill')
 
 			else:
-				error_log = frappe.new_doc("Zoho Sync Err Logs")
-				error_log.document_name = data["bill_number"]
-				error_log.error = str(r.json())
-				error_log.insert()
-
-				frappe.msgprint(str(r.json()))
+				frappe.msgprint(r.json().get('message'))
+				return r.json()		
 				#with open('tax_info_list_exception_err.txt', 'w') as file:
 				#	file.write(r.json().get('message'))
 				# r.raise_for_status()
@@ -690,6 +686,36 @@ class ZohoBooksAPI(Document):
 			#r.raise_for_status()
 			#if r.json().get('message') == "Bill information has been updated.":
 			return r.json()
+
+
+	def query_bill(self, bill_number):
+		master = "bills"
+		scope='ZohoBooks.bills.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/bills?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'bill_number': bill_number
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get("code") == 0:
+				return r.json().get('bills')
+			else:
+				frappe.msgprint(r.json().get('message'))
+			# r.raise_for_status()
 
 
 	def void_bill(self, bill_id):
@@ -1751,8 +1777,11 @@ def sync_erp_taxes_with_zoho(erp_tax):
 
 
 def update_item_in_zoho(doc, method):
+	#frappe.throw(str(doc.custom_skip_zoho_trigger))
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen") or doc.custom_skip_zoho_trigger:
+		doc.custom_skip_zoho_trigger = 0
+		#frappe.throw(str(doc.custom_skip_zoho_trigger))
 		return
 
 	api_controller = frappe.get_doc("Zoho Books API")
@@ -2205,9 +2234,19 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 	#bill_doc = frappe.get_doc("Purchase Receipt", bill)
 	bill_doc = frappe.get_doc("Purchase Invoice", bill)
 
+	group_supplier = frappe.get_value("Supplier", {
+		"custom_group_supplier": 1,
+		"supplier_group": frappe.get_value("Supplier", bill_doc.supplier, "supplier_group")
+	}, "name")
+
+	if group_supplier:
+		supplier = group_supplier
+	else:
+		supplier = bill_doc.supplier
+
 	# Check if Supplier is Inter/Intra state
 
-	contact_id = frappe.get_value("Supplier", bill_doc.supplier, "custom_zoho_contact_id")
+	contact_id = frappe.get_value("Supplier", supplier, "custom_zoho_contact_id")
 	is_reverse_charge_applied = False # default value initialised here (context: GST-unregistered Vendors)
 
 	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
@@ -2287,7 +2326,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		date = bill_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
 	data = {
-		'vendor_id': frappe.get_value("Supplier", bill_doc.supplier, "custom_zoho_contact_id"),
+		'vendor_id': contact_id,
 		#'bill_number': bill_doc.bill_no,
 		'reference_number': bill_doc.name,
 		'date': date,
@@ -2329,12 +2368,32 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 				if res.get('code') != 0:
 					frappe.msgprint(res.get("message"))
 
+		zb_bill_id = None
+
 		res = api_controller.post_bill(data)
-		if res:
-			bill_doc.custom_zoho_bill_id = res
+		if "bill_id" in res:
+			zb_bill_id = res.get('bill_id')
+
+		elif res.get('message') == 'A bill with this number has already been created for this vendor. Please check and try again.':
+			res2 = api_controller.query_bill(data["bill_number"])
+			#frappe.throw(str(res2))
+			if res2:
+				#frappe.throw(res2[0].get("bill_id"))
+				zb_bill_id = res2[0].get("bill_id")
+
+		if zb_bill_id is not None:
+			bill_doc.custom_zoho_bill_id = zb_bill_id
 			bill_doc.save()
 			frappe.db.commit()
 			return { "ADDED" }
+
+		else:
+			error_log = frappe.new_doc("Zoho Sync Err Logs")
+			error_log.document_name = data["bill_number"]
+			error_log.error = str(res)
+			error_log.insert()
+
+			frappe.msgprint(str(res))
 
 
 @frappe.whitelist(allow_guest=True)
@@ -2784,6 +2843,8 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 
 		res = api_controller.post_invoice(invoice_data)
 
+		zb_invoice_id = None
+
 		if "invoice_id" in res:
 			zb_invoice_id = res.get('invoice_id')
 
@@ -2795,7 +2856,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
-		if zb_invoice_id:
+		if zb_invoice_id is not None:
 			#zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()

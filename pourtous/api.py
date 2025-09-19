@@ -5,6 +5,8 @@ from frappe.utils import nowdate, get_first_day #, flt
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 
+from stdnum import ean
+
 # for testing/checking frappe.session.user
 #def check_user(doc, method):
 #	frappe.throw(str(frappe.session.user))
@@ -623,29 +625,50 @@ def get_sales_tax_template(doc, method):
 			)
 
 
-def create_barcode(doc, method):
-	from stdnum import ean
+def create_batch_barcode(doc, method):
 	pre_barcode = '890' + doc.name
 	doc.custom_barcode = pre_barcode + ean.calc_check_digit(pre_barcode)
 	doc.save()
 	#save the barcode in the Item table's barcode child-table
 	item_doc = frappe.get_doc("Item", doc.item)
 	item_doc.append("barcodes",
-				 {
-					 "barcode": doc.custom_barcode,
-					 "barcode_type": "EAN"
-				 }
+				{
+					"barcode": doc.custom_barcode,
+					"barcode_type": "EAN"
+				}
 	)
+	item_doc.custom_skip_zoho_trigger = 1
 	item_doc.save()
+
+
+def create_item_barcode(item_code):
+	item_doc = frappe.get_doc("Item", item_code)
+
+	if not item_doc.barcodes: # in case there is no barcode, create/add one
+		pre_barcode = '890' + item_code.zfill(9) # adding leading zeros to make 9 digits, plus the 3 digit country code
+		item_barcode = pre_barcode + ean.calc_check_digit(pre_barcode)
+
+		#save the barcode in the Item table's barcode child-table
+		item_doc.append("barcodes",
+					{
+						"barcode": item_barcode,
+						"barcode_type": "EAN"
+					}
+		)
+
+		item_doc.custom_skip_zoho_trigger = 1
+		item_doc.save()
 
 
 def verify_batch_qty_for_barcode(doc, method):
 	if doc.batch_qty == 0: #drop batch barcode from Item batch table, wben batch becomes empty
-		existing_item_barcode = frappe.db.get_value("Item Barcode", {"barcode": doc.custom_barcode}, "name")
-		if existing_item_barcode:
-			item_barcode_doc = frappe.get_doc("Item Barcode", existing_item_barcode)
-			item_barcode_doc.delete()
-			frappe.db.commit()
+		frappe.db.delete("Item Barcode", {"barcode": doc.custom_barcode})
+
+		# existing_item_barcode = frappe.db.get_value("Item Barcode", {"barcode": doc.custom_barcode}, "name")
+		# if existing_item_barcode:
+		# 	item_barcode_doc = frappe.get_doc("Item Barcode", existing_item_barcode)
+		# 	item_barcode_doc.delete()
+		# 	frappe.db.commit()
 
 
 def verify_item_prerequisites(doc, method):
@@ -788,7 +811,7 @@ def update_selling_price(doc, method):
 		if item.custom_selling_price == 0:
 			item.custom_selling_price = item.price_list_rate
 
-def update_price_lists(doc, method):
+def update_price_lists_item_barcode(doc, method):
 	if (doc.doctype == "Purchase Invoice" and not doc.update_stock) or doc.is_return:
 		return
 
@@ -803,6 +826,10 @@ def update_price_lists(doc, method):
 			# 	frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.price_list_rate)
 
 			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
+
+		else:
+			# Update the Item Barcode for non-batch Items
+			create_item_barcode(item.item_code)
 
 		#existing_item_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
 		existing_item_price_entry = frappe.db.get_list(

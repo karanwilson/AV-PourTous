@@ -151,13 +151,13 @@ doc_events = {
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
         "before_save": "pourtous.api.update_selling_price", # Add the 'Item Price'
-		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
+		"on_submit": "pourtous.api.update_price_lists_item_barcode", # Add the 'Item Price'
         #"before_insert": "pourtous.api.get_purchase_tax_template",
 	},
 	"Purchase Invoice": {
         #"before_insert": "pourtous.api.get_purchase_tax_template",
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_return_purchase_invoice",
-        "on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
+        "on_submit": "pourtous.api.update_price_lists_item_barcode", # Add the 'Item Price'
         "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_bill_in_zoho" # cancel bill in ZB
 	},
     #"Delivery Note": {
@@ -171,7 +171,7 @@ doc_events = {
         "on_submit": "pourtous.api.stock_recon_update_price_lists"
     },
     "Batch": {
-        "after_insert": "pourtous.api.create_barcode", # Adds a Batch Barcode
+        "after_insert": "pourtous.api.create_batch_barcode", # Adds a Batch Barcode
         "before_save": "pourtous.api.verify_batch_qty_for_barcode",
     },
     "Sales Order": {
@@ -290,6 +290,7 @@ fixtures = [
                                            #-used in code to prevent decimal entries in Integer values
                     "Item-custom_zoho_item_id", # required in case we create Invoices/Purchases on Zoho Books, via API
                     "Item-custom_zoho_item_updated", # for put/update calls
+                    "Item-custom_skip_zoho_trigger", # skip the PT app hooks trigger
 
                     "Payment Entry-custom_av_section_break", # PTDC
                     "Payment Entry-custom_contact", # PTDC
@@ -344,6 +345,7 @@ fixtures = [
                     "Contact-custom_tos", # for PTDC Monthly Balance
 
                     "Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
+                    "Supplier-custom_group_supplier", # for mapping suppliers to one Group in Zoho
 
                     "Purchase Order-custom_batch_items", # Creates a Tab Break for custom_batch_items_data and custom_add_batch_items
                     "Purchase Order-custom_batch_items_fetch", # Button
@@ -367,6 +369,8 @@ fixtures = [
 
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
                     "Purchase Invoice Item-custom_selling_price", # for setting the Selling Price
+
+                    "Stock Entry-custom_batch_barcode", # for scanning batch barcodes
 
                     "Stock Entry Detail-custom_buying_price",
                     "Stock Entry Detail-custom_selling_price",

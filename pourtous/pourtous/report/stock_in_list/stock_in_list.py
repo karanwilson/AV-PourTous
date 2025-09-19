@@ -67,7 +67,14 @@ def get_columns(filters):
 
 			{
 				"fieldname": "custom_barcode",
-				"label": "Barcode",
+				"label": "Batch Barcode",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+
+			{
+				"fieldname": "barcode",
+				"label": "Item Barcode",
 				"fieldtype": "Data",
 				"width": "150"
 			},
@@ -142,7 +149,14 @@ def get_columns(filters):
 
 			{
 				"fieldname": "custom_barcode",
-				"label": "Barcode",
+				"label": "Batch Barcode",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+
+			{
+				"fieldname": "barcode",
+				"label": "Item Barcode",
 				"fieldtype": "Data",
 				"width": "150"
 			},
@@ -217,7 +231,14 @@ def get_columns(filters):
 
 			{
 				"fieldname": "custom_barcode",
-				"label": "Barcode",
+				"label": "Batch Barcode",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+
+			{
+				"fieldname": "barcode",
+				"label": "Item Barcode",
 				"fieldtype": "Data",
 				"width": "150"
 			},
@@ -274,7 +295,13 @@ def get_data1(filters):
 			"""
 			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
 			`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
-			tabBatch.custom_barcode, `tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
+			tabBatch.custom_barcode,
+			IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
+				SELECT barcode from `tabItem Barcode`
+				WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
+				LIMIT 1
+			), 0) AS barcode,
+			`tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
 			IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
 			FROM `tabPurchase Receipt Item`
 			INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
@@ -292,7 +319,13 @@ def get_data1(filters):
 			"""
 			SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
 			`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
-			tabBatch.custom_barcode, `tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty, `tabPurchase Invoice Item`.custom_selling_price,
+			tabBatch.custom_barcode,
+			IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
+				SELECT barcode from `tabItem Barcode`
+				WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
+				LIMIT 1
+			), 0) AS barcode,
+			`tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty, `tabPurchase Invoice Item`.custom_selling_price,
 			IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
 			FROM `tabPurchase Invoice Item`
 			INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
@@ -312,7 +345,13 @@ def get_data1(filters):
 		query = frappe.db.sql(
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty,
+			item_code, batch_no, tabBatch.custom_barcode,
+			IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+				SELECT barcode from `tabItem Barcode`
+				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+				LIMIT 1
+			), 0) AS barcode,
+			`tabStock Entry Detail`.item_name, qty,
 			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
@@ -334,7 +373,13 @@ def get_data1(filters):
 		query = frappe.db.sql(
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
+			item_code, batch_no, tabBatch.custom_barcode, 
+			IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+				SELECT barcode from `tabItem Barcode`
+				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+				LIMIT 1
+			), 0) AS barcode,
+			`tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
 			AND `tabStock Entry Detail`.t_warehouse != '{1}'
@@ -358,7 +403,13 @@ def get_data2(filters):
 			"""
 			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
 			`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
-			tabBatch.custom_barcode, `tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
+			tabBatch.custom_barcode,
+			IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
+				SELECT barcode from `tabItem Barcode`
+				WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
+				LIMIT 1
+			), 0) AS barcode,
+			`tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
 			IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
 			FROM `tabPurchase Receipt Item`
 			INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
@@ -375,7 +426,13 @@ def get_data2(filters):
 			"""
 			SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
 			`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
-			tabBatch.custom_barcode, `tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty, `tabPurchase Invoice Item`.custom_selling_price,
+			tabBatch.custom_barcode,
+			IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
+				SELECT barcode from `tabItem Barcode`
+				WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
+				LIMIT 1
+			), 0) AS barcode,
+			`tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty, `tabPurchase Invoice Item`.custom_selling_price,
 			IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
 			FROM `tabPurchase Invoice Item`
 			INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
@@ -394,7 +451,13 @@ def get_data2(filters):
 		query = frappe.db.sql(
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty,
+			item_code, batch_no, tabBatch.custom_barcode,
+			IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+				SELECT barcode from `tabItem Barcode`
+				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+				LIMIT 1
+			), 0) AS barcode,
+			`tabStock Entry Detail`.item_name, qty,
 			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
@@ -415,7 +478,13 @@ def get_data2(filters):
 		query = frappe.db.sql(
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode, `tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
+			item_code, batch_no, tabBatch.custom_barcode,
+			IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+				SELECT barcode from `tabItem Barcode`
+				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+				LIMIT 1
+			), 0) AS barcode,
+			`tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
 			AND `tabStock Entry Detail`.t_warehouse != '{1}'

@@ -256,6 +256,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     if (r.message) {
                         const length = r.message.length;
                         console.log("Number of Credit Bills to process: ", length);
+                        //console.log('r.message[0]: ', r.message[0]);
                         let transfers = 0;
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
