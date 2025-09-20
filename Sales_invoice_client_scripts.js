@@ -126,7 +126,7 @@ frappe.listview_settings['Sales Invoice'] = {
                 callback: (r) => {
                     if (r.message) {
                         const length = r.message.length;
-                        console.log("Number of UPI invoices to sync: ", length);
+                        console.log("Number of Adv invoices to sync: ", length);
                         console.log("Invoice List: ", r.message);
                         //console.log("r.message[0]['name']: ", r.message[0]["name"]);
                         let added = 0;
