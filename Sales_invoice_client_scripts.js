@@ -1,7 +1,7 @@
 frappe.listview_settings['Sales Invoice'] = {
     refresh(listview) {
 
-        listview.page.add_inner_button("FS Inv to ZB", () => {
+        /* listview.page.add_inner_button("FS Inv to ZB", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_fs_invoice_list',
                 async: false,
@@ -196,7 +196,7 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        }, __("Sync with ZB"));
+        }, __("Sync with ZB")); */
 
 
         listview.page.add_inner_button("Orders to Invoices", () => {
