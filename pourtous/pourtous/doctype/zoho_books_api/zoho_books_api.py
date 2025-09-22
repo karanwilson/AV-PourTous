@@ -606,6 +606,34 @@ class ZohoBooksAPI(Document):
 			return r.json().get('message')
 
 
+	def get_an_item(self, item):
+		master = "items"
+		scope='ZohoBooks.settings.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/items/' + item + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get('message') == 'success':
+				return r.json().get('item')
+			else:
+				r.raise_for_status()
+
+
 	def get_items(self):
 		master = "items"
 		scope='ZohoBooks.settings.READ'
@@ -628,10 +656,10 @@ class ZohoBooksAPI(Document):
 
 			r = s.get(api_url)
 
-			r.raise_for_status()
 			if r.json().get('message') == 'success':
 				return r.json().get('items')
-
+			else:
+				r.raise_for_status()
 
 
 	def post_bill(self, data):
