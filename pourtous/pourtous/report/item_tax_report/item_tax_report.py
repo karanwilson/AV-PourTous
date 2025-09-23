@@ -30,6 +30,12 @@ def get_columns():
 			"width": "90"
 		},
 		{
+			"fieldname": "gst_hsn_code",
+			"label": "HSN Code",
+			"fieldtype": "Data",
+			"width": "90"
+		},
+		{
 			"fieldname": "item_name",
 			"label": "Item Name",
 			"fieldtype": "Data",
@@ -54,7 +60,7 @@ def get_columns():
 def get_data():
 	query = frappe.db.sql(
 		"""
-		SELECT i.item_code, i.item_name, its.supplier, it.item_tax_template
+		SELECT i.item_code, i.gst_hsn_code, i.item_name, its.supplier, it.item_tax_template
 		FROM tabItem i, `tabItem Supplier` its, `tabItem Tax` it
 		WHERE its.parent = i.item_code
 		AND it.parent = i.item_code
