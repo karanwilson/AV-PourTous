@@ -22,5 +22,17 @@ frappe.ui.form.on('Purchase Invoice', {
 			row.stock_qty = row.qty;
 		});
 		frm.refresh_field('items'); */
-	}
+	},
+
+	onload(frm) {
+		frm.set_query("batch_no", "items", function (doc, cdt, cdn) {
+			var item = locals[cdt][cdn];
+			return {
+				filters: {
+					item: item.item_code,
+					batch_qty: ["!=", 0]
+				},
+			};
+		});
+	},
 });
