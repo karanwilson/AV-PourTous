@@ -308,6 +308,8 @@ fixtures = [
                     "Sales Invoice-custom_transaction_date", # in case transaction date is earlier than the posting date
                     "Sales Invoice-custom_staff_member", # in case of accounts shared by a group
 
+                    "Sales Invoice-custom_upi_transfer_status", # ICICI POS-UPI Integration
+
                     "Sales Invoice-custom_zb_consol_inv_id", # PTDC
                     "Sales Invoice-custom_zoho_invoice_id", # for syncing with Zoho Books
                     #"Sales Invoice-custom_zoho_payment_id",
