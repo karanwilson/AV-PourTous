@@ -11,12 +11,12 @@ from stdnum import ean
 #def check_user(doc, method):
 #	frappe.throw(str(frappe.session.user))
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def set_customer_from_fs_account(custom_fs_account_number):
 	return frappe.db.get_value("Customer", {"custom_fs_account_number": custom_fs_account_number}, "name")
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def tax_exception_fetch_orders_to_invoice():
 	frappe.db.delete("Order Invoice Map Err") # deletes the old logs (used in the process_orders_to_invoice method below)
 
@@ -55,7 +55,7 @@ def tax_exception_fetch_orders_to_invoice():
 		)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def tax_exception_process_orders_to_invoice(order):
 
 	si = make_sales_invoice(order, ignore_permissions=True)
@@ -85,7 +85,7 @@ def tax_exception_process_orders_to_invoice(order):
 		return "DONE"
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_orders_to_invoice():
 	frappe.db.delete("Order Invoice Map Err") # deletes the old logs (used in the process_orders_to_invoice method below)
 
@@ -126,7 +126,7 @@ def fetch_orders_to_invoice():
 		), is_tax_inclusive
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def process_orders_to_invoice(order, pos_profile, order_date, order_time, is_tax_inclusive):
 
 	si = make_sales_invoice(order, ignore_permissions=True)
@@ -160,7 +160,7 @@ def process_orders_to_invoice(order, pos_profile, order_date, order_time, is_tax
 		return "DONE"
 
 
-""" @frappe.whitelist(allow_guest=True)
+""" @frappe.whitelist()
 def process_orders_to_invoice(order):
 
 	si = make_sales_invoice(order, ignore_permissions=True)
@@ -191,7 +191,7 @@ def process_orders_to_invoice(order):
 
 
 # PTDC
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_monthly_contributions():
 	return frappe.db.sql(
 		"""
@@ -210,7 +210,7 @@ def fetch_monthly_contributions():
 	)
 
 # PTDC
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def process_pt_monthly_balances(contact, customer, custom_in_kind_scheme, custom_lunch_scheme, custom_monthly_contribution, custom_ptdc_maintenance):
 	company = frappe.defaults.get_user_default("company")
 
@@ -273,7 +273,7 @@ def process_pt_monthly_balances(contact, customer, custom_in_kind_scheme, custom
 			return "OK"
 
 # PTDC
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_extra_contributions():
 	return frappe.db.sql(
 		"""
@@ -288,7 +288,7 @@ def fetch_extra_contributions():
 	)
 
 # PTDC
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def process_pt_extra_contributions(contact, customer, custom_extra_contribution):
 	company = frappe.defaults.get_user_default("company")
 
@@ -333,7 +333,7 @@ def process_pt_extra_contributions(contact, customer, custom_extra_contribution)
 			return "OK"
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_invoice_list():
 	return frappe.db.sql(
     	"""
@@ -347,7 +347,7 @@ def fetch_invoice_list():
 	)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def add_fs_accounts(invoice, customer):
 	fs_acc_num = frappe.get_value("Customer", customer, "custom_fs_account_number")
 	frappe.set_value("Sales Invoice", invoice, "custom_fs_account_number", fs_acc_num)
@@ -355,7 +355,7 @@ def add_fs_accounts(invoice, customer):
 	return "ADDED"
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def update_fs_accounts(fs_account, name, disable):
 	existing_fs_customer = frappe.get_value("Customer", {"custom_fs_account_number": fs_account}, "name")
 	if existing_fs_customer:
@@ -389,7 +389,7 @@ def update_fs_accounts(fs_account, name, disable):
 
 
 # called from B2B Sales Invoice client script
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_warehouse_name(customer):
 	customer_type = frappe.get_value("Customer", customer, "customer_type")
 	warehouse = "Sales Order Reserve - " + frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
@@ -399,12 +399,12 @@ def get_warehouse_name(customer):
 	}
 
 # called from B2B Sales Invoice client script
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_so_item_batch(sales_order):
 	return frappe.get_doc("Sales Order", sales_order)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_old_so_list():
 	return frappe.db.sql(
     	"""
@@ -420,7 +420,7 @@ def fetch_old_so_list():
        #as_dict=1,
 	)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def update_old_so_item_batch(sales_order_name):
 	stock_entry_name = frappe.get_value("Stock Entry", {"remarks": sales_order_name, "docstatus": 1}, "name")
 
@@ -536,7 +536,7 @@ def make_stock_reservation(doc, method):
 				doc.calculate_taxes_and_totals()
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_tax_template(company, supplier):
 	if frappe.db.get_value("Company", company, "gstin") and not frappe.db.get_value("Supplier", supplier, "gstin"):
 		return frappe.get_list(
@@ -557,7 +557,7 @@ def get_tax_template(company, supplier):
 		) """
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_sales_tax_template_form_script():
 	return frappe.get_list(
 		'Sales Taxes and Charges Template',
@@ -569,7 +569,7 @@ def get_sales_tax_template_form_script():
 	)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_purchase_tax_template(doc, method):
 	tax_template = frappe.get_list(
 		'Purchase Taxes and Charges Template',
@@ -598,7 +598,7 @@ def get_purchase_tax_template(doc, method):
 			)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_sales_tax_template(doc, method):
 	tax_template = frappe.get_list(
 		'Sales Taxes and Charges Template',
@@ -678,7 +678,7 @@ def verify_item_prerequisites(doc, method):
 		frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_batch_list():
 	return frappe.db.sql(
     	"""
@@ -696,7 +696,7 @@ def fetch_batch_list():
         #as_dict=1,
     )
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_batch_prices(batch):
 	batch_price = frappe.db.get_value("Item Price", {"batch_no": batch}, "price_list_rate")
 	if batch_price:
@@ -705,7 +705,7 @@ def sync_batch_prices(batch):
 
 
 # called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 #@frappe.validate_and_sanitize_search_inputs
 def supplier_batch_items(supplier):
 	query = frappe.db.sql(
@@ -750,7 +750,7 @@ def supplier_batch_items(supplier):
 	return query
 
 # called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def supplier_non_batch_items(supplier):
 	query = frappe.db.sql(
 		"""
@@ -793,7 +793,7 @@ def supplier_non_batch_items(supplier):
 	)
 	return query
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def supplier_items_filter(doctype, txt, searchfield, start, page_len, filters):
 	return frappe.db.sql(
@@ -1011,7 +1011,7 @@ def payment_entry_for_return(doc, method):
 			frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name' """
 
 # was called from Customer Client-Script 'Sync FS Accounts'
-""" @frappe.whitelist(allow_guest=True)
+""" @frappe.whitelist()
 def sync_fs_accounts():
 	#with open('customer_import.txt', 'w') as file:
 	#	file.write(str("inside validate_customer_imports"))

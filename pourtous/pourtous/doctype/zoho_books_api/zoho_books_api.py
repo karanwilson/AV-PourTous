@@ -41,7 +41,7 @@ class ZohoBooksAPI(Document):
 			#self.token_valid_till = datetime.strptime(self.token_received_at, self.DATETIME_FORMAT) + timedelta(minutes=55)
 
 
-	#@frappe.whitelist(allow_guest=True)
+	#@frappe.whitelist()
 	def request_access_token(self, scope):
 		soid = 'ZohoBooks.' + self.organization_id
 		token_url = 'https://accounts.zoho.in/oauth/v2/token?'
@@ -1508,7 +1508,7 @@ def update_supplier_contact_in_zoho(doc, method):
 
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_erp_supplier_list():
 	#return frappe.get_all('Supplier', filters = {"disabled": 0})
 	return frappe.db.sql(
@@ -1520,7 +1520,7 @@ def fetch_erp_supplier_list():
 		as_dict=True
 	)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def add_supplier_to_zb(supplier):
 	doc = frappe.get_doc("Supplier", supplier)
 	custom_zoho_contact_id = update_supplier_contact_in_zoho(doc, method=None)
@@ -1530,12 +1530,12 @@ def add_supplier_to_zb(supplier):
 		return { "ADDED" }
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_zb_contacts_list():
 	api_controller = frappe.get_doc("Zoho Books API")
 	return api_controller.get_contacts()
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_zb_contact_id_with_erp(contact_id, contact_name, contact_type):
 	if contact_type != "vendor":
 		return { "NOT VENDOR" }
@@ -1550,13 +1550,13 @@ def sync_zb_contact_id_with_erp(contact_id, contact_name, contact_type):
 		return { "ERP" }
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_zb_tax_list():
 	api_controller = frappe.get_doc("Zoho Books API")
 	return api_controller.get_taxes()
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_zb_tax_id_with_erp(tax_id, tax_name, tax_percentage, tax_type, tax_specific_type):
 	if tax_type == "tax_group" and re.search("CESS", tax_name):
 		# Match for I/GST-CESS Tax Groups
@@ -1648,12 +1648,12 @@ def sync_zb_tax_id_with_erp(tax_id, tax_name, tax_percentage, tax_type, tax_spec
 		return { "NO-MATCH" }
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_erp_tax_list():
 	return frappe.get_all('Item Tax Template', filters = {"disabled": 0})
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_erp_taxes_with_zoho(erp_tax):
 	erp_tax_doc = frappe.get_doc("Item Tax Template", erp_tax)
 
@@ -1994,7 +1994,7 @@ def delete_item_in_zoho(doc, method):
 			frappe.msgprint(msg)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_erp_items_list():
 	#return frappe.get_all('Supplier', filters = {"disabled": 0})
 	return frappe.db.sql(
@@ -2006,7 +2006,7 @@ def fetch_erp_items_list():
 		as_dict=True
 	)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def add_erp_item_in_zb(erp_item):
 	doc = frappe.get_doc("Item", erp_item)
 	custom_zoho_item_id = update_item_in_zoho(doc, method=None)
@@ -2016,19 +2016,20 @@ def add_erp_item_in_zb(erp_item):
 		return { "ADDED" }
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def custom_fetch_erp_items_list():
 	#return frappe.get_all('Supplier', filters = {"disabled": 0})
 	return frappe.db.sql(
 		"""
-		SELECT name, custom_zoho_item_id, gst_hsn_code FROM tabItem
+		SELECT name, custom_zoho_item_id FROM tabItem
 		WHERE disabled = 0 AND custom_zoho_item_updated = 0
+		AND custom_zoho_item_id IS NOT NULL
 		""",
 		as_dict=True
 		# SELECT name, custom_zoho_item_id, gst_hsn_code FROM tabItem
 	)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def update_erp_item_in_zb(erp_item):
 	doc = frappe.get_doc("Item", erp_item)
 	res = update_item_in_zoho(doc, method=None)
@@ -2043,17 +2044,35 @@ def update_erp_item_in_zb(erp_item):
 		return { "ADDED" }
 
 
-@frappe.whitelist(allow_guest=True)
-#def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
-def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id, gst_hsn_code):
+@frappe.whitelist()
+def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
 	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
 
 	#if item_name:
-		#doc = frappe.get_doc("Item", item)
+	doc = frappe.get_doc("Item", erp_item)
 
-	put_data = {
-		"hsn_or_sac": gst_hsn_code,
-	}
+	try:
+		zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+		zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+
+	except Exception as err:
+		msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + doc.item_code
+		frappe.msgprint(msg)
+		return
+
+	else:
+		put_data = {
+			"item_tax_preferences": [
+				{
+					"tax_id": zb_intra_tax_id,
+					"tax_specification": "intra",
+				},
+				{
+					"tax_id": zb_inter_tax_id,
+					"tax_specification": "inter",
+				},
+			],
+		}
 
 	api_controller = frappe.get_doc("Zoho Books API")
 	res = api_controller.put_item(custom_zoho_item_id, put_data)
@@ -2065,13 +2084,13 @@ def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id, gst_hsn_code):
 		frappe.msgprint(res.get('message'))
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_zb_item_list():
 	api_controller = frappe.get_doc("Zoho Books API")
 	return api_controller.get_items()
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_zb_item_id_with_erp(item_id, item_name):
 	if frappe.get_value("Item", item_name, "name"):
 		existing_item_doc = frappe.get_doc("Item", item_name)
@@ -2080,7 +2099,7 @@ def sync_zb_item_id_with_erp(item_id, item_name):
 		return { "UPDATED" }
 
 
-# @frappe.whitelist(allow_guest=True)
+# @frappe.whitelist()
 # def fetch_ptdc_erp_bills_list():
 # 	return frappe.db.sql(
 # 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
@@ -2094,7 +2113,7 @@ def sync_zb_item_id_with_erp(item_id, item_name):
 # 		as_dict=True
 # 	)
 
-# @frappe.whitelist(allow_guest=True)
+# @frappe.whitelist()
 # def fetch_ptdc_erp_debitnotes_list():
 # 	return frappe.db.sql(
 # 		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
@@ -2107,7 +2126,7 @@ def sync_zb_item_id_with_erp(item_id, item_name):
 # 		as_dict=True
 # 	)
 
-""" @frappe.whitelist(allow_guest=True)
+""" @frappe.whitelist()
 def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
 	bill_doc = frappe.get_doc("Purchase Receipt", bill)
 	#bill_doc = frappe.get_doc("Purchase Invoice", bill)
@@ -2249,7 +2268,7 @@ def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
 			return { "ADDED" } """
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_erp_bills_list():
 	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
 
@@ -2264,7 +2283,7 @@ def fetch_erp_bills_list():
 		as_dict=True
 	)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_erp_debitnotes_list():
 	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
 
@@ -2292,7 +2311,7 @@ def fetch_erp_debitnotes_list():
 			as_dict=True
 		)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def add_erp_bills_debitnotes_in_zoho(bill):
 	#bill_doc = frappe.get_doc("Purchase Receipt", bill)
 	bill_doc = frappe.get_doc("Purchase Invoice", bill)
@@ -2354,16 +2373,21 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		item_doc = frappe.get_doc("Item", item.item_code)
 
 		try:
+			if len(item_doc.taxes) > 1: # in case the item tax table has more than one tax to choose from
+				item_tax_template = item.item_tax_template # choose the tax that was recorded for the Invoice Item
+			else:
+				item_tax_template = item_doc.taxes[0].item_tax_template
+
 			if is_reverse_charge_applied:
 				if tax_specification == "intra":
-					reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_rcm_group_id")
-				else:
-					reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_igst_rcm_id")
+					reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_rcm_group_id")
+				else: # for "inter"
+					reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_igst_rcm_id")
 			else:
 				if tax_specification == "intra":
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
-				else:
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+					tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_tax_group_id")
+				else: # for "inter"
+					tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_tax_igst_id")
 		except Exception as err:
 			frappe.msgprint(str(err))
 			msg = "Please verify the Tax-template/Supplier/ZB-tax_id for Item Code " + item.item_code
@@ -2504,7 +2528,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 				frappe.msgprint(str(res3))
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_unsynced_erp_return_invoice_list():
 	return frappe.db.sql(
 		"""
@@ -2520,7 +2544,7 @@ def fetch_unsynced_erp_return_invoice_list():
 	# AND (custom_zb_creditnote_id IS NULL OR custom_zb_creditnote_refund_id IS NULL)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_return_inv_with_zoho_books(invoice, customer):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
@@ -2693,7 +2717,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 
 
 ## WIP ## PTDC Consolidated Invoices push to ZB
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_return):
 	erp_line_items = json.loads(line_items_dict)
 	#frappe.throw(str(erp_line_items))
@@ -2849,7 +2873,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 				return "ADDED"
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_unsynced_erp_fs_invoice_list():
 	return frappe.db.sql(
 		"""
@@ -2865,7 +2889,7 @@ def fetch_unsynced_erp_fs_invoice_list():
 		# AND status IN ('Paid', 'Credit Note Issued', 'Return')
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_fs_inv_with_zoho_books(invoice, customer):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
@@ -3055,7 +3079,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				return "ADDED" """
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_unsynced_erp_adv_payment_invoice_list():
 	return frappe.db.sql(
 		"""
@@ -3071,7 +3095,7 @@ def fetch_unsynced_erp_adv_payment_invoice_list():
 		as_dict=True
 	)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
@@ -3208,7 +3232,7 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 				return "ADDED"
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_unsynced_erp_aurocard_invoice_list():
 	return frappe.db.sql(
 		"""
@@ -3222,7 +3246,7 @@ def fetch_unsynced_erp_aurocard_invoice_list():
 		# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 	)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_aurocard_inv_with_zoho_books(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
@@ -3407,7 +3431,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 				return { "ADDED" } """
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_unsynced_erp_upi_invoice_list():
 	return frappe.db.sql(
 		"""
@@ -3421,7 +3445,7 @@ def fetch_unsynced_erp_upi_invoice_list():
 		# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 	)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def sync_upi_inv_with_zoho_books(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
@@ -3671,7 +3695,7 @@ def amend_return_purchase_invoice(doc, method):
 		return """
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_bills_to_delete():
 	return frappe.db.sql(
 		"""
@@ -3682,7 +3706,7 @@ def fetch_bills_to_delete():
 		as_dict=True
 	)
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def delete_bills_in_zoho(bill, custom_zoho_bill_id):
 	api_controller = frappe.get_doc("Zoho Books API")
 	res = api_controller.delete_bill(custom_zoho_bill_id)
@@ -3692,13 +3716,13 @@ def delete_bills_in_zoho(bill, custom_zoho_bill_id):
 		return { "DELETED" }
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def delete_specific_invoice_payments(invoice):
 	frappe.db.set_value("Sales Invoice", invoice, "custom_zoho_payment_id", "")
 	return { "DELETED" }
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_invoices_to_delete():
 	return frappe.db.sql(
 		"""
@@ -3715,7 +3739,7 @@ def fetch_invoices_to_delete():
 	"""
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def delete_invoice_ids_in_erp(invoice):
 	import csv
 
@@ -3747,7 +3771,7 @@ def delete_invoice_ids_in_erp(invoice):
 	#)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
 #def delete_invoice_ids_in_erp(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
@@ -3764,7 +3788,7 @@ def delete_invoices_in_zoho(invoice, custom_zoho_invoice_id):
 		#frappe.msgprint(msg)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_payments_cn_refunds_to_delete():
 	return frappe.db.sql(
 		"""
@@ -3794,7 +3818,7 @@ def fetch_payments_cn_refunds_to_delete():
 	"""
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 #def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
 def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 	api_controller = frappe.get_doc("Zoho Books API")
@@ -3825,7 +3849,7 @@ def delete_customer_payments_cn_refunds_in_zb(invoice, custom_zoho_payment_id):
 			#frappe.msgprint(msg) """
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def fetch_erp_invoice_list_to_update():
 	return frappe.db.sql(
 		"""
@@ -3839,7 +3863,7 @@ def fetch_erp_invoice_list_to_update():
 		as_dict=True
 	)
 
-""" @frappe.whitelist(allow_guest=True)
+""" @frappe.whitelist()
 def update_erp_inv_with_zoho_books(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)

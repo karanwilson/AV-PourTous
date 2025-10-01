@@ -125,7 +125,7 @@ doc_events = {
     "Sales Invoice": {
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_sales_invoice",
         "on_submit": "pourtous.api.payment_entry_for_return", # creates 'Payment Entry' for item returns
-        ##"before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_invoice_in_zoho" # cancel invoice in ZB
+        "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_invoice_in_zoho" # cancel invoice in ZB
 	},
     #"Payment Entry": {
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)
@@ -133,8 +133,8 @@ doc_events = {
 	#},
 	"Item": {
 		"before_insert": "pourtous.api.verify_item_prerequisites",
-        ##"before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho", # update Zoho Books
-        ##"on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_item_in_zoho" # update Zoho Books
+        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho", # update Zoho Books
+        "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_item_in_zoho" # update Zoho Books
 	},
     #"Item Tax Template": {
     #    "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_tax_in_zoho", # update Zoho Books
@@ -158,7 +158,7 @@ doc_events = {
         #"before_insert": "pourtous.api.get_purchase_tax_template",
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_return_purchase_invoice",
         "on_submit": "pourtous.api.update_price_lists_item_barcode", # Add the 'Item Price'
-        ##"before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_bill_in_zoho" # cancel bill in ZB
+        "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_bill_in_zoho" # cancel bill in ZB
 	},
     #"Delivery Note": {
     #    "before_save": "pourtous.api.check_user", # for testing/checking frappe.session.user

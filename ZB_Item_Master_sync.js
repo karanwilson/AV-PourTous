@@ -95,7 +95,7 @@ frappe.listview_settings['Item'] = {
                                     args: {
                                         erp_item: r.message[i]["name"],
                                         custom_zoho_item_id: r.message[i]["custom_zoho_item_id"],
-                                        gst_hsn_code: r.message[i]["gst_hsn_code"],
+                                        //gst_hsn_code: r.message[i]["gst_hsn_code"],
                                     },
                                     async: false,
                                 }).then(r => {
