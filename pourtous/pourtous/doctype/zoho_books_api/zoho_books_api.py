@@ -1842,9 +1842,12 @@ def sync_erp_taxes_with_zoho(erp_tax):
 def update_item_in_zoho(doc, method):
 	#frappe.throw(str(doc.custom_skip_zoho_trigger))
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen") or doc.custom_skip_zoho_trigger:
-		doc.custom_skip_zoho_trigger = 0 # reseting the value after it is matched
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		#frappe.throw(str(doc.custom_skip_zoho_trigger))
+		return
+
+	if doc.custom_skip_zoho_trigger and doc.custom_zoho_item_id != None:
+		doc.custom_skip_zoho_trigger = 0 # reseting the value after it is matched
 		return
 
 	api_controller = frappe.get_doc("Zoho Books API")

@@ -39,7 +39,7 @@ frappe.listview_settings['Item'] = {
         }, __("Sales Invoice")); */
 
 
-        /* listview.page.add_inner_button("Sync ERP Items with ZB", () => {
+        listview.page.add_inner_button("Sync ERP Items with ZB", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_erp_items_list',
                 async: false,
@@ -76,7 +76,7 @@ frappe.listview_settings['Item'] = {
                     }
                 }
             });
-        }, __("Sync with ZB")); */
+        }, __("Sync with ZB"));
 
         listview.page.add_inner_button("Update ERP Items in ZB", () => {
             frappe.call({
