@@ -875,7 +875,7 @@ def update_price_lists_item_barcode(doc, method):
 				}) """
 
 			item_price.insert()
-		
+
 		if custom_update_buying_price:
 			existing_item_buy_price_entry = frappe.db.get_list(
 				"Item Price",
