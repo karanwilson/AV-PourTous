@@ -41,5 +41,15 @@ frappe.query_reports["GST Sales Report"] = {
 			"options": "Customer Group",
 			"width": "60px",
 		},
+
+		{
+			"fieldname": "mop",
+			"label": __("MOP"),
+			"fieldtype": "Link",
+			"options": "Mode of Payment",
+			//"fieldtype": "Select",
+			//"options": "\nFS\nAurocard\nUPI\nCash\nCards\nNEFT\nDonations",
+			"width": "60px",
+		}
 	]
 };
