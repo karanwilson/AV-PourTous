@@ -327,6 +327,9 @@ fixtures = [
 
                     "Sales Order Item-custom_batch_no", # for SO Stock reservations
 
+                    "Mode of Payment-custom_transaction_fee_percentage", # Card charges
+                    #"Mode of Payment-custom_transaction_fee_account", # ledger account
+
                     "Customer-custom_fs_account_number", # for FS Transactions
                     #"Customer-custom_fs_kind_account_3", # for FS Transactions
                     #"Customer-custom_fs_cash_account_4", # for FS Transactions
