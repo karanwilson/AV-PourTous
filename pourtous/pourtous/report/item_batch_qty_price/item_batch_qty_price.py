@@ -26,7 +26,7 @@ def get_columns(filters):
 		return [
 			{
 				"fieldname": "item_code",
-				"label": "Code",
+				"label": "Item Code",
 				"fieldtype": "Data",
 				"width": "70"
 			},
@@ -44,7 +44,7 @@ def get_columns(filters):
 			},
 			{
 				"fieldname": "batch_no",
-				"label": "Batch No.",
+				"label": "Batch",
 				"fieldtype": "Link",
 				"options": "Batch",
 				"width": "100"
@@ -81,10 +81,22 @@ def get_columns(filters):
 			},
 			{
 				"fieldname": "selling_price",
-				"label": "Batch S.Price",
+				"label": "S Price",
 				"fieldtype": "Currency",
-				"width": "110"
+				"width": "80"
 			},
+			{
+				"fieldname": "custom_barcode",
+				"label": "Batch Barcode",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+			{
+				"fieldname": "qty",
+				"label": "Qty",
+				"fieldtype": "Float",
+				"width": "70"
+			}
 		]
 		""" {
 			"fieldname": "so_reserve",
@@ -97,7 +109,7 @@ def get_columns(filters):
 		return [
 			{
 				"fieldname": "item_code",
-				"label": "Code",
+				"label": "Item Code",
 				"fieldtype": "Data",
 				"width": "80"
 			},
@@ -127,16 +139,28 @@ def get_columns(filters):
 			},
 			{
 				"fieldname": "buying_price",
-				"label": "B.Price",
+				"label": "B Price",
 				"fieldtype": "Currency",
 				"width": "80"
 			},
 			{
 				"fieldname": "selling_price",
-				"label": "S.Price",
+				"label": "S Price",
 				"fieldtype": "Currency",
 				"width": "80"
 			},
+			{
+				"fieldname": "barcode",
+				"label": "Item Barcode",
+				"fieldtype": "Data",
+				"width": "150"
+			},
+			{
+				"fieldname": "qty",
+				"label": "Qty",
+				"fieldtype": "Float",
+				"width": "70"
+			}
 		]
 		""" {
 			"fieldname": "so_reserve",
@@ -173,7 +197,7 @@ def get_data(filters):
 				AND price_list = "Standard Buying"
 			) AS buying_price,
 			tabBatch.custom_buying_price AS batch_buying_price,
-			tabBatch.posa_batch_price AS selling_price
+			tabBatch.posa_batch_price AS selling_price, tabBatch.custom_barcode
 			FROM `tabStock Ledger Entry`, `tabItem Supplier`, tabBatch
 			WHERE `tabStock Ledger Entry`.is_cancelled = 0
 			AND tabBatch.name = `tabStock Ledger Entry`.batch_no
@@ -237,7 +261,13 @@ def get_data(filters):
 				SELECT price_list_rate FROM `tabItem Price`
 				WHERE `tabItem Price`.item_code = tabItem.item_code
 				AND price_list = "Standard Selling"
-			) AS selling_price
+			) AS selling_price,
+			(
+				SELECT barcode FROM `tabItem Barcode`
+				WHERE `tabItem Barcode`.parent = tabItem.item_code
+				AND tabItem.item_code = '{3}'
+				limit 1
+			) AS barcode
 			FROM tabItem, `tabItem Supplier`
 			WHERE tabItem.item_code = `tabItem Supplier`.parent
 			AND tabItem.item_code = '{3}'

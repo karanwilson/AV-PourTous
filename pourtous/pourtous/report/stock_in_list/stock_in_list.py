@@ -8,6 +8,10 @@ from frappe import _, msgprint
 def execute(filters=None):
 	if not (filters.voucher_type and filters.posting_date): # don't execute until filters are set
 		return [], []
+	
+	if filters.voucher_type == "Repack Stock Label":
+		if not (filters.voucher_type and filters.posting_date and filters.to_date): # don't execute until filters are set
+			return [], []
 
 	columns, data = [], []
 
@@ -363,6 +367,34 @@ def get_data1(filters):
 			LEFT JOIN tabBatch
 			ON `tabStock Entry Detail`.batch_no = tabBatch.name
 			""".format(filters.posting_date, warehouse, filters.from_time, filters.to_time),
+			as_dict=True
+		)
+
+	elif filters.voucher_type == "Repack Stock Label":
+		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+		# get company abbreviation
+		warehouse = "Sales Order Reserve - " + abbr
+		query = frappe.db.sql(
+			"""
+			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
+			item_code, batch_no, tabBatch.custom_barcode,
+			IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+				SELECT barcode from `tabItem Barcode`
+				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+				LIMIT 1
+			), 0) AS barcode,
+			`tabStock Entry Detail`.item_name, qty,
+			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
+			FROM `tabStock Entry Detail`
+			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
+			AND `tabStock Entry Detail`.t_warehouse != '{2}'
+			AND `tabStock Entry`.stock_entry_type = "Repack"
+			AND `tabStock Entry`.docstatus = 1
+			AND `tabStock Entry`.posting_date BETWEEN '{0}' AND '{1}'
+			AND `tabStock Entry`.posting_time BETWEEN '{3}' AND '{4}'
+			LEFT JOIN tabBatch
+			ON `tabStock Entry Detail`.batch_no = tabBatch.name
+			""".format(filters.posting_date, filters.to_date, warehouse, filters.from_time, filters.to_time),
 			as_dict=True
 		)
 
