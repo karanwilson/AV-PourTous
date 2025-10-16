@@ -706,12 +706,10 @@ def sync_batch_prices(batch):
 
 # called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
 @frappe.whitelist()
-#@frappe.validate_and_sanitize_search_inputs
-def supplier_batch_items(supplier):
+def supplier_items(supplier):
 	query = frappe.db.sql(
 		"""
-		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
-		`tabPurchase Receipt Item`.qty AS ordered_qty, MAX(`tabPurchase Receipt Item`.creation),
+		SELECT tabItem.item_code, tabItem.item_name,
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
@@ -737,61 +735,73 @@ def supplier_batch_items(supplier):
 			where item_code = `tabItem Supplier`.parent
 			AND voucher_type = "Sales Invoice"
 			AND (month(date(`tabStock Ledger Entry`.posting_date)) = month(curdate()))
-		) AS sold_this_month
-		FROM tabItem, `tabPurchase Receipt Item`, `tabItem Supplier`
-		WHERE tabItem.has_batch_no = 1
+		) AS sold_this_month,
+		tabItem.last_purchase_rate AS last_buy_price,
+		(
+			SELECT qty
+			FROM `tabPurchase Invoice` pi, `tabPurchase Invoice Item` pii
+			WHERE item_code = tabItem.item_code
+			AND parent = pi.name
+			AND supplier = '{2}'
+			AND pi.is_return = 0
+			AND pi.docstatus = 1
+			ORDER BY posting_date DESC
+			LIMIT 1
+		) AS last_order_qty
+
+		FROM tabItem, `tabItem Supplier`
+		WHERE tabItem.item_code = `tabItem Supplier`.parent
 		AND `tabItem Supplier`.supplier = '{2}'
-		AND tabItem.item_code = `tabItem Supplier`.parent
-		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
-		GROUP BY tabItem.item_code
+
 		""".format("Stores%", "Stall%", supplier),
 		as_dict=True
 	)
+
 	return query
 
-# called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
-@frappe.whitelist()
-def supplier_non_batch_items(supplier):
-	query = frappe.db.sql(
-		"""
-		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
-		`tabPurchase Receipt Item`.qty AS ordered_qty, MAX(`tabPurchase Receipt Item`.creation),
-		(
-			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
-			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
-			and warehouse like '{0}'
-			order by posting_date desc, posting_time desc, creation desc
-			limit 1
-		) AS store_qty,
-		(
-			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
-			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
-			and warehouse like '{1}'
-			order by posting_date desc, posting_time desc, creation desc
-			limit 1
-		) AS stall_qty,
-		(
-			select SUM(actual_qty) from `tabStock Ledger Entry`
-			where item_code = `tabItem Supplier`.parent
-			AND voucher_type = "Sales Invoice"
-			AND (month(date(`tabStock Ledger Entry`.posting_date))) = IF(month(curdate())-1, month(curdate())-1, 12)
-		) AS sold_last_month, 
-		(
-			select SUM(actual_qty) from `tabStock Ledger Entry`
-			where item_code = `tabItem Supplier`.parent
-			AND voucher_type = "Sales Invoice"
-			AND (month(date(`tabStock Ledger Entry`.posting_date)) = month(curdate()))
-		) AS sold_this_month
-		FROM tabItem, `tabPurchase Receipt Item`, `tabItem Supplier`
-		WHERE tabItem.has_batch_no = 0
-		AND `tabItem Supplier`.supplier = '{2}'
-		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
-		AND tabItem.item_code = `tabItem Supplier`.parent
-		GROUP BY tabItem.item_code
-		""".format("Stores%", "Stall%", supplier),
-		as_dict=True
-	)
-	return query
+
+# def supplier_batch_items(supplier):
+# 	query = frappe.db.sql(
+# 		"""
+# 		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
+# 		`tabPurchase Receipt Item`.qty AS ordered_qty, MAX(`tabPurchase Receipt Item`.creation),
+# 		(
+# 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+# 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+# 			and warehouse like '{0}'
+# 			order by posting_date desc, posting_time desc, creation desc
+# 			limit 1
+# 		) AS store_qty,
+# 		(
+# 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+# 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+# 			and warehouse like '{1}'
+# 			order by posting_date desc, posting_time desc, creation desc
+# 			limit 1
+# 		) AS stall_qty,
+# 		(
+# 			select SUM(actual_qty) from `tabStock Ledger Entry`
+# 			where item_code = `tabItem Supplier`.parent
+# 			AND voucher_type = "Sales Invoice"
+# 			AND (month(date(`tabStock Ledger Entry`.posting_date))) = IF(month(curdate())-1, month(curdate())-1, 12)
+# 		) AS sold_last_month, 
+# 		(
+# 			select SUM(actual_qty) from `tabStock Ledger Entry`
+# 			where item_code = `tabItem Supplier`.parent
+# 			AND voucher_type = "Sales Invoice"
+# 			AND (month(date(`tabStock Ledger Entry`.posting_date)) = month(curdate()))
+# 		) AS sold_this_month
+# 		FROM tabItem, `tabPurchase Receipt Item`, `tabItem Supplier`
+# 		WHERE tabItem.has_batch_no = 1
+# 		AND `tabItem Supplier`.supplier = '{2}'
+# 		AND tabItem.item_code = `tabItem Supplier`.parent
+# 		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
+# 		GROUP BY tabItem.item_code
+# 		""".format("Stores%", "Stall%", supplier),
+# 		as_dict=True
+# 	)
+# 	return query
+
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs

@@ -1,20 +1,19 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2024-10-30 12:07:41.603326",
- "default_view": "List",
+ "creation": "2024-08-27 12:33:32.305819",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "item_code",
   "item_name",
-  "buying_price",
-  "ordered_qty",
   "store_qty",
   "stall_qty",
   "sold_last_month",
   "sold_this_month",
+  "last_buy_price",
+  "last_order_qty",
   "to_buy"
  ],
  "fields": [
@@ -28,18 +27,6 @@
    "fieldname": "item_name",
    "fieldtype": "Data",
    "label": "Item Name",
-   "read_only": 1
-  },
-  {
-   "fieldname": "buying_price",
-   "fieldtype": "Currency",
-   "label": "Buying Price",
-   "read_only": 1
-  },
-  {
-   "fieldname": "ordered_qty",
-   "fieldtype": "Float",
-   "label": "Ordered Qty",
    "read_only": 1
   },
   {
@@ -67,17 +54,29 @@
   },
   {
    "fieldname": "stall_qty",
-   "fieldtype": "Data",
+   "fieldtype": "Float",
    "label": "Stall Qty"
+  },
+  {
+   "fieldname": "last_buy_price",
+   "fieldtype": "Currency",
+   "label": "Last Buy Price",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_order_qty",
+   "fieldtype": "Float",
+   "label": "Last Order Qty",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-01-23 01:00:39.057409",
+ "modified": "2025-10-16 07:20:18.147573",
  "modified_by": "Administrator",
  "module": "pourtous",
- "name": "PO Supplier Non Batch Items",
+ "name": "PO Supplier Items",
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",

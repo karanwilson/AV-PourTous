@@ -353,15 +353,10 @@ fixtures = [
                     "Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
                     "Supplier-custom_group_supplier", # for mapping suppliers to one Group in Zoho
 
-                    "Purchase Order-custom_batch_items", # Creates a Tab Break for custom_batch_items_data and custom_add_batch_items
-                    "Purchase Order-custom_batch_items_fetch", # Button
-                    "Purchase Order-custom_batch_items_data", # To fetch the Items from the Selected Supplier, along with the required data
-                    "Purchase Order-custom_add_batch_items", # Button: pushes the Selected Items (and their Qty) to the PO Items
-
-                    "Purchase Order-custom_non_batch_items", # Creates a Tab Break for custom_non_batch_items_data and custom_add_non_batch_items
-                    "Purchase Order-custom_non_batch_items_fetch", # Button
-                    "Purchase Order-custom_non_batch_items_data", # To fetch the Items from the Selected Supplier, along with the required data
-                    "Purchase Order-custom_add_non_batch_items", # Button: pushes the Selected Items (and their Qty) to the PO Items
+                    "Purchase Order-custom_items", # Creates a Tab Break for custom_items_data and custom_add_items
+                    "Purchase Order-custom_items_fetch", # Button
+                    "Purchase Order-custom_items_data", # To fetch the Items from the Selected Supplier, along with the required data
+                    "Purchase Order-custom_add_items", # Button: pushes the Selected Items (and their Qty) to the PO Items
 
                     "Purchase Order Item-custom_comments", # for putting custom UOM (like bag, etc.) in Purchase Orders
 
