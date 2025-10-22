@@ -630,7 +630,9 @@ class ZohoBooksAPI(Document):
 			if r.json().get('message') == 'success':
 				return r.json().get('item')
 			else:
-				r.raise_for_status()
+				#r.raise_for_status()
+				frappe.msgprint(r.json().get('message'))
+				return r.json()
 
 
 	def get_items(self):
@@ -1841,6 +1843,11 @@ def sync_erp_taxes_with_zoho(erp_tax):
 
 def update_item_in_zoho(doc, method):
 	#frappe.throw(str(doc.custom_skip_zoho_trigger))
+	if not doc.taxes:
+		frappe.throw("Please enter a Tax Template")
+	if not doc.valuation_rate:
+		frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
+
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		#frappe.throw(str(doc.custom_skip_zoho_trigger))
@@ -1911,7 +1918,7 @@ def update_item_in_zoho(doc, method):
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
 			'purchase_account_name': 'Cost of Goods Sold',
-			#'purchase_description': "",
+			'account_name': 'Sales',
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -1932,14 +1939,14 @@ def update_item_in_zoho(doc, method):
 					"tax_specification": "inter",
 				},
 			],
-			'can_be_purchased': True,
+			#'can_be_purchased': True, # getting message from Zoho Books that Item Type cannot be changed for items having transactions.
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
 			#'purchase_account_id': '2464766000000341487',
 			#'purchase_account_name': 'Purchase of Goods & Services',
 			#'purchase_account_id': '2464766000000000567',
 			'purchase_account_name': 'Cost of Goods Sold',
-			#'purchase_description': "",
+			'account_name': 'Sales',
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -1957,6 +1964,7 @@ def update_item_in_zoho(doc, method):
 
 	else:
 		# put/update existing Item
+		#frappe.throw(str(put_data))
 		res = api_controller.put_item(doc.custom_zoho_item_id, put_data)
 		#frappe.throw(str(res))
 		if res:
@@ -2033,6 +2041,22 @@ def custom_fetch_erp_items_list():
 	)
 
 @frappe.whitelist()
+def custom_fetch_erp_items_list_from_file():
+	import csv
+
+	with open('items_to_update_zoho.csv', newline='') as f:
+		reader = csv.reader(f)
+		item_ids_list_of_lists = list(reader)
+
+	item_ids_list = []
+
+	for row in item_ids_list_of_lists:
+		item_ids_list.extend(row)
+
+	return item_ids_list
+
+
+@frappe.whitelist()
 def update_erp_item_in_zb(erp_item):
 	doc = frappe.get_doc("Item", erp_item)
 	res = update_item_in_zoho(doc, method=None)
@@ -2048,40 +2072,46 @@ def update_erp_item_in_zb(erp_item):
 
 
 @frappe.whitelist()
-def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
+def custom_update_erp_item_in_zb(custom_zoho_item_id):
+#def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
 	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
 
 	#if item_name:
-	doc = frappe.get_doc("Item", erp_item)
+	# doc = frappe.get_doc("Item", erp_item)
 
-	try:
-		zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
-		zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+	# try:
+	# 	zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+	# 	zb_inter_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 
-	except Exception as err:
-		msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + doc.item_code
-		frappe.msgprint(msg)
-		return
+	# except Exception as err:
+	# 	msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + doc.item_code
+	# 	frappe.msgprint(msg)
+	# 	return
 
-	else:
-		put_data = {
-			"item_tax_preferences": [
-				{
-					"tax_id": zb_intra_tax_id,
-					"tax_specification": "intra",
-				},
-				{
-					"tax_id": zb_inter_tax_id,
-					"tax_specification": "inter",
-				},
-			],
-		}
+	# else:
+	# 	put_data = {
+	# 		"item_tax_preferences": [
+	# 			{
+	# 				"tax_id": zb_intra_tax_id,
+	# 				"tax_specification": "intra",
+	# 			},
+	# 			{
+	# 				"tax_id": zb_inter_tax_id,
+	# 				"tax_specification": "inter",
+	# 			},
+	# 		],
+	# 	}
+
+	put_data = {
+		'item_type': 'sales_and_purchases',
+		'account_name': 'Sales',
+	}
 
 	api_controller = frappe.get_doc("Zoho Books API")
 	res = api_controller.put_item(custom_zoho_item_id, put_data)
 	if res.get('code') == 0:
 		#doc.custom_zoho_item_updated = 1
-		frappe.db.set_value("Item", erp_item, "custom_zoho_item_updated", 1)
+		#frappe.db.set_value("Item", erp_item, "custom_zoho_item_updated", 1)
 		return { "ADDED" }
 	else:
 		frappe.msgprint(res.get('message'))
@@ -2092,6 +2122,10 @@ def get_zb_item_list():
 	api_controller = frappe.get_doc("Zoho Books API")
 	return api_controller.get_items()
 
+@frappe.whitelist()
+def get_an_item(item):
+	api_controller = frappe.get_doc("Zoho Books API")
+	return api_controller.get_an_item(item)
 
 @frappe.whitelist()
 def sync_zb_item_id_with_erp(item_id, item_name):

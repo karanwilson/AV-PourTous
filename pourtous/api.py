@@ -920,7 +920,7 @@ def stock_recon_update_price_lists(doc, method):
 					item_price = frappe.get_doc({
 						"doctype": "Item Price",
 						"item_code": item.item_code,
-						"uom": item.uom,
+						"uom": frappe.db.get_value('Item', item.item_code, 'stock_uom'),
 						"price_list": "Standard Selling",
 						"price_list_rate": item.custom_selling_price,
 						#"batch_no": item.batch_no
