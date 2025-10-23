@@ -80,7 +80,7 @@ frappe.listview_settings['Item'] = {
 
         listview.page.add_inner_button("Update ERP Items in ZB", () => {
             frappe.call({
-                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.custom_fetch_erp_items_list_from_file',
+                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.custom_fetch_erp_items_list',
                 async: false,
                 callback: (r) => {
                     if (r.message) {
@@ -94,9 +94,9 @@ frappe.listview_settings['Item'] = {
                                 frappe.call({
                                     method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.custom_update_erp_item_in_zb',
                                     args: {
-                                        //erp_item: r.message[i]["name"],
-                                        //custom_zoho_item_id: r.message[i]["custom_zoho_item_id"],
-                                        custom_zoho_item_id: r.message[i],
+                                        erp_item: r.message[i]["name"],
+                                        custom_zoho_item_id: r.message[i]["custom_zoho_item_id"],
+                                        //custom_zoho_item_id: r.message[i],
                                         //gst_hsn_code: r.message[i]["gst_hsn_code"],
                                     },
                                     async: false,

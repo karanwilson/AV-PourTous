@@ -1917,7 +1917,9 @@ def update_item_in_zoho(doc, method):
 			'can_be_purchased': True,
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
+			'purchase_account_id': '2464766000000000567',
 			'purchase_account_name': 'Cost of Goods Sold',
+			'account_id': '2464766000000030407',
 			'account_name': 'Sales',
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
@@ -1942,10 +1944,9 @@ def update_item_in_zoho(doc, method):
 			#'can_be_purchased': True, # getting message from Zoho Books that Item Type cannot be changed for items having transactions.
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
-			#'purchase_account_id': '2464766000000341487',
-			#'purchase_account_name': 'Purchase of Goods & Services',
-			#'purchase_account_id': '2464766000000000567',
+			'purchase_account_id': '2464766000000000567',
 			'purchase_account_name': 'Cost of Goods Sold',
+			'account_id': '2464766000000030407',
 			'account_name': 'Sales',
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
@@ -2072,8 +2073,8 @@ def update_erp_item_in_zb(erp_item):
 
 
 @frappe.whitelist()
-def custom_update_erp_item_in_zb(custom_zoho_item_id):
-#def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
+def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
+#def custom_update_erp_item_in_zb(custom_zoho_item_id):
 	#item_code = frappe.get_value("Item", {"custom_zoho_item_id": custom_zoho_item_id}, "item_code")
 
 	#if item_name:
@@ -2104,6 +2105,9 @@ def custom_update_erp_item_in_zb(custom_zoho_item_id):
 
 	put_data = {
 		'item_type': 'sales_and_purchases',
+		'purchase_account_id': '2464766000000000567',
+		'purchase_account_name': 'Cost of Goods Sold',
+		'account_id': '2464766000000030407',
 		'account_name': 'Sales',
 	}
 
@@ -2111,7 +2115,7 @@ def custom_update_erp_item_in_zb(custom_zoho_item_id):
 	res = api_controller.put_item(custom_zoho_item_id, put_data)
 	if res.get('code') == 0:
 		#doc.custom_zoho_item_updated = 1
-		#frappe.db.set_value("Item", erp_item, "custom_zoho_item_updated", 1)
+		frappe.db.set_value("Item", erp_item, "custom_zoho_item_updated", 1)
 		return { "ADDED" }
 	else:
 		frappe.msgprint(res.get('message'))
