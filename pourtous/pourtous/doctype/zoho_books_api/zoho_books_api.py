@@ -1919,7 +1919,7 @@ def update_item_in_zoho(doc, method):
 					"tax_specification": "inter",
 				},
 			],
-			'can_be_purchased': True,
+			#'can_be_purchased': True,
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
 			'purchase_account_id': purchase_account_id,
