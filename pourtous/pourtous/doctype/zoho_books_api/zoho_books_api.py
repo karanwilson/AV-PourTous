@@ -1848,8 +1848,13 @@ def update_item_in_zoho(doc, method):
 	if not doc.valuation_rate:
 		frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
 
-	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Purchasing Service"):
+		purchase_account_id = '2464766000000000567'
+		account_id = '2464766000000030407'
+	elif frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center"):
+		purchase_account_id = '2407242000000000567'
+		account_id = '2407242000000030369'
+	elif frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		#frappe.throw(str(doc.custom_skip_zoho_trigger))
 		return
 
@@ -1917,9 +1922,9 @@ def update_item_in_zoho(doc, method):
 			'can_be_purchased': True,
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
-			'purchase_account_id': '2464766000000000567',
+			'purchase_account_id': purchase_account_id,
 			'purchase_account_name': 'Cost of Goods Sold',
-			'account_id': '2464766000000030407',
+			'account_id': account_id,
 			'account_name': 'Sales',
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
@@ -1944,9 +1949,9 @@ def update_item_in_zoho(doc, method):
 			#'can_be_purchased': True, # getting message from Zoho Books that Item Type cannot be changed for items having transactions.
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
-			'purchase_account_id': '2464766000000000567',
+			'purchase_account_id': purchase_account_id,
 			'purchase_account_name': 'Cost of Goods Sold',
-			'account_id': '2464766000000030407',
+			'account_id': account_id,
 			'account_name': 'Sales',
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
@@ -2103,11 +2108,18 @@ def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
 	# 		],
 	# 	}
 
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Purchasing Service"):
+		purchase_account_id = '2464766000000000567'
+		account_id = '2464766000000030407'
+	elif frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center"):
+		purchase_account_id = '2407242000000000567'
+		account_id = '2407242000000030369'
+
 	put_data = {
 		'item_type': 'sales_and_purchases',
-		'purchase_account_id': '2464766000000000567',
+		'purchase_account_id': purchase_account_id,
 		'purchase_account_name': 'Cost of Goods Sold',
-		'account_id': '2464766000000030407',
+		'account_id': account_id,
 		'account_name': 'Sales',
 	}
 
