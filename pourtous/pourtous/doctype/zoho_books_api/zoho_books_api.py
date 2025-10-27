@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import random
 
 import requests, json, re
+import os
 #import urllib
 
 
@@ -588,6 +589,8 @@ class ZohoBooksAPI(Document):
 		api_url = 'https://www.zohoapis.in/books/v3/items/' + item_id + '?'
 
 		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		#frappe.throw(_("api_url: {0} , authorization: {1}").format(api_url, authorization))
 
 		with requests.Session() as s:
 			s.params = {
@@ -1848,15 +1851,14 @@ def update_item_in_zoho(doc, method):
 	if not doc.valuation_rate:
 		frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
 
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Purchasing Service"):
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
 		purchase_account_id = '2464766000000000567'
 		account_id = '2464766000000030407'
-	elif frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center"):
+	elif frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		purchase_account_id = '2407242000000000567'
 		account_id = '2407242000000030369'
-	elif frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
-		#frappe.throw(str(doc.custom_skip_zoho_trigger))
-		return
+	else:
+		frappe.throw("Please verify if Zoho Books API is enabled for this compamy")
 
 	if doc.custom_skip_zoho_trigger and doc.custom_zoho_item_id != None:
 		doc.custom_skip_zoho_trigger = 0 # reseting the value after it is matched
@@ -1999,9 +2001,8 @@ def update_item_in_zoho(doc, method):
 
 
 def delete_item_in_zoho(doc, method):
-	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
-		return
+	if frappe.defaults.get_user_default("company") not in ("Pour Tous Purchasing Service", "Pour Tous Distribution Center"):
+		frappe.throw("Please verify if Zoho Books API is enabled for this compamy")
 
 	if doc.custom_zoho_item_id:
 		api_controller = frappe.get_doc("Zoho Books API")
@@ -2009,6 +2010,28 @@ def delete_item_in_zoho(doc, method):
 		if res:
 			msg = "Zoho Books Response: " + res
 			frappe.msgprint(msg)
+
+@frappe.whitelist()
+#def custom_delete_item_in_zoho(erp_item, custom_zoho_item_id):
+def custom_delete_item_in_zoho(custom_zoho_item_id):
+	if frappe.defaults.get_user_default("company") not in ("Pour Tous Purchasing Service", "Pour Tous Distribution Center"):
+		frappe.throw("Please verify if Zoho Books API is enabled for this compamy")
+
+	api_controller = frappe.get_doc("Zoho Books API")
+	res = api_controller.delete_item(custom_zoho_item_id)
+	if res == "The item has been deleted.":
+		#frappe.db.set_value("Item", erp_item, "custom_zoho_item_updated", 0)
+		return { "DELETED" }
+	elif res == "":
+		str_item = custom_zoho_item_id + 'Items which are a part of other transactions cannot be deleted. Instead, mark them as inactive.'
+		if os.path.exists('zb_item_to_update.txt'):
+			append_write = 'a' # append if already exists
+		else:
+			append_write = 'w' # make a new file if not
+		with open('zb_item_to_update.txt', append_write) as file:
+			file.write(str_item)
+	else:
+		frappe.msgprint(res)
 
 
 @frappe.whitelist()
@@ -2050,7 +2073,7 @@ def custom_fetch_erp_items_list():
 def custom_fetch_erp_items_list_from_file():
 	import csv
 
-	with open('items_to_update_zoho.csv', newline='') as f:
+	with open('Items_to_delete_zb_extract_2.csv', newline='') as f:
 		reader = csv.reader(f)
 		item_ids_list_of_lists = list(reader)
 
@@ -2108,12 +2131,14 @@ def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
 	# 		],
 	# 	}
 
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Purchasing Service"):
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
 		purchase_account_id = '2464766000000000567'
 		account_id = '2464766000000030407'
-	elif frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center"):
+	elif frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		purchase_account_id = '2407242000000000567'
 		account_id = '2407242000000030369'
+	else:
+		frappe.throw("Please verify if Zoho Books API is enabled for this compamy")
 
 	put_data = {
 		'item_type': 'sales_and_purchases',
@@ -3040,6 +3065,9 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				#frappe.throw(res2[0].get("invoice_id"))
 				zb_invoice_id = res2[0].get("invoice_id")
 
+		else:
+			frappe.throw(str(res))
+
 		#if "invoice_id" in res:
 		if zb_invoice_id is not None:
 			#zb_invoice_id = res.get('invoice_id')
@@ -3273,6 +3301,9 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 				#frappe.throw(res2[0].get("invoice_id"))
 				zb_invoice_id = res2[0].get("invoice_id")
 
+		else:
+			frappe.throw(res.get("message"))
+
 		#if "invoice_id" in res:
 		if zb_invoice_id:
 			#zb_invoice_id = res.get('invoice_id')
@@ -3390,6 +3421,9 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
 			if res2:
 				zb_invoice_id = res2[0].get("invoice_id")
+
+		else:
+			frappe.throw(res.get("message"))
 
 		#if "invoice_id" in res:
 		if zb_invoice_id:
