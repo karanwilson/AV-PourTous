@@ -1846,10 +1846,10 @@ def sync_erp_taxes_with_zoho(erp_tax):
 
 def update_item_in_zoho(doc, method):
 	#frappe.throw(str(doc.custom_skip_zoho_trigger))
-	if not doc.taxes:
-		frappe.throw("Please enter a Tax Template")
-	if not doc.valuation_rate:
-		frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
+	# if not doc.taxes:
+	# 	frappe.throw("Please enter a Tax Template")
+	# if not doc.valuation_rate:
+	# 	frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
 
 	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
 		purchase_account_id = '2464766000000000567'
