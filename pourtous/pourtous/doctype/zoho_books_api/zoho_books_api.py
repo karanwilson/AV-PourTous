@@ -666,6 +666,35 @@ class ZohoBooksAPI(Document):
 				r.raise_for_status()
 
 
+	def get_journals(self, vendor_id):
+		master = "accounts"
+		scope='ZohoBooks.accountants.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/journals?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'vendor_id': vendor_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get('message') == 'success':
+				return r.json()
+			else:
+				r.raise_for_status()
+
+
 	def post_bill(self, data):
 		master = "bills"
 		scope='ZohoBooks.bills.CREATE'
