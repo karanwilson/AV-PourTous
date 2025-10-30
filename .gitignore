@@ -6,3 +6,4 @@ tags
 pourtous/docs/current
 node_modules
 pourtous/public/dist
+pourtous/public/node_modules
