@@ -328,7 +328,7 @@ class ZohoBooksAPI(Document):
 			#{'code': 100017, 'message': 'Tax or tax group already exists with this name.'}
 
 
-	def get_a_tax(self, tax_id, data):
+	def get_a_tax(self, tax_id):
 		master = "settings"
 		scope='ZohoBooks.settings.READ'
 
@@ -348,7 +348,30 @@ class ZohoBooksAPI(Document):
 				'content-type': 'application/json'
 				}
 
-			r = s.put(api_url, data=json.dumps(data))
+			r = s.get(api_url)
+
+
+	def get_taxes(self):
+		master = "settings"
+		scope='ZohoBooks.settings.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/settings/taxes?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
 
 
 	def delete_tax(self, tax_id):
@@ -1853,10 +1876,24 @@ def update_item_in_zoho(doc, method):
 
 	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
 		purchase_account_id = '2464766000000000567'
+		purchase_account_name = 'Cost of Goods Sold'
 		account_id = '2464766000000030407'
+		account_name = 'Sales'
 	elif frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		purchase_account_id = '2407242000000000567'
+		purchase_account_name = 'Cost of Goods Sold'
 		account_id = '2407242000000030369'
+		account_name = 'Sales'
+	elif frappe.defaults.get_user_default("company") == "Auroville Bakery":
+		purchase_account_id = ''
+		purchase_account_name = ''
+		account_id = '2386181000000030369'
+		account_name = 'Sales'
+	elif frappe.defaults.get_user_default("company") == "AV Bakery Cafe":
+		purchase_account_id = ''
+		purchase_account_name = ''
+		account_id = '2567347000000000486'
+		account_name = 'Sales'
 	else:
 		frappe.throw("Please verify if Zoho Books API is enabled for this compamy")
 
@@ -1925,9 +1962,9 @@ def update_item_in_zoho(doc, method):
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
 			'purchase_account_id': purchase_account_id,
-			'purchase_account_name': 'Cost of Goods Sold',
+			'purchase_account_name': purchase_account_name,
 			'account_id': account_id,
-			'account_name': 'Sales',
+			'account_name': account_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -1952,9 +1989,9 @@ def update_item_in_zoho(doc, method):
 			'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
 			'purchase_account_id': purchase_account_id,
-			'purchase_account_name': 'Cost of Goods Sold',
+			'purchase_account_name': purchase_account_name,
 			'account_id': account_id,
-			'account_name': 'Sales',
+			'account_name': account_name,
 			"hsn_or_sac": doc.gst_hsn_code,
 			"rate": 0
 		}
@@ -2133,19 +2170,33 @@ def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
 
 	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
 		purchase_account_id = '2464766000000000567'
+		purchase_account_name = 'Cost of Goods Sold'
 		account_id = '2464766000000030407'
+		account_name = 'Sales'
 	elif frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		purchase_account_id = '2407242000000000567'
+		purchase_account_name = 'Cost of Goods Sold'
 		account_id = '2407242000000030369'
+		account_name = 'Sales'
+	elif frappe.defaults.get_user_default("company") == "Auroville Bakery":
+		purchase_account_id = ''
+		purchase_account_name = ''
+		account_id = '2386181000000030369'
+		account_name = 'Sales'
+	elif frappe.defaults.get_user_default("company") == "AV Bakery Cafe":
+		purchase_account_id = ''
+		purchase_account_name = ''
+		account_id = '2386181000000030369'
+		account_name = 'Sales'
 	else:
 		frappe.throw("Please verify if Zoho Books API is enabled for this compamy")
 
 	put_data = {
 		'item_type': 'sales_and_purchases',
 		'purchase_account_id': purchase_account_id,
-		'purchase_account_name': 'Cost of Goods Sold',
+		'purchase_account_name': purchase_account_name,
 		'account_id': account_id,
-		'account_name': 'Sales',
+		'account_name': account_name,
 	}
 
 	api_controller = frappe.get_doc("Zoho Books API")
@@ -2410,10 +2461,12 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 	is_reverse_charge_applied = False # default value initialised here (context: GST-unregistered Vendors)
 
 	# for better design: need to fetch the is_inclusive_tax from the settings in the ERP tax table
-	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
-		is_inclusive_tax = False
-	else:
-		is_inclusive_tax = True
+	# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+	# 	is_inclusive_tax = False
+	# else:
+	# 	is_inclusive_tax = True
+
+	is_inclusive_tax = True if bill_doc.taxes[0].included_in_print_rate else False
 
 	api_controller = frappe.get_doc("Zoho Books API")
 
@@ -2627,12 +2680,26 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 
+	is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
+
 	if frappe.get_value("Customer", customer, "customer_type") == "Company":
 		fs_customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
 	elif invoice_doc.company == "Pour Tous Purchasing Service":
-		fs_customer_id = 2464766000000395217  # PTPS "FS Account Customers" in ZB
+		fs_customer_id = 2464766000000395217 # PTPS "FS Account Customers" in ZB
 		aurocard_customer_id = 2464766000000395229 # PTPS "Aurocard Customers" in ZB
 		upi_customer_id = 2464766000000395241 # PTPS "UPI Customers" in ZB
+	elif invoice_doc.company == "Auroville Bakery":
+		fs_customer_id = 2386181000000186007 # AVB "FS Account Customers" in ZB
+		aurocard_customer_id = 2386181000000177675 # AVB "Aurocard Customers" in ZB
+		upi_customer_id = 2386181000000192017 # AVB "UPI Customers" in ZB
+		cash_customer_id = 2386181000000108046 # AVB "Cash Customers" in ZB
+		cards_customer_id = 2386181000000192001 # AVB "Card Customers" in ZB
+	elif invoice_doc.company == "AV Bakery Cafe":
+		fs_customer_id = 2567347000000380861 # AVBC "FS Account Customers" in ZB
+		aurocard_customer_id = 2567347000000035120 # AVBC "Aurocard Customers" in ZB
+		upi_customer_id = 2567347000000380968 # AVBC "UPI Customers" in ZB
+		cash_customer_id = 2567347000000035084 # AVBC "Cash Customers" in ZB
+		cards_customer_id = 2567347000000381112 # AVBC "Card Customers" in ZB
 	else:
 		frappe.throw("Please set the ZB Walk-in Customer IDs for this Company")
 
@@ -2685,7 +2752,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				'customer_id': fs_customer_id, # "FS Account Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
-				"is_inclusive_tax": True,
+				"is_inclusive_tax": is_inclusive_tax,
 				"custom_fields": [
 					{
 						"index": 1,
@@ -2703,7 +2770,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				'customer_id': aurocard_customer_id, # "Aurocard Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
-				"is_inclusive_tax": True,
+				"is_inclusive_tax": is_inclusive_tax,
 				"custom_fields": [
 					{
 						"index": 2,
@@ -2721,7 +2788,27 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				'customer_id': upi_customer_id, # "UPI Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
-				"is_inclusive_tax": True,
+				"is_inclusive_tax": is_inclusive_tax,
+				"line_items": line_items,
+				"invoice_id": zb_inv_id
+			}
+
+		elif customer_group == "Cash Payments":
+			creditnote_data = {
+				'customer_id': cash_customer_id, # "Cash Customers" in ZB
+				'creditnote_number': invoice,
+				'date': date,
+				"is_inclusive_tax": is_inclusive_tax,
+				"line_items": line_items,
+				"invoice_id": zb_inv_id
+			}
+
+		elif customer_group == "Card Payments":
+			creditnote_data = {
+				'customer_id': cards_customer_id, # "UPI Customers" in ZB
+				'creditnote_number': invoice,
+				'date': date,
+				"is_inclusive_tax": is_inclusive_tax,
 				"line_items": line_items,
 				"invoice_id": zb_inv_id
 			}
@@ -2829,6 +2916,10 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		if customer_doc.gstin == frappe.db.get_value("Company", company, "gstin"):
 			taxable = False
 
+	if taxable:
+		settings_doc = frappe.get_doc("Accounts Settings")
+		is_inclusive_tax = True if settings_doc.show_inclusive_tax_in_print else False
+
 	line_items = []
 
 	for item in erp_line_items:
@@ -2867,7 +2958,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		'customer_id': customer_id,
 		#'invoice_number': consol_inv_pt_account+"--"+date[2:],
 		'date': date,
-		"is_inclusive_tax": True,
+		"is_inclusive_tax": is_inclusive_tax,
 		#'price_precision': 2,
 		"custom_fields": [
 			{
@@ -2975,6 +3066,10 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 		customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
 	elif invoice_doc.company == "Pour Tous Purchasing Service":
 		customer_id = 2464766000000395217  # PTPS "FS Account Customers" in ZB
+	elif invoice_doc.company == "Auroville Bakery":
+		customer_id = 2386181000000186007 # AVB "FS Account Customers" in ZB
+	elif invoice_doc.company == "AV Bakery Cafe":
+		customer_id = 2567347000000380861 # AVBC "FS Account Customers" in ZB
 	else:
 		frappe.throw("Please set the ZB Walk-in Customer IDs for this Company")
 
@@ -2987,6 +3082,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			item_doc = frappe.get_doc("Item", item.item_code)
 
 			if invoice_doc.taxes:
+				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
 					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
@@ -3023,7 +3119,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			'customer_id': customer_id,
 			'invoice_number': invoice[-16:],
 			'date': date,
-			"is_inclusive_tax": True,
+			"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"custom_fields": [
 				{
@@ -3193,6 +3289,28 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 			customer_id = 2464766000000395229 # PTPS "Aurocard Customers" in ZB
 		elif customer_group == "UPI Payments":
 			customer_id = 2464766000000395241 # PTPS "UPI Customers" in ZB
+	elif invoice_doc.company == "Auroville Bakery":
+		if fs_account_number:
+			customer_id = 2386181000000186007 # AVB "FS Account Customers" in ZB
+		elif customer_group == "Aurocard Payments":
+			customer_id = 2386181000000177675 # AVB "Aurocard Customers" in ZB
+		elif customer_group == "UPI Payments":
+			customer_id = 2386181000000192017 # AVB "UPI Customers" in ZB
+		elif customer_group == "Cash Payments":
+			customer_id = 2386181000000108046 # AVB "Cash Customers" in ZB
+		elif customer_group == "Card Payments":
+			customer_id = 2386181000000192001 # AVB "Card Customers" in ZB
+	elif invoice_doc.company == "AV Bakery Cafe":
+		if fs_account_number:
+			customer_id = 2567347000000380861 # AVBC "FS Account Customers" in ZB
+		elif customer_group == "Aurocard Payments":
+			customer_id = 2567347000000035120 # AVBC "Aurocard Customers" in ZB
+		elif customer_group == "UPI Payments":
+			customer_id = 2567347000000380968 # AVBC "UPI Customers" in ZB
+		elif customer_group == "Cash Payments":
+			customer_id = 2567347000000035084 # AVBC "Cash Customers" in ZB
+		elif customer_group == "Card Payments":
+			customer_id = 2567347000000381112 # AVBC "Card Customers" in ZB
 	else:
 		frappe.throw("Please set the ZB Walk-in Customer IDs for this Company")
 
@@ -3205,6 +3323,7 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 			item_doc = frappe.get_doc("Item", item.item_code)
 
 			if invoice_doc.taxes:
+				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
 					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
@@ -3241,7 +3360,7 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 			'customer_id': customer_id,
 			'invoice_number': invoice[-16:],
 			'date': date,
-			"is_inclusive_tax": True,
+			"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"custom_fields": [
 				{
@@ -3273,7 +3392,7 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 						"data_type": "text"
 					}
 				]
-			
+
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
 			for row in invoice_doc.taxes: # searching in the "Taxes and Charges" table
@@ -3338,6 +3457,10 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 
 	if invoice_doc.company == "Pour Tous Purchasing Service":
 		customer_id = 2464766000000395229
+	elif invoice_doc.company == "Auroville Bakery":
+		customer_id = 2386181000000177675 # AVB "Aurocard Customers" in ZB
+	elif invoice_doc.company == "AV Bakery Cafe":
+		customer_id = 2567347000000035120 # AVBC "Aurocard Customers" in ZB
 	else:
 		frappe.throw("Please set the ZB Walk-in Customer IDs for this Company")
 
@@ -3348,6 +3471,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			item_doc = frappe.get_doc("Item", item.item_code)
 
 			if invoice_doc.taxes:
+				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
 					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
@@ -3383,7 +3507,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			'customer_id': customer_id, # "Aurocard Customers" in ZB
 			'invoice_number': invoice[-16:],
 			'date': date,
-			"is_inclusive_tax": True,
+			"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"custom_fields": [
 				{
@@ -3540,6 +3664,10 @@ def sync_upi_inv_with_zoho_books(invoice):
 
 	if invoice_doc.company == "Pour Tous Purchasing Service":
 		customer_id = 2464766000000395241
+	elif invoice_doc.company == "Auroville Bakery":
+		customer_id = 2386181000000192017 # AVB "UPI Customers" in ZB
+	elif invoice_doc.company == "AV Bakery Cafe":
+		customer_id = 2567347000000380968 # AVBC "UPI Customers" in ZB
 	else:
 		frappe.throw("Please set the ZB Walk-in Customer IDs for this Company")
 
@@ -3550,6 +3678,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 			item_doc = frappe.get_doc("Item", item.item_code)
 
 			if invoice_doc.taxes:
+				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
 					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
@@ -3585,7 +3714,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 			'customer_id': customer_id, # "UPI Customers" in ZB
 			'invoice_number': invoice[-16:],
 			'date': date,
-			"is_inclusive_tax": True,
+			"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"line_items": line_items
 		}
