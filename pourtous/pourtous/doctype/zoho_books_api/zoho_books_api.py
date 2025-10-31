@@ -689,6 +689,35 @@ class ZohoBooksAPI(Document):
 				r.raise_for_status()
 
 
+	def get_journals(self, vendor_id):
+		master = "accounts"
+		scope='ZohoBooks.accountants.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/journals?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'vendor_id': vendor_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get('message') == 'success':
+				return r.json()
+			else:
+				r.raise_for_status()
+
+
 	def post_bill(self, data):
 		master = "bills"
 		scope='ZohoBooks.bills.CREATE'
@@ -1869,10 +1898,10 @@ def sync_erp_taxes_with_zoho(erp_tax):
 
 def update_item_in_zoho(doc, method):
 	#frappe.throw(str(doc.custom_skip_zoho_trigger))
-	if not doc.taxes:
-		frappe.throw("Please enter a Tax Template")
-	if not doc.valuation_rate:
-		frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
+	# if not doc.taxes:
+	# 	frappe.throw("Please enter a Tax Template")
+	# if not doc.valuation_rate:
+	# 	frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
 
 	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
 		purchase_account_id = '2464766000000000567'
