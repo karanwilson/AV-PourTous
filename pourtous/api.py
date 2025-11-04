@@ -361,6 +361,9 @@ def update_fs_accounts(fs_account, name, disable):
 	if existing_fs_customer:
 		customer_doc = frappe.get_doc("Customer", existing_fs_customer)
 		updated = "" # to reduce the number of db commits
+		if customer_doc.customer_type == 'Company':
+			return updated
+
 		if customer_doc.disabled != int(disable):
 			customer_doc.disabled = int(disable)
 			updated = "UPDATED"
