@@ -20,7 +20,25 @@
   "token_received_at",
   "token_validity",
   "token_valid_till",
-  "test"
+  "test",
+  "column_break_shr3d",
+  "location",
+  "location_id",
+  "gst_number",
+  "income_account",
+  "income_account_id",
+  "expense_account",
+  "expense_account_id",
+  "walk_in_fs_customer",
+  "walk_in_fs_contact_id",
+  "walk_in_aurocard_customer",
+  "walk_in_aurocard_contact_id",
+  "walk_in_upi_customer",
+  "walk_in_upi_contact_id",
+  "walk_in_cash_customer",
+  "walk_in_cash_contact_id",
+  "walk_in_card_customer",
+  "walk_in_card_contact_id"
  ],
  "fields": [
   {
@@ -111,12 +129,120 @@
    "fieldtype": "Datetime",
    "label": "Token valid till",
    "read_only": 1
+  },
+  {
+   "fetch_from": "location.gst_number",
+   "fetch_if_empty": 1,
+   "fieldname": "gst_number",
+   "fieldtype": "Data",
+   "label": "GST Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "label": "Location",
+   "options": "Zoho Location"
+  },
+  {
+   "fetch_from": "location.location_id",
+   "fieldname": "location_id",
+   "fieldtype": "Data",
+   "label": "Location ID"
+  },
+  {
+   "fieldname": "column_break_shr3d",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "income_account",
+   "fieldtype": "Link",
+   "label": "Income Account",
+   "options": "Zoho Accounts"
+  },
+  {
+   "fetch_from": "income_account.account_id",
+   "fieldname": "income_account_id",
+   "fieldtype": "Data",
+   "label": "Income Account ID"
+  },
+  {
+   "fieldname": "expense_account",
+   "fieldtype": "Link",
+   "label": "Expense Account",
+   "options": "Zoho Accounts"
+  },
+  {
+   "fetch_from": "expense_account.account_id",
+   "fieldname": "expense_account_id",
+   "fieldtype": "Data",
+   "label": "Expense Account ID"
+  },
+  {
+   "fieldname": "walk_in_fs_customer",
+   "fieldtype": "Link",
+   "label": "Walk In FS Customer",
+   "options": "Zoho Walk In customer"
+  },
+  {
+   "fieldname": "walk_in_aurocard_customer",
+   "fieldtype": "Link",
+   "label": "Walk In Aurocard Customer",
+   "options": "Zoho Walk In customer"
+  },
+  {
+   "fieldname": "walk_in_upi_customer",
+   "fieldtype": "Link",
+   "label": "Walk In UPI Customer",
+   "options": "Zoho Walk In customer"
+  },
+  {
+   "fieldname": "walk_in_cash_customer",
+   "fieldtype": "Link",
+   "label": "Walk In Cash Customer",
+   "options": "Zoho Walk In customer"
+  },
+  {
+   "fieldname": "walk_in_card_customer",
+   "fieldtype": "Link",
+   "label": "Walk In Card Customer",
+   "options": "Zoho Walk In customer"
+  },
+  {
+   "fetch_from": "walk_in_fs_customer.contact_id",
+   "fieldname": "walk_in_fs_contact_id",
+   "fieldtype": "Data",
+   "label": "Walk In FS Contact ID"
+  },
+  {
+   "fetch_from": "walk_in_aurocard_customer.contact_id",
+   "fieldname": "walk_in_aurocard_contact_id",
+   "fieldtype": "Data",
+   "label": "Walk In Aurocard Contact ID"
+  },
+  {
+   "fetch_from": "walk_in_upi_customer.contact_id",
+   "fieldname": "walk_in_upi_contact_id",
+   "fieldtype": "Data",
+   "label": "Walk In UPI Contact ID"
+  },
+  {
+   "fetch_from": "walk_in_cash_customer.contact_id",
+   "fieldname": "walk_in_cash_contact_id",
+   "fieldtype": "Data",
+   "label": "Walk In Cash Contact ID"
+  },
+  {
+   "fetch_from": "walk_in_card_customer.contact_id",
+   "fieldname": "walk_in_card_contact_id",
+   "fieldtype": "Data",
+   "label": "Walk In Card Contact ID"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-04-17 19:35:08.187418",
+ "modified": "2025-11-06 13:15:18.685755",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",
@@ -129,6 +255,26 @@
    "print": 1,
    "read": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Item Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
    "share": 1,
    "write": 1
   }

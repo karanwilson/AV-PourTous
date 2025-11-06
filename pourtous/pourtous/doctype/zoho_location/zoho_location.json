@@ -1,0 +1,72 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:location_id",
+ "creation": "2025-11-05 15:47:11.227500",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "location_id",
+  "initial_stock",
+  "initial_stock_rate",
+  "location_name",
+  "gst_number"
+ ],
+ "fields": [
+  {
+   "fieldname": "location_id",
+   "fieldtype": "Data",
+   "label": "Location ID",
+   "unique": 1
+  },
+  {
+   "fieldname": "location_name",
+   "fieldtype": "Data",
+   "label": "Location Name"
+  },
+  {
+   "fieldname": "gst_number",
+   "fieldtype": "Data",
+   "label": "GST Number"
+  },
+  {
+   "fieldname": "initial_stock",
+   "fieldtype": "Data",
+   "label": "Initial Stock"
+  },
+  {
+   "fieldname": "initial_stock_rate",
+   "fieldtype": "Data",
+   "label": "Initial Stock Rate"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-11-06 16:06:16.088228",
+ "modified_by": "Administrator",
+ "module": "pourtous",
+ "name": "Zoho Location",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "location_name"
+}
