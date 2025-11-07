@@ -3071,7 +3071,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		'customer_id': customer_id,
 		#'invoice_number': consol_inv_pt_account+"--"+date[2:],
 		'date': date,
-		"is_inclusive_tax": is_inclusive_tax,
+		#"is_inclusive_tax": is_inclusive_tax,
 		'location_id': api_controller.location_id,
 		#'price_precision': 2,
 		"custom_fields": [
@@ -3084,6 +3084,9 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		],
 		"line_items": line_items
 	}
+
+	if taxable:
+		data['is_inclusive_tax'] = is_inclusive_tax
 
 	#frappe.throw(str(data))
 
