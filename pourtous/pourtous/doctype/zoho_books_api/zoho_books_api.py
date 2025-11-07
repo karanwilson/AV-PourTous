@@ -3256,7 +3256,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			'invoice_number': invoice[-16:],
 			'date': date,
 			'location_id': api_controller.location_id,
-			"is_inclusive_tax": is_inclusive_tax,
+			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"custom_fields": [
 				{
@@ -3268,6 +3268,9 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			],
 			"line_items": line_items,
 		}
+
+		if invoice_doc.taxes:
+			invoice_data['is_inclusive_tax'] = is_inclusive_tax
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
