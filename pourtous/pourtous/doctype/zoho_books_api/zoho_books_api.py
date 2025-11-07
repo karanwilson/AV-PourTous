@@ -2595,7 +2595,8 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 	# else:
 	# 	is_inclusive_tax = True
 
-	is_inclusive_tax = True if bill_doc.taxes[0].included_in_print_rate else False
+	if bill_doc.taxes:
+		is_inclusive_tax = True if bill_doc.taxes[0].included_in_print_rate else False
 
 	api_controller = frappe.get_doc("Zoho Books API")
 
@@ -2678,12 +2679,18 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		#'bill_number': bill_doc.bill_no,
 		'reference_number': bill_doc.name,
 		'date': date,
-		"is_inclusive_tax": is_inclusive_tax,
+		#"is_inclusive_tax": is_inclusive_tax,
 		"is_reverse_charge_applied": is_reverse_charge_applied,
 		#'price_precision': 2,
-		'location_id': api_controller.location_id,
+		#'location_id': api_controller.location_id,
 		"line_items": line_items
 	}
+
+	if api_controller.location_id:
+		data['location_id'] = api_controller.location_id
+	
+	if bill_doc.taxes:
+		data['is_inclusive_tax'] = is_inclusive_tax
 
 	if bill_doc.is_return and bill_doc.custom_zb_vendor_credit_id == None:
 		if bill_doc.bill_no:
@@ -2834,7 +2841,8 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 
-	is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
+	if invoice_doc.taxes:
+		is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 	if frappe.get_value("Customer", customer, "customer_type") == "Company":
 		fs_customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
@@ -2880,8 +2888,8 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				'customer_id': fs_customer_id, # "FS Account Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
-				'location_id': api_controller.location_id,
-				"is_inclusive_tax": is_inclusive_tax,
+				#'location_id': api_controller.location_id,
+				#"is_inclusive_tax": is_inclusive_tax,
 				"custom_fields": [
 					{
 						"index": 1,
@@ -2900,8 +2908,8 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				'customer_id': api_controller.walk_in_aurocard_contact_id, # "Aurocard Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
-				'location_id': api_controller.location_id,
-				"is_inclusive_tax": is_inclusive_tax,
+				#'location_id': api_controller.location_id,
+				#"is_inclusive_tax": is_inclusive_tax,
 				"custom_fields": [
 					{
 						"index": 2,
@@ -2920,8 +2928,8 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				'customer_id': api_controller.walk_in_upi_contact_id, # "UPI Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
-				'location_id': api_controller.location_id,
-				"is_inclusive_tax": is_inclusive_tax,
+				#'location_id': api_controller.location_id,
+				#"is_inclusive_tax": is_inclusive_tax,
 				"custom_fields": [
 					{
 						"index": 3,
@@ -2940,8 +2948,8 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				'customer_id': api_controller.walk_in_card_contact_id, # "UPI Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
-				'location_id': api_controller.location_id,
-				"is_inclusive_tax": is_inclusive_tax,
+				#'location_id': api_controller.location_id,
+				#"is_inclusive_tax": is_inclusive_tax,
 				"custom_fields": [
 					{
 						"index": 4,
@@ -2960,11 +2968,17 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				'customer_id': api_controller.walk_in_cash_contact_id, # "Cash Customers" in ZB
 				'creditnote_number': invoice,
 				'date': date,
-				'location_id': api_controller.location_id,
-				"is_inclusive_tax": is_inclusive_tax,
+				#'location_id': api_controller.location_id,
+				#"is_inclusive_tax": is_inclusive_tax,
 				"line_items": line_items,
 				#"invoice_id": zb_inv_id
 			}
+
+		if api_controller.location_id:
+			creditnote_data['location_id'] = api_controller.location_id
+
+		if invoice_doc.taxes:
+			creditnote_data['is_inclusive_tax'] = is_inclusive_tax
 
 		# for Returns
 		zb_inv_id = frappe.get_value("Sales Invoice", invoice_doc.return_against, "custom_zoho_invoice_id")
@@ -3072,7 +3086,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		#'invoice_number': consol_inv_pt_account+"--"+date[2:],
 		'date': date,
 		#"is_inclusive_tax": is_inclusive_tax,
-		'location_id': api_controller.location_id,
+		#'location_id': api_controller.location_id,
 		#'price_precision': 2,
 		"custom_fields": [
 			{
@@ -3084,6 +3098,9 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		],
 		"line_items": line_items
 	}
+
+	if api_controller.location_id:
+		data['location_id'] = api_controller.location_id
 
 	if taxable:
 		data['is_inclusive_tax'] = is_inclusive_tax
@@ -3258,7 +3275,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			'customer_id': customer_id,
 			'invoice_number': invoice[-16:],
 			'date': date,
-			'location_id': api_controller.location_id,
+			#'location_id': api_controller.location_id,
 			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"custom_fields": [
@@ -3274,6 +3291,9 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
+
+		if api_controller.location_id:
+			invoice_data['location_id'] = api_controller.location_id
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -3442,7 +3462,7 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 			'customer_id': customer_id,
 			'invoice_number': invoice[-16:],
 			'date': date,
-			'location_id': api_controller.location_id,
+			#'location_id': api_controller.location_id,
 			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"line_items": line_items,
@@ -3450,6 +3470,9 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
+
+		if api_controller.location_id:
+			invoice_data['location_id'] = api_controller.location_id
 
 		if fs_account_number:
 			invoice_data["custom_fields"] = [
@@ -3642,7 +3665,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			'customer_id': customer_id, # "Aurocard Customers" in ZB
 			'invoice_number': invoice[-16:],
 			'date': date,
-			'location_id': api_controller.location_id,
+			#'location_id': api_controller.location_id,
 			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"custom_fields": [
@@ -3658,6 +3681,9 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
+
+		if api_controller.location_id:
+			invoice_data['location_id'] = api_controller.location_id
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -3817,7 +3843,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 			'customer_id': customer_id, # "UPI Customers" in ZB
 			'invoice_number': invoice[-16:],
 			'date': date,
-			"location_id": api_controller.location_id,
+			#"location_id": api_controller.location_id,
 			#"is_inclusive_tax": is_inclusive_tax,
 			"custom_fields": [
 				{
@@ -3833,6 +3859,9 @@ def sync_upi_inv_with_zoho_books(invoice):
 
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
+
+		if api_controller.location_id:
+			invoice_data['location_id'] = api_controller.location_id
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -3980,7 +4009,7 @@ def sync_card_inv_with_zoho_books(invoice):
 			'customer_id': customer_id, # "Card Customers" in ZB
 			'invoice_number': invoice[-16:],
 			'date': date,
-			"location_id": api_controller.location_id,
+			#"location_id": api_controller.location_id,
 			#"is_inclusive_tax": is_inclusive_tax,
 			"custom_fields": [
 				{
@@ -3996,6 +4025,9 @@ def sync_card_inv_with_zoho_books(invoice):
 
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
+
+		if api_controller.location_id:
+			invoice_data['location_id'] = api_controller.location_id
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -4144,7 +4176,7 @@ def sync_cash_inv_with_zoho_books(invoice):
 			'customer_id': customer_id, # "Card Customers" in ZB
 			'invoice_number': invoice[-16:],
 			'date': date,
-			"location_id": api_controller.location_id,
+			#"location_id": api_controller.location_id,
 			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"line_items": line_items
@@ -4152,6 +4184,9 @@ def sync_cash_inv_with_zoho_books(invoice):
 
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
+
+		if api_controller.location_id:
+			invoice_data['location_id'] = api_controller.location_id
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
