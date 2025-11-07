@@ -3440,10 +3440,13 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 			'invoice_number': invoice[-16:],
 			'date': date,
 			'location_id': api_controller.location_id,
-			"is_inclusive_tax": is_inclusive_tax,
+			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"line_items": line_items,
 		}
+
+		if invoice_doc.taxes:
+			invoice_data['is_inclusive_tax'] = is_inclusive_tax
 
 		if fs_account_number:
 			invoice_data["custom_fields"] = [
@@ -3637,7 +3640,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			'invoice_number': invoice[-16:],
 			'date': date,
 			'location_id': api_controller.location_id,
-			"is_inclusive_tax": is_inclusive_tax,
+			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"custom_fields": [
 				{
@@ -3649,6 +3652,9 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			],
 			"line_items": line_items
 		}
+
+		if invoice_doc.taxes:
+			invoice_data['is_inclusive_tax'] = is_inclusive_tax
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -3809,18 +3815,21 @@ def sync_upi_inv_with_zoho_books(invoice):
 			'invoice_number': invoice[-16:],
 			'date': date,
 			"location_id": api_controller.location_id,
-			"is_inclusive_tax": is_inclusive_tax,
-				"custom_fields": [
-					{
-						"index": 3,
-						"label": "cf_upi_transaction_id",
-						"value": invoice_doc.custom_upi_transaction_id,
-						"data_type": "text"
-					}
-				],
+			#"is_inclusive_tax": is_inclusive_tax,
+			"custom_fields": [
+				{
+					"index": 3,
+					"label": "cf_upi_transaction_id",
+					"value": invoice_doc.custom_upi_transaction_id,
+					"data_type": "text"
+				}
+			],
 			#'price_precision': 2,
 			"line_items": line_items
 		}
+
+		if invoice_doc.taxes:
+			invoice_data['is_inclusive_tax'] = is_inclusive_tax
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -3969,7 +3978,7 @@ def sync_card_inv_with_zoho_books(invoice):
 			'invoice_number': invoice[-16:],
 			'date': date,
 			"location_id": api_controller.location_id,
-			"is_inclusive_tax": is_inclusive_tax,
+			#"is_inclusive_tax": is_inclusive_tax,
 			"custom_fields": [
 				{
 					"index": 4,
@@ -3981,6 +3990,9 @@ def sync_card_inv_with_zoho_books(invoice):
 			#'price_precision': 2,
 			"line_items": line_items
 		}
+
+		if invoice_doc.taxes:
+			invoice_data['is_inclusive_tax'] = is_inclusive_tax
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -4130,10 +4142,13 @@ def sync_cash_inv_with_zoho_books(invoice):
 			'invoice_number': invoice[-16:],
 			'date': date,
 			"location_id": api_controller.location_id,
-			"is_inclusive_tax": is_inclusive_tax,
+			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
 			"line_items": line_items
 		}
+
+		if invoice_doc.taxes:
+			invoice_data['is_inclusive_tax'] = is_inclusive_tax
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
