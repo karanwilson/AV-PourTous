@@ -2688,7 +2688,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		"is_inclusive_tax": is_inclusive_tax,
 		"is_reverse_charge_applied": is_reverse_charge_applied,
 		#'price_precision': 2,
-		#'location_id': '2464766000000030367',
+		'location_id': api_controller.location_id,
 		"line_items": line_items
 	}
 
