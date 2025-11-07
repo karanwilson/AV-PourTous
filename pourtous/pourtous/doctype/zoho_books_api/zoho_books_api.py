@@ -2942,7 +2942,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 			}
 
 		#elif customer_group == "Card Payments":
-		elif invoice_doc.payments[0].mode_of_payment == "Cards":
+		elif invoice_doc.payments[0].mode_of_payment in ("Cards", "RuPay"):
 			creditnote_data = {
 				'customer_id': api_controller.walk_in_card_contact_id, # "UPI Customers" in ZB
 				'creditnote_number': invoice,
@@ -3480,7 +3480,7 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 					}
 				]
 
-		elif invoice_doc.payments[0].mode_of_payment == "Cards":
+		elif invoice_doc.payments[0].mode_of_payment in ("Cards", "RuPay"):
 			invoice_data["custom_fields"] = [
 					{
 						"index": 4,
