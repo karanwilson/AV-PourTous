@@ -2094,26 +2094,27 @@ def update_item_in_zoho(doc, method):
 			"rate": 0
 		}
 
-	# bakery items at Townhall location, should only have one location: Townhall
-	if frappe.defaults.get_user_default("company") == "AV Bakery Cafe Townhall" and doc.brand == 'Bakery':
-		data['custom_fields'] = put_data['custom_fields'] = [
-				{
-					"index": 1,
-					"label": "cf_brand",
-					"value": doc.brand,
-					"data_type": "text"
-				}
-			]
+	if api_controller.location_id:
+		# bakery items at Townhall location, should only have one location: Townhall
+		if frappe.defaults.get_user_default("company") == "AV Bakery Cafe Townhall" and doc.brand == 'Bakery':
+			data['custom_fields'] = put_data['custom_fields'] = [
+					{
+						"index": 1,
+						"label": "cf_brand",
+						"value": doc.brand,
+						"data_type": "text"
+					}
+				]
 
-		data['locations'] = put_data['locations'] = frappe.db.get_list(
-			'Zoho Location', filters={'location_id': api_controller.location_id},
-			fields=['location_id','initial_stock','initial_stock_rate']
-		)
+			data['locations'] = put_data['locations'] = frappe.db.get_list(
+				'Zoho Location', filters={'location_id': api_controller.location_id},
+				fields=['location_id','initial_stock','initial_stock_rate']
+			)
 
-	else:
-		data['locations'] = put_data['locations'] = frappe.db.get_list(
-			'Zoho Location', fields=['location_id','initial_stock','initial_stock_rate']
-		)
+		else:
+			data['locations'] = put_data['locations'] = frappe.db.get_list(
+				'Zoho Location', fields=['location_id','initial_stock','initial_stock_rate']
+			)
 
 	#frappe.throw(str(put_data))
 
