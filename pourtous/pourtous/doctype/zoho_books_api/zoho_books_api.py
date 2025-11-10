@@ -3033,7 +3033,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		#customer_id = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "custom_zoho_contact_id")
 		customer_id = customer_doc.custom_zoho_contact_id
 	else:
-		api_controller.walk_in_fs_contact_id  # get the "PT Account Customers" in PTDC ZB
+		customer_id = api_controller.walk_in_fs_contact_id  # get the "PT Account Customers" in PTDC ZB
 		#customer_id = 2407242000000343009  # get the "PT Account Customers" in PTDC ZB
 
 	#date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
