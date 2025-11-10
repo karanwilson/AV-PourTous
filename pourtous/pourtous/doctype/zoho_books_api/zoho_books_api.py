@@ -2768,7 +2768,14 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 			#frappe.throw(str(res2))
 			if res2:
 				#frappe.throw(res2[0].get("bill_id"))
-				zb_bill_id = res2[0].get("bill_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_bill_id = res2[0].get("bill_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_bill_id = res2[0].get("bill_id")
 
 		if zb_bill_id is not None:
 			bill_doc.custom_zoho_bill_id = zb_bill_id
@@ -3326,7 +3333,14 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			#frappe.throw(str(res2))
 			if res2:
 				#frappe.throw(res2[0].get("invoice_id"))
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		else:
 			frappe.throw(str(res))
@@ -3544,7 +3558,14 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 			#frappe.throw(str(res2))
 			if res2:
 				#frappe.throw(res2[0].get("invoice_id"))
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		else:
 			frappe.throw(res.get("message"))
@@ -3713,7 +3734,14 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
 			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
 			if res2:
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		else:
 			frappe.throw(res.get("message"))
@@ -3891,7 +3919,14 @@ def sync_upi_inv_with_zoho_books(invoice):
 		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
 			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
 			if res2:
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
 		if zb_invoice_id:
@@ -4057,7 +4092,14 @@ def sync_card_inv_with_zoho_books(invoice):
 		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
 			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
 			if res2:
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
 		if zb_invoice_id:
@@ -4216,7 +4258,14 @@ def sync_cash_inv_with_zoho_books(invoice):
 		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
 			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
 			if res2:
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
 		if zb_invoice_id:
