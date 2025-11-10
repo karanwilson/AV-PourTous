@@ -3295,6 +3295,9 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 
 		if api_controller.location_id:
 			invoice_data['location_id'] = api_controller.location_id
+			if api_controller.organization_id == "60040904218" and api_controller.location_id == "2567347000000219005" and date < '2025-11-05':
+				invoice_data['reference_number'] = invoice[-16:]
+				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
