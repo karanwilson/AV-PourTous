@@ -83,7 +83,8 @@ def get_data(filters):
 		si.total_taxes_and_charges, si.grand_total, si.is_return
 		FROM `tabSales Invoice` si
 		WHERE si.docstatus = 1
-		AND si.custom_zoho_invoice_id IS NULL
+		AND ((si.custom_zoho_invoice_id IS NULL AND si.custom_zb_creditnote_id IS NOT NULL)
+		OR (si.custom_zoho_invoice_id IS NOT NULL AND si.custom_zb_creditnote_id IS NULL))
 		AND si.posting_date between '{0}' and '{1}'
 		""".format(filters.from_date, filters.to_date),
 		as_dict=True
