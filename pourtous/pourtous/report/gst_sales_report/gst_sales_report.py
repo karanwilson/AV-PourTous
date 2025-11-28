@@ -119,6 +119,13 @@ def get_columns():
 		},
 
 		{
+			"fieldname": "sales_40",
+			"label": "Sales - 40%",
+			"fieldtype": "Currency",
+			"width": "100"
+		},
+
+		{
 			"fieldname": "cess_amount",
 			"label": "CESS Amount",
 			"fieldtype": "Currency",
@@ -149,7 +156,7 @@ def get_data(filters):
 		gst_sales_query = frappe.db.sql(
 			"""
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date, table1.sales_exempted,
-			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
+			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40, table1.sales_28_cess_12,
 			table1.cgst_amount, table1.sgst_amount, table1.cess_amount,
 			IF((table1.cess_amount IS NULL), (table1.cgst_amount + table1.sgst_amount), (table1.cgst_amount + table1.sgst_amount + table1.cess_amount)) AS total_tax,
 			table1.grand_total
@@ -185,6 +192,10 @@ def get_data(filters):
 			AS sales_28,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 40.0)
+			AS sales_40,
+			
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
 			WHERE parent = `tabSales Invoice`.name
 			AND sii.item_tax_template = itt.name AND itt.gst_rate = 28.0 AND sii.item_tax_template like "GST 28_ CESS 12%")
 			AS sales_28_cess_12,
@@ -218,7 +229,7 @@ def get_data(filters):
 		gst_sales_query = frappe.db.sql(
 			"""
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date, table1.sales_exempted,
-			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
+			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40, table1.sales_28_cess_12,
 			table1.cgst_amount, table1.sgst_amount, table1.cess_amount,
 			IF((table1.cess_amount IS NULL), (table1.cgst_amount + table1.sgst_amount), (table1.cgst_amount + table1.sgst_amount + table1.cess_amount)) AS total_tax,
 			table1.grand_total
@@ -252,6 +263,10 @@ def get_data(filters):
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
 			WHERE parent = si.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 28.0)
 			AS sales_28,
+
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = si.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 40.0)
+			AS sales_40,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
 			WHERE parent = si.name
@@ -289,7 +304,7 @@ def get_data(filters):
 		gst_sales_query = frappe.db.sql(
 			"""
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date, table1.sales_exempted,
-			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
+			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40, table1.sales_28_cess_12,
 			table1.cgst_amount, table1.sgst_amount, table1.cess_amount,
 			IF((table1.cess_amount IS NULL), (table1.cgst_amount + table1.sgst_amount), (table1.cgst_amount + table1.sgst_amount + table1.cess_amount)) AS total_tax,
 			table1.grand_total
@@ -323,6 +338,10 @@ def get_data(filters):
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
 			WHERE parent = si.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 28.0)
 			AS sales_28,
+
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = si.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 40.0)
+			AS sales_40,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
 			WHERE parent = si.name
@@ -359,7 +378,7 @@ def get_data(filters):
 		gst_sales_query = frappe.db.sql(
 			"""
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date, table1.sales_exempted,
-			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
+			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40, table1.sales_28_cess_12,
 			table1.cgst_amount, table1.sgst_amount, table1.cess_amount,
 			IF((table1.cess_amount IS NULL), (table1.cgst_amount + table1.sgst_amount), (table1.cgst_amount + table1.sgst_amount + table1.cess_amount)) AS total_tax,
 			table1.grand_total
@@ -394,6 +413,10 @@ def get_data(filters):
 			WHERE parent = si.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 28.0)
 			AS sales_28,
 
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = si.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 40.0)
+			AS sales_40,
+			
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
 			WHERE parent = si.name
 			AND sii.item_tax_template = itt.name AND itt.gst_rate = 28.0 AND sii.item_tax_template like "GST 28_ CESS 12%")
@@ -430,7 +453,7 @@ def get_data(filters):
 		gst_sales_query = frappe.db.sql(
 			"""
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date, table1.sales_exempted,
-			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_28_cess_12,
+			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40, table1.sales_28_cess_12,
 			table1.cgst_amount, table1.sgst_amount, table1.cess_amount,
 			IF((table1.cess_amount IS NULL), (table1.cgst_amount + table1.sgst_amount), (table1.cgst_amount + table1.sgst_amount + table1.cess_amount)) AS total_tax,
 			table1.grand_total
@@ -464,6 +487,10 @@ def get_data(filters):
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
 			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 28.0)
 			AS sales_28,
+
+			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
+			WHERE parent = `tabSales Invoice`.name AND sii.item_tax_template = itt.name AND itt.gst_rate = 40.0)
+			AS sales_40,
 
 			(SELECT SUM(net_amount) FROM `tabSales Invoice Item` sii, `tabItem Tax Template` itt
 			WHERE parent = `tabSales Invoice`.name
