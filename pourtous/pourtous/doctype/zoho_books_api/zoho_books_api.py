@@ -1350,7 +1350,7 @@ class ZohoBooksAPI(Document):
 
 		token_to_use = self.query_stored_tokens(master, scope)
 
-		api_url = 'https://www.zohoapis.in/books/v3/invoices?' + invoice_id + '?'
+		api_url = 'https://www.zohoapis.in/books/v3/invoices/' + invoice_id + '?'
 
 		authorization = 'Zoho-oauthtoken ' + token_to_use
 
@@ -2084,7 +2084,7 @@ def update_item_in_zoho(doc, method):
 				},
 			],
 			#'can_be_purchased': True, # getting message from Zoho Books that Item Type cannot be changed for items having transactions.
-			'item_type': 'sales_and_purchases',
+			#'item_type': 'sales_and_purchases',
 			'vendor_id': zb_contact_id,
 			'purchase_account_id': api_controller.expense_account_id,
 			'purchase_account_name': api_controller.expense_account,
@@ -2725,8 +2725,16 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		elif res.get('message') == 'The vendor credit# specified already exists.':
 			res2 = api_controller.query_vendor_credit(data["vendor_credit_number"], data['reference_number'])
 			if res2:
-				#frappe.throw(res2[0].get("bill_id"))
-				zb_vendor_credit_id = res2[0].get("vendor_credit_id")
+				#frappe.throw(res2[0].get("vendor_credit_id"))
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_vendor_credit_id = res2[0].get("vendor_credit_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_vendor_credit_id = res2[0].get("vendor_credit_id")
+
 
 		if zb_vendor_credit_id is not None:
 			bill_doc.custom_zb_vendor_credit_id = zb_vendor_credit_id
@@ -2781,7 +2789,14 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 			#frappe.throw(str(res2))
 			if res2:
 				#frappe.throw(res2[0].get("bill_id"))
-				zb_bill_id = res2[0].get("bill_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_bill_id = res2[0].get("bill_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_bill_id = res2[0].get("bill_id")
 
 		if zb_bill_id is not None:
 			bill_doc.custom_zoho_bill_id = zb_bill_id
@@ -2807,6 +2822,12 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 				error_log.insert()
 
 				frappe.msgprint(str(res3))
+
+
+@frappe.whitelist()
+def get_an_invoice(invoice_id):
+	api_controller = frappe.get_doc("Zoho Books API")
+	return api_controller.get_an_invoice(invoice_id)
 
 
 @frappe.whitelist()
@@ -2990,6 +3011,9 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 
 		if api_controller.location_id:
 			creditnote_data['location_id'] = api_controller.location_id
+			if api_controller.organization_id == "60040904218" and api_controller.location_id == "2567347000000219005" and date < '2025-11-05':
+				creditnote_data['reference_number'] = invoice[-16:]
+				creditnote_data['creditnote_number'] = invoice.replace("SINV", "THIN")[-16:]
 
 		if invoice_doc.taxes:
 			creditnote_data['is_inclusive_tax'] = is_inclusive_tax
@@ -3046,7 +3070,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		#customer_id = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "custom_zoho_contact_id")
 		customer_id = customer_doc.custom_zoho_contact_id
 	else:
-		customer_id = api_controller.walk_in_fs_contact_id  # get the "PT Account Customers" in PTDC ZB
+		api_controller.walk_in_fs_contact_id  # get the "PT Account Customers" in PTDC ZB
 		#customer_id = 2407242000000343009  # get the "PT Account Customers" in PTDC ZB
 
 	#date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
@@ -3269,6 +3293,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 						#"description": item.item_name,
 						"rate": float(item.rate),
 						"quantity": float(item.qty),
+						"discount_amount": float(item.discount_amount),
 						"tax_id": tax_id
 					}
 					line_items.append(line_item)
@@ -3280,6 +3305,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
+					"discount_amount": float(item.discount_amount),
 					'gst_treatment_code': 'out_of_scope'
 				}
 				line_items.append(line_item)
@@ -3300,6 +3326,9 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 					"data_type": "text"
 				}
 			],
+			"discount": float(invoice_doc.discount_amount),
+			"is_discount_before_tax": True,
+			"discount_type": "entity_level",
 			"line_items": line_items,
 		}
 
@@ -3308,6 +3337,9 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 
 		if api_controller.location_id:
 			invoice_data['location_id'] = api_controller.location_id
+			if api_controller.organization_id == "60040904218" and api_controller.location_id == "2567347000000219005" and date < '2025-11-05':
+				invoice_data['reference_number'] = invoice[-16:]
+				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -3336,7 +3368,14 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			#frappe.throw(str(res2))
 			if res2:
 				#frappe.throw(res2[0].get("invoice_id"))
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		else:
 			frappe.throw(str(res))
@@ -3456,6 +3495,7 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 						#"description": item.item_name,
 						"rate": float(item.rate),
 						"quantity": float(item.qty),
+						"discount_amount": float(item.discount_amount),
 						"tax_id": tax_id
 					}
 					line_items.append(line_item)
@@ -3467,6 +3507,7 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
+					"discount_amount": float(item.discount_amount),
 					'gst_treatment_code': 'out_of_scope'
 				}
 				line_items.append(line_item)
@@ -3479,6 +3520,9 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 			#'location_id': api_controller.location_id,
 			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
+			"discount": float(invoice_doc.discount_amount),
+			"is_discount_before_tax": True,
+			"discount_type": "entity_level",
 			"line_items": line_items,
 		}
 
@@ -3487,6 +3531,9 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 
 		if api_controller.location_id:
 			invoice_data['location_id'] = api_controller.location_id
+			if api_controller.organization_id == "60040904218" and api_controller.location_id == "2567347000000219005" and date < '2025-11-05':
+				invoice_data['reference_number'] = invoice[-16:]
+				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
 		if fs_account_number:
 			invoice_data["custom_fields"] = [
@@ -3554,7 +3601,14 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 			#frappe.throw(str(res2))
 			if res2:
 				#frappe.throw(res2[0].get("invoice_id"))
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		else:
 			frappe.throw(res.get("message"))
@@ -3660,6 +3714,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 						#"description": item.item_name,
 						"rate": float(item.rate),
 						"quantity": float(item.qty),
+						"discount_amount": float(item.discount_amount),
 						"tax_id": tax_id
 					}
 					line_items.append(line_item)
@@ -3671,6 +3726,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
+					"discount_amount": float(item.discount_amount),
 					'gst_treatment_code': 'out_of_scope'
 				}
 				line_items.append(line_item)	
@@ -3690,6 +3746,9 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 					"data_type": "text"
 				}
 			],
+			"discount": float(invoice_doc.discount_amount),
+			"is_discount_before_tax": True,
+			"discount_type": "entity_level",
 			"line_items": line_items
 		}
 
@@ -3698,6 +3757,9 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 
 		if api_controller.location_id:
 			invoice_data['location_id'] = api_controller.location_id
+			if api_controller.organization_id == "60040904218" and api_controller.location_id == "2567347000000219005" and date < '2025-11-05':
+				invoice_data['reference_number'] = invoice[-16:]
+				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -3723,7 +3785,14 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
 			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
 			if res2:
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		else:
 			frappe.throw(res.get("message"))
@@ -3838,6 +3907,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 						#"description": item.item_name,
 						"rate": float(item.rate),
 						"quantity": float(item.qty),
+						"discount_amount": float(item.discount_amount),
 						"tax_id": tax_id
 					}
 					line_items.append(line_item)
@@ -3849,6 +3919,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
+					"discount_amount": float(item.discount_amount),
 					'gst_treatment_code': 'out_of_scope'
 				}
 				line_items.append(line_item)
@@ -3868,6 +3939,9 @@ def sync_upi_inv_with_zoho_books(invoice):
 				}
 			],
 			#'price_precision': 2,
+			"discount": float(invoice_doc.discount_amount),
+			"is_discount_before_tax": True,
+			"discount_type": "entity_level",
 			"line_items": line_items
 		}
 
@@ -3876,6 +3950,9 @@ def sync_upi_inv_with_zoho_books(invoice):
 
 		if api_controller.location_id:
 			invoice_data['location_id'] = api_controller.location_id
+			if api_controller.organization_id == "60040904218" and api_controller.location_id == "2567347000000219005" and date < '2025-11-05':
+				invoice_data['reference_number'] = invoice[-16:]
+				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -3901,7 +3978,190 @@ def sync_upi_inv_with_zoho_books(invoice):
 		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
 			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
 			if res2:
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
+
+		#if "invoice_id" in res:
+		if zb_invoice_id:
+			zb_invoice_id = res.get('invoice_id')
+			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
+			invoice_doc.save()
+			frappe.db.commit()
+
+			res2 = api_controller.mark_invoice_as_sent(zb_invoice_id)
+			if res2 == "Invoice status has been changed to Sent.":
+				return { "ADDED" }
+
+
+@frappe.whitelist()
+def fetch_unsynced_erp_neft_invoice_list():
+	if frappe.defaults.get_user_default("company") == "Auroville Bakery":
+		return frappe.db.sql(
+			"""
+			SELECT si.name, si.customer, si.docstatus, si.status, si.custom_zoho_invoice_id, si.custom_zoho_payment_id
+			FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
+			WHERE si.docstatus = 1
+			AND posting_date >= "2025-11-01"
+			AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
+			AND si.custom_fs_account_number IS NULL AND sip.mode_of_payment = "NEFT" AND sip.parent = si.name
+			AND custom_zoho_invoice_id IS NULL
+			""",
+			as_dict=True
+			# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		)
+
+	elif frappe.defaults.get_user_default("company") == "AV Bakery Cafe":
+		return frappe.db.sql(
+			"""
+			SELECT si.name, si.customer, si.docstatus, si.status, si.custom_zoho_invoice_id, si.custom_zoho_payment_id
+			FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
+			WHERE si.docstatus = 1
+			AND posting_date >= "2025-10-01"
+			AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
+			AND si.custom_fs_account_number IS NULL AND sip.mode_of_payment = "NEFT" AND sip.parent = si.name
+			AND custom_zoho_invoice_id IS NULL
+			""",
+			as_dict=True
+			# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		)
+
+	elif frappe.defaults.get_user_default("company") == "AV Bakery Cafe Townhall":
+		return frappe.db.sql(
+			"""
+			SELECT si.name, si.customer, si.docstatus, si.status, si.custom_zoho_invoice_id, si.custom_zoho_payment_id
+			FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
+			WHERE si.docstatus = 1
+			AND posting_date >= "2025-10-01"
+			AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
+			AND si.custom_fs_account_number IS NULL AND sip.mode_of_payment = "NEFT" AND sip.parent = si.name
+			AND custom_zoho_invoice_id IS NULL
+			""",
+			as_dict=True
+			# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		)
+
+	else:
+		return frappe.db.sql(
+			"""
+			SELECT si.name, si.customer, si.docstatus, si.status, si.custom_zoho_invoice_id, si.custom_zoho_payment_id
+			FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
+			WHERE si.docstatus = 1
+			AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
+			AND si.custom_fs_account_number IS NULL AND sip.mode_of_payment = "NEFT" AND sip.parent = si.name
+			AND custom_zoho_invoice_id IS NULL
+			""",
+			as_dict=True
+			# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		)
+
+@frappe.whitelist()
+def sync_neft_inv_with_zoho_books(invoice, customer):
+	api_controller = frappe.get_doc("Zoho Books API")
+	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
+	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+	customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
+
+	if invoice_doc.custom_zoho_invoice_id == None:
+		line_items = []
+
+		for item in invoice_doc.items:
+			item_doc = frappe.get_doc("Item", item.item_code)
+
+			if invoice_doc.taxes:
+				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
+
+				try:
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				except Exception as err:
+					frappe.msgprint(str(err))
+					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
+					frappe.msgprint(msg)
+					return
+
+				else:
+					line_item = {
+						"item_id": item_doc.custom_zoho_item_id,
+						"name": item.item_name,
+						#"description": item.item_name,
+						"rate": float(item.rate),
+						"quantity": float(item.qty),
+						"discount_amount": float(item.discount_amount),
+						"tax_id": tax_id
+					}
+					line_items.append(line_item)
+
+			else:
+				line_item = {
+					"item_id": item_doc.custom_zoho_item_id,
+					"name": item.item_name,
+					#"description": item.item_name,
+					"rate": float(item.rate),
+					"quantity": float(item.qty),
+					"discount_amount": float(item.discount_amount),
+					'gst_treatment_code': 'out_of_scope'
+				}
+				line_items.append(line_item)
+
+		invoice_data = {
+			'customer_id': customer_id,
+			'invoice_number': invoice[-16:],
+			'date': date,
+			#"location_id": api_controller.location_id,
+			#"is_inclusive_tax": is_inclusive_tax,
+			#'price_precision': 2,
+			"discount": float(invoice_doc.discount_amount),
+			"is_discount_before_tax": True,
+			"discount_type": "entity_level",
+			"line_items": line_items
+		}
+
+		if invoice_doc.taxes:
+			invoice_data['is_inclusive_tax'] = is_inclusive_tax
+
+		if api_controller.location_id:
+			invoice_data['location_id'] = api_controller.location_id
+			if api_controller.organization_id == "60040904218" and api_controller.location_id == "2567347000000219005" and date < '2025-11-05':
+				invoice_data['reference_number'] = invoice[-16:]
+				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
+
+		# adding delivery charge if any
+		if invoice_doc.posa_delivery_charges:
+			for row in invoice_doc.taxes: # searching in the "Taxes and Charges" table
+				if row.gst_tax_type == None:
+					invoice_data["shipping_charge"] = row.tax_amount
+
+		#frappe.throw(str(invoice_data))
+		if invoice_doc.amended_from:
+			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
+			res = api_controller.delete_invoice(void_invoice_id)
+			#frappe.throw(str(res))
+			if res.get('code') != 0:
+				frappe.msgprint(res.get("message"))
+
+		res = api_controller.post_invoice(invoice_data)
+
+		zb_invoice_id = None
+
+		if "invoice_id" in res:
+			zb_invoice_id = res.get('invoice_id')
+
+		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
+			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
+			if res2:
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
 		if zb_invoice_id:
@@ -4005,6 +4265,7 @@ def sync_card_inv_with_zoho_books(invoice):
 						#"description": item.item_name,
 						"rate": float(item.rate),
 						"quantity": float(item.qty),
+						"discount_amount": float(item.discount_amount),
 						"tax_id": tax_id
 					}
 					line_items.append(line_item)
@@ -4015,6 +4276,7 @@ def sync_card_inv_with_zoho_books(invoice):
 					"name": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
+					"discount_amount": float(item.discount_amount),
 					'gst_treatment_code': 'out_of_scope'
 				}
 				line_items.append(line_item)
@@ -4034,6 +4296,9 @@ def sync_card_inv_with_zoho_books(invoice):
 				}
 			],
 			#'price_precision': 2,
+			"discount": float(invoice_doc.discount_amount),
+			"is_discount_before_tax": True,
+			"discount_type": "entity_level",
 			"line_items": line_items
 		}
 
@@ -4042,6 +4307,9 @@ def sync_card_inv_with_zoho_books(invoice):
 
 		if api_controller.location_id:
 			invoice_data['location_id'] = api_controller.location_id
+			if api_controller.organization_id == "60040904218" and api_controller.location_id == "2567347000000219005" and date < '2025-11-05':
+				invoice_data['reference_number'] = invoice[-16:]
+				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -4067,7 +4335,14 @@ def sync_card_inv_with_zoho_books(invoice):
 		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
 			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
 			if res2:
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
 		if zb_invoice_id:
@@ -4171,6 +4446,7 @@ def sync_cash_inv_with_zoho_books(invoice):
 						#"description": item.item_name,
 						"rate": float(item.rate),
 						"quantity": float(item.qty),
+						"discount_amount": float(item.discount_amount),
 						"tax_id": tax_id
 					}
 					line_items.append(line_item)
@@ -4182,6 +4458,7 @@ def sync_cash_inv_with_zoho_books(invoice):
 					#"description": item.item_name,
 					"rate": float(item.rate),
 					"quantity": float(item.qty),
+					"discount_amount": float(item.discount_amount),
 					'gst_treatment_code': 'out_of_scope'
 				}
 				line_items.append(line_item)
@@ -4193,6 +4470,9 @@ def sync_cash_inv_with_zoho_books(invoice):
 			#"location_id": api_controller.location_id,
 			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
+			"discount": float(invoice_doc.discount_amount),
+			"is_discount_before_tax": True,
+			"discount_type": "entity_level",
 			"line_items": line_items
 		}
 
@@ -4201,6 +4481,9 @@ def sync_cash_inv_with_zoho_books(invoice):
 
 		if api_controller.location_id:
 			invoice_data['location_id'] = api_controller.location_id
+			if api_controller.organization_id == "60040904218" and api_controller.location_id == "2567347000000219005" and date < '2025-11-05':
+				invoice_data['reference_number'] = invoice[-16:]
+				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -4226,7 +4509,14 @@ def sync_cash_inv_with_zoho_books(invoice):
 		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
 			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
 			if res2:
-				zb_invoice_id = res2[0].get("invoice_id")
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
 		if zb_invoice_id:
