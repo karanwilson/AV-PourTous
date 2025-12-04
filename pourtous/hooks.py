@@ -333,6 +333,7 @@ fixtures = [
                     #"Mode of Payment-custom_transaction_fee_account", # ledger account
 
                     "Customer-custom_fs_account_number", # for FS Transactions
+                    "Customer-custom_credit_limit_exception", # for Exception Credit Limit
                     #"Customer-custom_fs_kind_account_3", # for FS Transactions
                     #"Customer-custom_fs_cash_account_4", # for FS Transactions
                     "Customer-custom_receive_from_fs_api", # for PTDC Monthly Balance

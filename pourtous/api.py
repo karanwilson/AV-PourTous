@@ -356,22 +356,30 @@ def add_fs_accounts(invoice, customer):
 
 
 @frappe.whitelist()
-def update_fs_accounts(fs_account, name, disable):
+def update_fs_accounts(fs_account, name, disable, credit_limit_av_account):
 	existing_fs_customer = frappe.get_value("Customer", {"custom_fs_account_number": fs_account}, "name")
 	if existing_fs_customer:
 		customer_doc = frappe.get_doc("Customer", existing_fs_customer)
 		updated = "" # to reduce the number of db commits
+
+		if not customer_doc.custom_credit_limit_exception:
+			customer_doc.credit_limits.clear()
+			customer_doc.append("credit_limits", { "credit_limit": credit_limit_av_account })
+			updated = "credit_limit"
+
 		if customer_doc.customer_type == 'Company':
+			customer_doc.custom_update_zoho_contact = 0
+			customer_doc.save()
 			return updated
 
 		if customer_doc.disabled != int(disable):
 			customer_doc.disabled = int(disable)
-			updated = "UPDATED"
+			updated += "_UPDATED"
 		if customer_doc.customer_name != name:
 			customer_doc.customer_name = name
-			updated = "UPDATED"
+			updated += "_UPDATED"
 
-		if updated == "UPDATED":
+		if updated != "":
 			customer_doc.custom_update_zoho_contact = 0
 			customer_doc.save()
 			return updated
@@ -386,6 +394,8 @@ def update_fs_accounts(fs_account, name, disable):
 		new_customer.customer_type = 'Individual'
 		new_customer.customer_group = 'Individual'
 		new_customer.territory = 'India'
+
+		new_customer.append("credit_limits", { "credit_limit": credit_limit_av_account })
 
 		new_customer.insert()
 		return "NEW"
