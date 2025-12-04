@@ -2531,34 +2531,47 @@ def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
 def fetch_erp_bills_list():
 	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
 
-	return frappe.db.sql(
-		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
-		"""
-		SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
-		AND is_return = 0 AND custom_zoho_bill_id IS NULL
-		AND posting_date >= "2025-06-01"
-		""",
-		# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
-		as_dict=True
-	)
-
-@frappe.whitelist()
-def fetch_erp_debitnotes_list():
-	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
-
-	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
 		return frappe.db.sql(
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
-			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-			AND posting_date >= "2025-05-01"
+			AND is_return = 0 AND custom_zoho_bill_id IS NULL
+			AND posting_date between "2025-06-01" and "2025-11-30"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
 		)
 
-	else:
+	elif frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		return frappe.db.sql(
+			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+			"""
+			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
+			AND is_return = 0 AND custom_zoho_bill_id IS NULL
+			AND posting_date >= "2025-06-01"
+			""",
+			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+			as_dict=True
+		)
+
+@frappe.whitelist()
+def fetch_erp_debitnotes_list():
+	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
+
+	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
+		return frappe.db.sql(
+			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+			"""
+			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
+			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
+			AND posting_date between "2025-06-01" and "2025-11-30"
+			""",
+			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
+			as_dict=True
+		)
+
+	elif frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
 		return frappe.db.sql(
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			"""
@@ -3057,7 +3070,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 		#customer_id = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "custom_zoho_contact_id")
 		customer_id = customer_doc.custom_zoho_contact_id
 	else:
-		api_controller.walk_in_fs_contact_id  # get the "PT Account Customers" in PTDC ZB
+		customer_id = api_controller.walk_in_fs_contact_id  # get the "PT Account Customers" in PTDC ZB
 		#customer_id = 2407242000000343009  # get the "PT Account Customers" in PTDC ZB
 
 	#date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
