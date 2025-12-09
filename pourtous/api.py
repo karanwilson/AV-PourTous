@@ -17,6 +17,14 @@ def set_customer_from_fs_account(custom_fs_account_number):
 
 
 @frappe.whitelist()
+def set_item_default_warehouse(item_code, warehouse):
+	item_doc = frappe.get_doc("Item", item_code)
+	item_doc.item_defaults[0].default_warehouse = warehouse
+	item_doc.custom_skip_zoho_trigger = 1
+	item_doc.save()
+
+
+@frappe.whitelist()
 def tax_exception_fetch_orders_to_invoice():
 	frappe.db.delete("Order Invoice Map Err") # deletes the old logs (used in the process_orders_to_invoice method below)
 

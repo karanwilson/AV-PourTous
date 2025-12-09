@@ -18,6 +18,12 @@ frappe.ui.form.on('Purchase Invoice', {
 	before_save(frm) {
 		frm.set_value('disable_rounded_total', 0);
 
+		frm.doc.items.forEach((item) => {
+			frappe.call('pourtous.api.set_item_default_warehouse', {
+				item_code: item.item_code,
+				warehouse: item.warehouse
+			});
+		});
 		/* frm.doc.items.forEach((row) => {
 			row.stock_qty = row.qty;
 		});
