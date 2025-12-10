@@ -295,14 +295,15 @@ fixtures = [
 
                     "Payment Entry-custom_av_section_break", # PTDC
                     "Payment Entry-custom_contact", # PTDC
-                    "Payment Entry-custom_extra_contribution", # for PTDC Monthly Balance
-                    "Payment Entry-custom_fs_transfer_status", # for PTDC contribution Entry transactions
+                    #"Payment Entry-custom_extra_contribution", # for PTDC Monthly Balance
+                    "Payment Entry-custom_fs_transfer_status",
                     "Payment Entry-custom_fs_account_number", # for FS Transactions
-                    "Payment Entry-custom_av_column_break" # PTDC
-                    "Payment Entry-custom_in_kind_scheme", # for PTDC Monthly Balance
-                    "Payment Entry-custom_lunch_scheme", # for PTDC Monthly Balance
-                    "Payment Entry-custom_monthly_contribution", # for PTDC Monthly Balance
-                    "Payment Entry-custom_ptdc_maintenance", # PTDC
+                    "Payment Entry-custom_receive_from_fs_api", # for FS Transactions
+                    #"Payment Entry-custom_av_column_break" # PTDC
+                    #"Payment Entry-custom_in_kind_scheme", # for PTDC Monthly Balance
+                    #"Payment Entry-custom_lunch_scheme", # for PTDC Monthly Balance
+                    #"Payment Entry-custom_monthly_contribution", # for PTDC Monthly Balance
+                    #"Payment Entry-custom_ptdc_maintenance", # PTDC
 
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
                     "Sales Invoice-custom_fs_account_number", # to Identify Invoice based on FS Account number
@@ -336,7 +337,7 @@ fixtures = [
                     "Customer-custom_credit_limit_exception", # for Exception Credit Limit
                     #"Customer-custom_fs_kind_account_3", # for FS Transactions
                     #"Customer-custom_fs_cash_account_4", # for FS Transactions
-                    "Customer-custom_receive_from_fs_api", # for PTDC Monthly Balance
+                    #"Customer-custom_receive_from_fs_api",
                     "Customer-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
                     "Customer-custom_update_zoho_contact", # to prevent trigger of Zoho Contact update, during the FS account update script.
 
