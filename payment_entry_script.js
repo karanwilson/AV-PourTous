@@ -25,10 +25,17 @@ frappe.ui.form.on('Payment Entry', {
 			frappe.call({
 				method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_fs_credit_bill',
 				args: {
-					bill: frm.pass
+					bill: frm.doc.references[0].reference_name,
+					pe: frm.doc.name
 				},
 				callback: (r) => {
-					//frm.set_value('party', r.message);
+					if (r.message['Result'] == "OK") {
+						frm.set_value('custom_fs_transfer_status', r.message['Result']);
+						frm.set_value('reference_no', r.message['reference_no']);
+						frm.set_value('custom_remarks', 1);
+						frm.set_value('remarks', r.message['Message']);
+					}
+					else frappe.throw(r.message['Message']);
 				}
 			});
 		}
