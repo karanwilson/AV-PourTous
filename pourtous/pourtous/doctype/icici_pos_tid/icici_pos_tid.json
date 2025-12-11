@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-12-05 20:43:59.073335",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "erp_user_id",
+  "tid"
+ ],
+ "fields": [
+  {
+   "fieldname": "tid",
+   "fieldtype": "Data",
+   "label": "TID"
+  },
+  {
+   "fieldname": "erp_user_id",
+   "fieldtype": "Link",
+   "label": "ERP User ID",
+   "options": "User"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-12-05 20:49:12.861859",
+ "modified_by": "Administrator",
+ "module": "pourtous",
+ "name": "ICICI POS TID",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "erp_user_id"
+}
