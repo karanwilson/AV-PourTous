@@ -7,10 +7,11 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "ptps_settings_column",
+  "credit_limit_av_account",
   "ptdc_settings_section",
   "ptdc_pos_translations",
-  "monthly_balance_reset",
-  "ptps_settings_column"
+  "monthly_balance_reset"
  ],
  "fields": [
   {
@@ -34,12 +35,17 @@
    "fieldname": "ptps_settings_column",
    "fieldtype": "Section Break",
    "label": "PTPS Settings"
+  },
+  {
+   "fieldname": "credit_limit_av_account",
+   "fieldtype": "Currency",
+   "label": "Credit Limit AV Account"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-10-25 16:47:36.505722",
+ "modified": "2025-12-02 15:42:38.460591",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Pour Tous Settings",

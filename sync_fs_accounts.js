@@ -8,7 +8,8 @@ frappe.listview_settings['Customer'] = {
                     if (r.message) {
                         const length = r.message["RecordCount"];
                         console.log("Number of FS Accounts: ", length);
-                        let added = 0, updated = 0;
+                        console.log("credit_limit_av_account: ", r.message["credit_limit_av_account"]);
+                        let added = 0, updated = 0, credit_limit_UPDATED = 0, credit_limit = 0;
 
                         for (let i = 0; i < length; i++) {
                             if (i>0 && r.message["Accounts"]["R"+i+"_Number"] == r.message["Accounts"]["R"+(i-1)+"_Number"]) {
@@ -22,19 +23,25 @@ frappe.listview_settings['Customer'] = {
                                     args: {
                                         fs_account: r.message["Accounts"]["R"+i+"_Number"],
                                         name: r.message["Accounts"]["R"+i+"_Name"],
-                                        disable: r.message["Accounts"]["R"+i+"_Disable"]
+                                        disable: r.message["Accounts"]["R"+i+"_Disable"],
+                                        credit_limit_av_account: r.message["credit_limit_av_account"]
                                     },
                                     async: false,
                                 }).then(r => {
                                     if (r.message == "NEW")
                                         added++;
-                                    else if (r.message == "UPDATED")
+                                    else if (r.message == "_UPDATED")
                                         updated++;
+                                    else if (r.message == "credit_limit_UPDATED")
+                                        credit_limit_UPDATED++;
+                                    else if (r.message == "credit_limit")
+                                        credit_limit++;
                                 }).then(r => {
                                     // placing this statement block here as it does not work outside of the main frappe.call block
                                     // though it prints on console for each loop iteration (comes in only one line, with the loop count),
                                     // it shows an accurate result in the end. This design works.
                                     console.log("Added ", added, " Accounts; Updated ", updated, " Accounts");
+                                    console.log("UPDATED+credit_limit_UPDATED: ", credit_limit_UPDATED, ", credit_limit updated: ", credit_limit);
                                     //console.log("Updated ", updated, " Accounts");
                                 });
                                 const count = i+1; // i starts from 0, but length counts from 1
