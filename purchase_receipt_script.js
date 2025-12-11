@@ -23,9 +23,3 @@ frappe.ui.form.on('Purchase Receipt', {
         });
     }, */
 });
-
-// frappe.ui.form.on('Purchase Receipt Item', {
-//     items_add(frm, cdt, cdn) { // "items" is the name of the table field for child-table
-// 		frappe.model.set_value(cdt, cdn, 'rate', 0);
-//     },
-// });
