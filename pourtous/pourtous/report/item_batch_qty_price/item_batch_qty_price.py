@@ -34,13 +34,13 @@ def get_columns(filters):
 				"fieldname": "item_name",
 				"label": "Item Name",
 				"fieldtype": "Data",
-				"width": "250"
+				"width": "200"
 			},
 			{
 				"fieldname": "supplier",
 				"label": "Supplier",
 				"fieldtype": "Data",
-				"width": "200"
+				"width": "150"
 			},
 			{
 				"fieldname": "batch_no",
@@ -64,6 +64,24 @@ def get_columns(filters):
 			{
 				"fieldname": "stall_qty",
 				"label": "Stall Qty",
+				"fieldtype": "Float",
+				"width": "80"
+			},
+			{
+				"fieldname": "store_1_qty",
+				"label": "Store1 Qty",
+				"fieldtype": "Float",
+				"width": "80"
+			},
+			{
+				"fieldname": "store_2_qty",
+				"label": "Store2 Qty",
+				"fieldtype": "Float",
+				"width": "80"
+			},
+			{
+				"fieldname": "store_3_qty",
+				"label": "Store3 Qty",
 				"fieldtype": "Float",
 				"width": "80"
 			},
@@ -117,13 +135,13 @@ def get_columns(filters):
 				"fieldname": "item_name",
 				"label": "Item Name",
 				"fieldtype": "Data",
-				"width": "300"
+				"width": "200"
 			},
 			{
 				"fieldname": "supplier",
 				"label": "Supplier",
 				"fieldtype": "Data",
-				"width": "250"	
+				"width": "150"	
 			},
 			{
 				"fieldname": "store_qty",
@@ -136,6 +154,24 @@ def get_columns(filters):
 				"label": "Stall Qty",
 				"fieldtype": "Float",
 				"width": "100"
+			},
+			{
+				"fieldname": "store_1_qty",
+				"label": "Store1 Qty",
+				"fieldtype": "Float",
+				"width": "80"
+			},
+			{
+				"fieldname": "store_2_qty",
+				"label": "Store2 Qty",
+				"fieldtype": "Float",
+				"width": "80"
+			},
+			{
+				"fieldname": "store_3_qty",
+				"label": "Store3 Qty",
+				"fieldtype": "Float",
+				"width": "80"
 			},
 			{
 				"fieldname": "buying_price",
@@ -190,7 +226,17 @@ def get_data(filters):
 				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
 				WHERE is_cancelled = 0 AND warehouse LIKE '{2}'
 				AND batch_no = tabBatch.name
-			) AS so_reserve,
+			) AS store_1_qty,
+			(
+				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+				WHERE is_cancelled = 0 AND warehouse LIKE '{3}'
+				AND batch_no = tabBatch.name
+			) AS store_2_qty,
+			(
+				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+				WHERE is_cancelled = 0 AND warehouse LIKE '{4}'
+				AND batch_no = tabBatch.name
+			) AS store_3_qty,
 			(
 				SELECT price_list_rate FROM `tabItem Price`
 				WHERE `tabItem Price`.item_code = `tabStock Ledger Entry`.item_code
@@ -220,10 +266,22 @@ def get_data(filters):
 				WHERE is_cancelled = 0 AND warehouse LIKE '{2}'
 				AND batch_no = tabBatch.name
 			) != 0
+			OR
+			(
+				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+				WHERE is_cancelled = 0 AND warehouse LIKE '{3}'
+				AND batch_no = tabBatch.name
+			) != 0
+			OR
+			(
+				SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+				WHERE is_cancelled = 0 AND warehouse LIKE '{4}'
+				AND batch_no = tabBatch.name
+			) != 0
 			)
-			AND `tabStock Ledger Entry`.item_code = '{3}'
+			AND `tabStock Ledger Entry`.item_code = '{5}'
 			GROUP BY `tabStock Ledger Entry`.batch_no
-			""".format("Stores%", "Stall%", "Sales Order Reserve%", filters.name),
+			""".format("Stores%", "Stall%", "Store 1%", "Store 2%", "Store 3%", filters.name),
 			as_dict=True
 		)
 
@@ -251,7 +309,21 @@ def get_data(filters):
 				and warehouse like '{2}'
 				order by posting_date desc, posting_time desc, creation desc
 				limit 1
-			) AS so_reserve,
+			) AS store_1_qty,
+			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{3}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS store_2_qty,
+			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{4}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS store_3_qty,
 			(
 				SELECT price_list_rate FROM `tabItem Price`
 				WHERE `tabItem Price`.item_code = tabItem.item_code
@@ -265,13 +337,13 @@ def get_data(filters):
 			(
 				SELECT barcode FROM `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = tabItem.item_code
-				AND tabItem.item_code = '{3}'
+				AND tabItem.item_code = '{5}'
 				limit 1
 			) AS barcode
 			FROM tabItem, `tabItem Supplier`
 			WHERE tabItem.item_code = `tabItem Supplier`.parent
-			AND tabItem.item_code = '{3}'
-			""".format("Stores%", "Stall%", "Sales Order Reserve%", filters.name),
+			AND tabItem.item_code = '{5}'
+			""".format("Stores%", "Stall%", "Store 1%", "Store 2%", "Store 3%", filters.name),
 			as_dict=True
 		)
 

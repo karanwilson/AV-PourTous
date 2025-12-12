@@ -491,6 +491,12 @@ class ZohoBooksAPI(Document):
 
 			r = s.get(api_url)
 
+			if r.json().get('message') == 'success':
+				return r.json().get('taxes')
+			else:
+				frappe.msgprint(r.json().get('message'))
+			#r.raise_for_status()
+
 
 	def delete_tax(self, tax_id):
 		master = "settings"
@@ -626,35 +632,6 @@ class ZohoBooksAPI(Document):
 			# {'code': 0, 'message': 'The tax group has been deleted.'}
 			# {'code': 100019,
  			# 'message': 'This tax cannot be deleted because it has been used in transactions.'}
-
-
-	def get_taxes(self):
-		master = "settings"
-		scope='ZohoBooks.settings.READ'
-
-		token_to_use = self.query_stored_tokens(master, scope)
-
-		api_url = 'https://www.zohoapis.in/books/v3/settings/taxes?'
-
-		authorization = 'Zoho-oauthtoken ' + token_to_use
-
-		with requests.Session() as s:
-			s.params = {
-				'organization_id': self.organization_id
-			}
-
-			s.headers = {
-				'Authorization': authorization,
-				'content-type': 'application/json'
-				}
-
-			r = s.get(api_url)
-
-			if r.json().get('message') == 'success':
-				return r.json().get('taxes')
-			else:
-				frappe.msgprint(r.json().get('message'))
-			#r.raise_for_status()
 
 
 	def post_item(self, data):

@@ -54,8 +54,20 @@ def get_columns():
 			"width": "100"
 		},
 		{
-			"fieldname": "so_reserved",
-			"label": "SO Reserved",
+			"fieldname": "store_1_qty",
+			"label": "Store1 Qty",
+			"fieldtype": "Float",
+			"width": "115"
+		},
+		{
+			"fieldname": "store_2_qty",
+			"label": "Store2 Qty",
+			"fieldtype": "Float",
+			"width": "115"
+		},
+		{
+			"fieldname": "store_3_qty",
+			"label": "Store3 Qty",
 			"fieldtype": "Float",
 			"width": "115"
 		}
@@ -91,12 +103,26 @@ def get_data(filters):
 				and warehouse like '{2}'
 				order by posting_date desc, posting_time desc, creation desc
 				limit 1
-			) AS so_reserved
+			) AS store_1_qty,
+			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{3}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS store_2_qty,
+			(
+				select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+				where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+				and warehouse like '{4}'
+				order by posting_date desc, posting_time desc, creation desc
+				limit 1
+			) AS store_3_qty
 			FROM tabItem, `tabItem Supplier`
 			WHERE tabItem.item_code = `tabItem Supplier`.parent
-			AND tabItem.item_code = '{3}'
+			AND tabItem.item_code = '{5}'
 			) table1
-			""".format("Stores%", "Stall%", "Sales Order Reserve%", filters.name),
+			""".format("Stores%", "Stall%", "Store 1%", "Store 2%", "Store 3%", filters.name),
 			as_dict=True
 		)
 
