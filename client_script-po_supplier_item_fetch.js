@@ -18,6 +18,9 @@ frappe.ui.form.on('Purchase Order', {
 						item_row.item_name = row["item_name"];
 						item_row.store_qty = row["store_qty"];
 						item_row.stall_qty = row["stall_qty"];
+						item_row.str1_qty = row["str1_qty"];
+						item_row.str2_qty = row["str2_qty"];
+						item_row.str3_qty = row["str3_qty"];
 						item_row.sold_last_month = row["sold_last_month"];
 						item_row.sold_this_month = row["sold_this_month"];
 						item_row.last_buy_price = row["last_buy_price"];

@@ -746,6 +746,27 @@ def supplier_items(supplier):
 			limit 1
 		) AS stall_qty,
 		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{2}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) AS str1_qty,
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{3}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) AS str2_qty,
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{4}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) AS str3_qty,
+		(
 			select SUM(actual_qty) from `tabStock Ledger Entry`
 			where item_code = `tabItem Supplier`.parent
 			AND voucher_type = "Sales Invoice"
@@ -763,7 +784,7 @@ def supplier_items(supplier):
 			FROM `tabPurchase Invoice` pi, `tabPurchase Invoice Item` pii
 			WHERE item_code = tabItem.item_code
 			AND parent = pi.name
-			AND supplier = '{2}'
+			AND supplier = '{5}'
 			AND pi.is_return = 0
 			AND pi.docstatus = 1
 			ORDER BY posting_date DESC
@@ -772,9 +793,9 @@ def supplier_items(supplier):
 
 		FROM tabItem, `tabItem Supplier`
 		WHERE tabItem.item_code = `tabItem Supplier`.parent
-		AND `tabItem Supplier`.supplier = '{2}'
+		AND `tabItem Supplier`.supplier = '{5}'
 
-		""".format("Stores%", "Stall%", supplier),
+		""".format("Stores%", "Stall%", "Store 1%", "Store 2%", "Store 3%", supplier),
 		as_dict=True
 	)
 
