@@ -305,6 +305,7 @@ fixtures = [
                     #"Payment Entry-custom_monthly_contribution", # for PTDC Monthly Balance
                     #"Payment Entry-custom_ptdc_maintenance", # PTDC
 
+                    "Sales Invoice-custom_customer_group", # for categorisation for the 'Mode of Payment'
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
                     "Sales Invoice-custom_fs_account_number", # to Identify Invoice based on FS Account number
                     "Sales Invoice-custom_transaction_date", # in case transaction date is earlier than the posting date
