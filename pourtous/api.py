@@ -20,7 +20,8 @@ def cancel_payment_entry(doc, method):
 	elif doc.doctype == "Sales Order" and doc.advance_paid > 0:
 		payment_entry = frappe.db.get_list("Payment Entry", filters={"reference_doctype": doc.doctype, "reference_name": doc.name}, fields=["name"])
 		payment_doc = frappe.get_doc("Payment Entry", payment_entry)
-		payment_doc.cancel()
+		if len(payment_doc.references) == 1 and doc.unallocated_amount == 0: # cancel only in case the Payment Entry voucher is being used solely by this Invoice
+			payment_doc.cancel()
 
 def verify_cancel_permission(doc,method):
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center" and (frappe.session.user not in 
