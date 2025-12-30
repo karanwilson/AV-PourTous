@@ -7,9 +7,26 @@ from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 
 from stdnum import ean
 
+
 # for testing/checking frappe.session.user
-#def check_user(doc, method):
-#	frappe.throw(str(frappe.session.user))
+# def check_user(doc, method):
+# 	frappe.throw(str(frappe.session.user))
+
+def cancel_payment_entry(doc, method):
+	if doc.doctype == "Sales Invoice" and doc.advances:
+		payment_doc = frappe.get_doc(doc.advances[0].reference_type, doc.advances[0].reference_name)
+		payment_doc.cancel()
+
+	elif doc.doctype == "Sales Order" and doc.advance_paid > 0:
+		payment_entry = frappe.db.get_list("Payment Entry", filters={"reference_doctype": doc.doctype, "reference_name": doc.name}, fields=["name"])
+		payment_doc = frappe.get_doc("Payment Entry", payment_entry)
+		payment_doc.cancel()
+
+def verify_cancel_permission(doc,method):
+	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center" and (frappe.session.user not in 
+	('Administrator', 'anandi@auroville.org.in', 'arulkumarsankar@auroville.org.in', 'karan.wilson@auroville.org.in')):
+		frappe.throw("Please request the executives to cancell Invoice")
+
 
 @frappe.whitelist()
 def set_customer_from_fs_account(custom_fs_account_number):

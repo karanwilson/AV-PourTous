@@ -17,6 +17,7 @@ frappe.ui.form.on('Purchase Invoice', {
 
 	before_save(frm) {
 		frm.set_value('disable_rounded_total', 0);
+		frm.set_value('title', frm.doc.supplier_name);
 
 		if (frm.doc.update_stock && !frm.doc.is_return) {
 			frm.doc.items.forEach((item) => {

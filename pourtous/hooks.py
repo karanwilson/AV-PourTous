@@ -125,7 +125,11 @@ doc_events = {
     "Sales Invoice": {
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_sales_invoice",
         "on_submit": "pourtous.api.payment_entry_for_return", # creates 'Payment Entry' for item returns
-        "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_invoice_in_zoho" # cancel invoice in ZB
+        "before_cancel": [
+            "pourtous.api.verify_cancel_permission",
+            "pourtous.api.cancel_payment_entry",
+            "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_invoice_in_zoho" # cancel invoice in ZB"
+        ], # cancel invoice in ZB
 	},
     "Payment Entry": {
         #"before_cancel": "payments.payment_gateways.doctype.fs_settings.fs_settings.refund_fs_payments",
