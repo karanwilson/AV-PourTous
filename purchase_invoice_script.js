@@ -19,18 +19,20 @@ frappe.ui.form.on('Purchase Invoice', {
 		frm.set_value('disable_rounded_total', 0);
 		frm.set_value('title', frm.doc.supplier_name);
 
-		if (frm.doc.update_stock && !frm.doc.is_return) {
-			frm.doc.items.forEach((item) => {
-				if (item.warehouse == "Stores - PTPS") {
-					frappe.throw(__("We are migrating stock from the common '{0}' to segregated stores: please set the correct Store/Warehouse", [item.warehouse]));
-				}
-				else {
-					frappe.call('pourtous.api.set_item_default_warehouse', {
-						item_code: item.item_code,
-						warehouse: item.warehouse
-					});
-				}
-			});
+		if (frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service") {
+			if (frm.doc.update_stock && !frm.doc.is_return) {
+				frm.doc.items.forEach((item) => {
+					if (item.warehouse == "Stores - PTPS") {
+						frappe.throw(__("We are migrating stock from the common '{0}' to segregated stores: please set the correct Store/Warehouse", [item.warehouse]));
+					}
+					else {
+						frappe.call('pourtous.api.set_item_default_warehouse', {
+							item_code: item.item_code,
+							warehouse: item.warehouse
+						});
+					}
+				});
+			}
 		}
 		/* frm.doc.items.forEach((row) => {
 			row.stock_qty = row.qty;
