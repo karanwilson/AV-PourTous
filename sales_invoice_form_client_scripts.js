@@ -12,4 +12,17 @@ frappe.ui.form.on('Sales Invoice', {
 		if (!frm.doc.amended_from)
             frappe.throw(__("Please submit Sales Invoices from the POS"));
 	},
+
+	before_cancel(frm) {
+		if (frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center") {
+			if (frappe.session.user == "Administrator" ||
+				frappe.session.user == "anandi@auroville.org.in" ||
+				frappe.session.user == "arulkumarsankar@auroville.org.in" ||
+				frappe.session.user == "karan.wilson@auroville.org.in") {
+				}
+			else {
+				frappe.throw("Please request the executives to cancell Invoice");
+			}
+		}
+	}
 });

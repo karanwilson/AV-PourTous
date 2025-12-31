@@ -126,7 +126,7 @@ doc_events = {
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_sales_invoice",
         "on_submit": "pourtous.api.payment_entry_for_return", # creates 'Payment Entry' for item returns
         "before_cancel": [
-            "pourtous.api.verify_cancel_permission",
+            #"pourtous.api.verify_cancel_permission", # Shifted to Client (form) script
             "pourtous.api.cancel_payment_entry",
             "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_invoice_in_zoho" # cancel invoice in ZB"
         ], # cancel invoice in ZB
