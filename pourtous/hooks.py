@@ -132,7 +132,7 @@ doc_events = {
         ], # cancel invoice in ZB
 	},
     "Payment Entry": {
-        #"before_cancel": "payments.payment_gateways.doctype.fs_settings.fs_settings.refund_fs_payments",
+        "before_cancel": "payments.payment_gateways.doctype.fs_settings.fs_settings.refund_fs_payments",
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)
         #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
 	},
