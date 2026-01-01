@@ -12,6 +12,14 @@ frappe.query_reports["Monthly Statement"] = {
 		},
 
 		{
+			"fieldname": "branch",
+			"label": __("Branch"),
+			"fieldtype": "Link",
+			"options": "Branch",
+			"width": "60px",
+		},
+
+		{
 			"fieldname": "from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",
