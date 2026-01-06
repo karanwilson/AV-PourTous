@@ -2515,7 +2515,7 @@ def fetch_erp_bills_list():
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 0 AND custom_zoho_bill_id IS NULL
 			AND posting_date between "2025-06-01" and "2025-12-31"
-			AND bill_date < "2025-12-01"
+			AND bill_date <= "2025-12-31"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
