@@ -399,9 +399,9 @@ def update_fs_accounts(fs_account, name, disable, credit_limit_av_account):
 			customer_doc.save()
 			return updated
 
-		if customer_doc.disabled != int(disable):
-			customer_doc.disabled = int(disable)
-			updated += "_UPDATED"
+		# if customer_doc.disabled != int(disable):
+		# 	customer_doc.disabled = int(disable)
+		# 	updated += "_UPDATED"
 		if customer_doc.customer_name != name:
 			customer_doc.customer_name = name
 			updated += "_UPDATED"
@@ -416,7 +416,7 @@ def update_fs_accounts(fs_account, name, disable, credit_limit_av_account):
 
 		new_customer.customer_name = name
 		new_customer.custom_fs_account_number = fs_account
-		new_customer.disabled = int(disable)
+		#new_customer.disabled = int(disable)
 
 		new_customer.customer_type = 'Individual'
 		new_customer.customer_group = 'Individual'

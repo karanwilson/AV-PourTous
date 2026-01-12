@@ -850,6 +850,97 @@ class ZohoBooksAPI(Document):
 			return r.json()
 
 
+	def get_a_bill(self, bill_id):
+		master = "bills"
+		scope='ZohoBooks.bills.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/bills/' + bill_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get("code") == 0:
+				return r.json().get('bill')
+			else:
+				frappe.msgprint(r.json().get('message'))
+				return r.json()
+			# r.raise_for_status()
+
+
+	def add_attachment_to_bill(self, bill_id, file_name, file_url):
+		master = "bills"
+		scope = "ZohoBooks.bills.CREATE"
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/bills/' + bill_id + '/attachment?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		attachment = frappe.local.site + file_url
+		#attachment = frappe.local.site + "/public" + file_url
+
+		with open(attachment, 'rb') as attachment_binary:
+			files=[ ('attachment',(file_name, attachment_binary,'application/pdf')) ]
+
+			with requests.Session() as s:
+				s.params = {
+					'organization_id': self.organization_id
+					#'can_send_in_mail': 'false'
+				}
+
+				s.headers = {
+					'Authorization': authorization,
+					'content-type': 'multipart/form-data'
+				}
+
+				#payload = {}
+
+				r = s.post(api_url, files=files)
+				#frappe.throw(str(r.json()))
+
+				return r.json()
+
+
+	def delete_attachment_in_bill(self, bill_id):
+		master = "bills"
+		scope = "ZohoBooks.bills.DELETE"
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/bills/' + bill_id + 'attachment?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+			}
+
+			r = s.delete(api_url)
+			#frappe.throw(str(r.json()))
+
+			return r.json()
+
+
 	def query_bill(self, bill_number, reference_number):
 		master = "bills"
 		scope='ZohoBooks.bills.READ'
@@ -1318,6 +1409,7 @@ class ZohoBooksAPI(Document):
 				return r.json().get('invoice')
 			else:
 				frappe.msgprint(r.json().get('message'))
+				return r.json()
 			# r.raise_for_status()
 
 
@@ -1573,10 +1665,10 @@ def delete_contact_in_zoho(doc, method):
 
 
 def update_supplier_contact_in_zoho(doc, method):
-	if not doc.gstin:
-		doc.is_reverse_charge_applicable = 1
-	else:
-		doc.is_reverse_charge_applicable = 0
+	# if not doc.gstin:
+	# 	doc.is_reverse_charge_applicable = 1
+	# else:
+	# 	doc.is_reverse_charge_applicable = 0
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		return
@@ -2004,7 +2096,8 @@ def update_item_in_zoho(doc, method):
 			"pcs": "pcs"
 		}
 	else:
-		frappe.throw("Please configure the UOM Mapping for this Company")
+		frappe.msgprint("Zoho Books: Please configure the UOM Mapping for this Company")
+		return
 
 	try:
 		zb_intra_tax_id = frappe.get_value("Item Tax Template", doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
@@ -2800,6 +2893,65 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 				error_log.insert()
 
 				frappe.msgprint(str(res3))
+
+
+@frappe.whitelist()
+def query_bill(bill_number, reference_number):
+	api_controller = frappe.get_doc("Zoho Books API")
+	return api_controller.query_bill("bill_number", "reference_number")
+
+
+@frappe.whitelist()
+def get_a_bill(bill_id):
+	api_controller = frappe.get_doc("Zoho Books API")
+	return api_controller.get_a_bill(bill_id)
+
+
+@frappe.whitelist()
+def fetch_file_attachments_in_bills():
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		return frappe.db.sql(
+			"""
+			select f.name, pi.custom_zoho_bill_id, attached_to_name, file_name, file_url
+			from tabFile f, `tabPurchase Invoice` pi
+			where attached_to_doctype = "Purchase Invoice"
+			AND attached_to_name = pi.name
+			AND f.custom_zoho_bill_id IS NULL AND pi.custom_zoho_bill_id IS NOT NULL
+			""",
+			as_dict=True
+		)
+
+
+@frappe.whitelist()
+def attach_file_to_bill(file_docname, bill_id, file_name, file_url):
+	#attachment = frappe.local.site + file_url
+	#frappe.throw(attachment)
+	#with open(attachment, 'rb') as attachment_binary:
+		#attachment_binary_string = f.read().decode()
+		#files = {'attachment': attachment_binary}
+
+	api_controller = frappe.get_doc("Zoho Books API")
+	res = api_controller.add_attachment_to_bill(bill_id, file_name, file_url)
+	if res.get("code") == 0:
+		frappe.db.set_value("File", file_docname, "custom_zoho_bill_id", bill_id)
+		return { "ADDED" }
+	else:
+		frappe.msgprint(res.get("message"))
+		return
+
+
+# called from hooks.py
+def delete_zb_bill_attachment(doc, method):
+	if doc.custom_zoho_bill_id:
+		delete_attached_file_in_bill(doc.custom_zoho_bill_id)
+
+
+@frappe.whitelist()
+def delete_attached_file_in_bill(bill_id):
+	api_controller = frappe.get_doc("Zoho Books API")
+	res = api_controller.delete_attachment_in_bill(bill_id)
+	if res.get("code") == 0:
+		return { "ADDED" }
 
 
 @frappe.whitelist()

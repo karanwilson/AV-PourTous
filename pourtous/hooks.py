@@ -145,6 +145,9 @@ doc_events = {
     #    "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_tax_in_zoho", # update Zoho Books
     #    "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_tax_in_zoho" # update Zoho Books
     #},
+    "File": {
+        "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_zb_bill_attachment" # verify if file is an attachment in ZB, and delete attachment in ZB
+    },
 	"Customer": {
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_contact_in_zoho",
         "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
@@ -372,6 +375,8 @@ fixtures = [
                     "Purchase Invoice-custom_zoho_bill_id",
                     "Purchase Invoice-custom_zb_vendor_credit_id",
                     "Purchase Invoice-custom_zoho_void_bill_id",
+
+                    "File-custom_zoho_bill_id", # for Vendor Bill attachments
 
                     "Purchase Receipt-custom_zoho_bill_id",
                     "Purchase Receipt-custom_zb_vendor_credit_id",
