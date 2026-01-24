@@ -2672,7 +2672,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 	# Check if Supplier is Inter/Intra state
 
 	contact_id = frappe.get_value("Supplier", supplier, "custom_zoho_contact_id")
-	is_reverse_charge_applied = False # default value initialised here (context: GST-unregistered Vendors)
+	#is_reverse_charge_applied = False # default value initialised here (context: GST-unregistered Vendors)
 
 	# for better design: need to fetch the is_inclusive_tax from the settings in the ERP tax table
 	# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
@@ -2747,7 +2747,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 				"quantity": abs(float(item.qty))
 			}
 			if is_reverse_charge_applied:
-				line_item["reverse_charge_tax_id"] = reverse_charge_tax_id
+				#line_item["reverse_charge_tax_id"] = reverse_charge_tax_id
 				is_inclusive_tax = False
 			else:
 				line_item["tax_id"] = tax_id
@@ -2765,7 +2765,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		'reference_number': bill_doc.name,
 		'date': date,
 		#"is_inclusive_tax": is_inclusive_tax,
-		"is_reverse_charge_applied": is_reverse_charge_applied,
+		#"is_reverse_charge_applied": is_reverse_charge_applied,
 		#'price_precision': 2,
 		#'location_id': api_controller.location_id,
 		"line_items": line_items
@@ -2773,7 +2773,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 
 	if api_controller.location_id:
 		data['location_id'] = api_controller.location_id
-	
+
 	if bill_doc.taxes:
 		data['is_inclusive_tax'] = is_inclusive_tax
 
@@ -2806,13 +2806,11 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 				else:
 					zb_vendor_credit_id = res2[0].get("vendor_credit_id")
 
-
 		if zb_vendor_credit_id is not None:
 			bill_doc.custom_zb_vendor_credit_id = zb_vendor_credit_id
 			bill_doc.save()
 			frappe.db.commit()
 			return { "ADDED" }
-
 
 		else :
 			data["vendor_credit_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
