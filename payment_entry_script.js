@@ -20,7 +20,7 @@ frappe.ui.form.on('Payment Entry', {
 		}
 	},
 
-	before_submit(frm) {
+	/* before_submit(frm) {
 		if (frm.doc.custom_receive_from_fs_api && frm.doc.mode_of_payment == "FS") {
 			if (frm.doc.references.length == 1) {
 				frappe.call({
@@ -30,25 +30,28 @@ frappe.ui.form.on('Payment Entry', {
 						pe: frm.doc.name
 					},
 					callback: (r) => {
-						if (r.message['custom_fs_transfer_status'] == "OK" || r.message['custom_fs_transfer_status'] == "OK - Paid") {
-							// frm.set_value('custom_fs_transfer_status', r.message['Result']);
-							// frm.set_value('reference_no', r.message['reference_no']);
-							// frm.set_value('custom_remarks', 1);
-							// frm.set_value('remarks', r.message['Message']);
-							frm.set_value({
-								custom_fs_transfer_status: r.message['custom_fs_transfer_status'],
-								reference_no: r.message['reference_no'],
-								custom_remarks: 1,
-								remarks: r.message['remarks']
-							});
+						if (r.message) {
+							if (r.message['custom_fs_transfer_status'] == "OK" || r.message['custom_fs_transfer_status'] == "OK - Paid") {
+								// frm.set_value('custom_fs_transfer_status', r.message['Result']);
+								// frm.set_value('reference_no', r.message['reference_no']);
+								// frm.set_value('custom_remarks', 1);
+								// frm.set_value('remarks', r.message['Message']);
+								frm.set_value({
+									custom_fs_transfer_status: r.message['custom_fs_transfer_status'],
+									reference_no: r.message['reference_no'],
+									custom_remarks: 1,
+									remarks: r.message['remarks']
+								});
+							}
+							else frappe.throw(r.message['custom_fs_transfer_status']);
 						}
-						else frappe.throw(r.message['custom_fs_transfer_status']);
+						else frappe.throw("No Response");
 					}
 				});
 			}
 			else frappe.throw("Receiving Payment via FS API is configured for a single Invoice/Order only");
 		}
-	},
+	}, */
 
 	// on_submit(frm) { // update custom_fs_transfer_status
 	// 	frm.doc.references.forEach((reference) => {

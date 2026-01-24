@@ -36,6 +36,13 @@ def get_columns():
 		},
 
 		{
+			"fieldname": "custom_fs_account_number",
+			"label": "FS Account",
+			"fieldtype": "Data",
+			"width": "120"
+		},
+
+		{
 			"fieldname": "posting_date",
 			"label": "Posting Date",
 			"fieldtype": "Date",
@@ -66,16 +73,19 @@ def get_columns():
 
 
 def get_data(filters):
+	query = """
+			SELECT name, customer_name, custom_fs_account_number, posting_date, status, custom_fs_transfer_status, grand_total
+			FROM `tabSales Invoice`
+			WHERE docstatus = 1 AND outstanding_amount > 0 AND status IN
+			("Unpaid", "Unpaid and Discounted", "Partly Paid", "Partly Paid and Discounted", "Overdue", "Overdue and Discounted")
+			"""
 
-	query = frappe.db.sql(
-		"""
-		SELECT name, customer_name, posting_date, status, custom_fs_transfer_status, grand_total
-		FROM `tabSales Invoice`
-		WHERE docstatus = 1 AND outstanding_amount > 0 AND status IN
-		("Unpaid", "Unpaid and Discounted", "Partly Paid", "Partly Paid and Discounted", "Overdue", "Overdue and Discounted")
-		""",
-		as_dict=True
-		#AND custom_fs_transfer_status = "Insufficient Funds"
-	)
+	# custom_fs_account_number filter is optional.
+	if filters.get("from_date") and filters.get("to_date"):
+		query += "AND posting_date between %(from_date)s and %(to_date)s"
 
-	return query
+	# custom_fs_account_number filter is optional.
+	if filters.get("custom_fs_account_number"):
+		query += " AND custom_fs_account_number = %(custom_fs_account_number)s"
+
+	return frappe.db.sql(query, filters, as_dict=1)

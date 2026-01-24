@@ -132,7 +132,9 @@ doc_events = {
         ], # cancel invoice in ZB
 	},
     "Payment Entry": {
-        "before_cancel": "payments.payment_gateways.doctype.fs_settings.fs_settings.refund_fs_payments",
+        #"before_validate": "pourtous.api.pe_before_validate",
+        "before_submit": "pourtous.api.pe_fapi_transfer",
+        "before_cancel": "payments.payment_gateways.doctype.fs_settings.fs_settings.refund_fs_payments"
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)
         #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
 	},
@@ -329,6 +331,8 @@ fixtures = [
                     "Sales Invoice-custom_zb_consol_creditnote_id",
                     #"Sales Invoice-custom_zb_creditnote_refund_id",
                     "Sales Invoice-custom_zoho_void_invoice_id",
+                    "Sales Invoice-custom_token_number", # for AV Bakery
+                    "Sales Invoice-custom_is_donation", # for AV Bakery
 
                     "Sales Order-custom_fs_account_number", # to Identify Sales Order based on FS Account number
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions

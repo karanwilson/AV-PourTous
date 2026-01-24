@@ -5,6 +5,8 @@ from frappe.utils import nowdate, get_first_day #, flt
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 
+from payments.payment_gateways.doctype.fs_settings.fs_settings import add_transfer_fs_credit_bill
+
 from stdnum import ean
 
 
@@ -12,17 +14,43 @@ from stdnum import ean
 # def check_user(doc, method):
 # 	frappe.throw(str(frappe.session.user))
 
-def cancel_payment_entry(doc, method):
-	if doc.doctype == "Sales Invoice" and doc.advances:
-		payment_doc = frappe.get_doc(doc.advances[0].reference_type, doc.advances[0].reference_name)
-		if len(payment_doc.references) == 1 and doc.unallocated_amount == 0: # cancel only in case the Payment Entry voucher is being used solely by this Invoice
-			payment_doc.cancel()
+# def pe_before_validate(doc, method):
+# 	frappe.throw("test")
+# 	if doc.custom_receive_from_fs_api and doc.mode_of_payment == "FS":
+# 		frappe.throw("if")
+# 		doc.reference_no = "Temp ref no: pre-fs-transaction"
+# 		doc.reference_date = nowdate()
+# 	else:
+# 		frappe.throw("else")
 
-	elif doc.doctype == "Sales Order" and doc.advance_paid > 0:
-		payment_entry = frappe.db.get_list("Payment Entry", filters={"reference_doctype": doc.doctype, "reference_name": doc.name}, fields=["name"])
-		payment_doc = frappe.get_doc("Payment Entry", payment_entry)
-		if len(payment_doc.references) == 1 and doc.unallocated_amount == 0: # cancel only in case the Payment Entry voucher is being used solely by this Order
-			payment_doc.cancel()
+def pe_fapi_transfer(doc, method):
+	if doc.custom_receive_from_fs_api and doc.mode_of_payment == "FS":
+		if len(doc.references) == 1:
+			res = add_transfer_fs_credit_bill(doc.references[0].reference_name, doc.name)
+			if res:
+				if res['custom_fs_transfer_status'] == "OK" or res['custom_fs_transfer_status'] == "OK - Paid":
+					doc.custom_fs_transfer_status = res['custom_fs_transfer_status']
+					doc.reference_no = res['reference_no']
+					doc.remarks = res['remarks']
+			else:
+				frappe.throw("No Response")
+		else:
+			frappe.throw("Receiving Payment via FS API is configured for a single Invoice/Order only")
+
+
+def cancel_payment_entry(doc, method):
+	if frappe.defaults.get_user_default("company") == 'Pour Tous Purchasing Service':
+		if doc.doctype == "Sales Invoice" and doc.advances:
+			payment_doc = frappe.get_doc(doc.advances[0].reference_type, doc.advances[0].reference_name)
+			if len(payment_doc.references) == 1 and doc.unallocated_amount == 0: # cancel only in case the Payment Entry voucher is being used solely by this Invoice
+				payment_doc.cancel()
+
+		elif doc.doctype == "Sales Order" and doc.advance_paid > 0:
+			payment_entry = frappe.db.get_list("Payment Entry", filters={"reference_doctype": doc.doctype, "reference_name": doc.name}, fields=["name"])
+			payment_doc = frappe.get_doc("Payment Entry", payment_entry)
+			if len(payment_doc.references) == 1 and doc.unallocated_amount == 0: # cancel only in case the Payment Entry voucher is being used solely by this Order
+				payment_doc.cancel()
+
 
 def verify_cancel_permission(doc,method):
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center" and (frappe.session.user not in 
@@ -399,9 +427,9 @@ def update_fs_accounts(fs_account, name, disable, credit_limit_av_account):
 			customer_doc.save()
 			return updated
 
-		# if customer_doc.disabled != int(disable):
-		# 	customer_doc.disabled = int(disable)
-		# 	updated += "_UPDATED"
+		if customer_doc.disabled != int(disable):
+			customer_doc.disabled = int(disable)
+			updated += "_UPDATED"
 		if customer_doc.customer_name != name:
 			customer_doc.customer_name = name
 			updated += "_UPDATED"
@@ -416,7 +444,7 @@ def update_fs_accounts(fs_account, name, disable, credit_limit_av_account):
 
 		new_customer.customer_name = name
 		new_customer.custom_fs_account_number = fs_account
-		#new_customer.disabled = int(disable)
+		new_customer.disabled = int(disable)
 
 		new_customer.customer_type = 'Individual'
 		new_customer.customer_group = 'Individual'
