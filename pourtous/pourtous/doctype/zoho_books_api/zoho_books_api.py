@@ -1727,7 +1727,6 @@ def update_supplier_contact_in_zoho(doc, method):
 			#return { "UPDATED" }
 
 
-
 @frappe.whitelist()
 def fetch_erp_supplier_list():
 	#return frappe.get_all('Supplier', filters = {"disabled": 0})
