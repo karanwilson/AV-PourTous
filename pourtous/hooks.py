@@ -140,7 +140,10 @@ doc_events = {
 	},
 	"Item": {
 		#"before_insert": "pourtous.api.verify_item_prerequisites",
-        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho", # update Zoho Books
+        "before_save": [
+            "pourtous.api.add_item_barcode",
+            "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho" # update Zoho Books
+        ],
         "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_item_in_zoho" # update Zoho Books
 	},
     #"Item Tax Template": {
@@ -161,13 +164,13 @@ doc_events = {
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
         "before_save": "pourtous.api.update_selling_price", # Add the 'Item Price'
-		"on_submit": "pourtous.api.update_price_lists_item_barcode", # Add the 'Item Price'
+		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
         #"before_insert": "pourtous.api.get_purchase_tax_template",
 	},
 	"Purchase Invoice": {
         #"before_insert": "pourtous.api.get_purchase_tax_template",
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_return_purchase_invoice",
-        "on_submit": "pourtous.api.update_price_lists_item_barcode", # Add the 'Item Price'
+        "on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
         "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_bill_in_zoho" # cancel bill in ZB
 	},
     #"Delivery Note": {
@@ -182,7 +185,7 @@ doc_events = {
     },
     "Batch": {
         "after_insert": "pourtous.api.create_batch_barcode", # Adds a Batch Barcode
-        "before_save": "pourtous.api.verify_batch_qty_for_barcode",
+        #"before_save": "pourtous.api.verify_batch_qty_for_barcode",
     },
     "Sales Order": {
         #"before_insert": "pourtous.api.get_sales_tax_template",
