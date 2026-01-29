@@ -300,11 +300,11 @@ def get_data1(filters):
 			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
 			`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
 			tabBatch.custom_barcode,
-			IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
+			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
 				LIMIT 1
-			), 0) AS barcode,
+			) AS barcode,
 			`tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
 			IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
 			FROM `tabPurchase Receipt Item`
@@ -316,6 +316,11 @@ def get_data1(filters):
 			ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
 			""".format(filters.posting_date, filters.from_time, filters.to_time),
 			as_dict=True
+			# IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
+			# 	SELECT barcode from `tabItem Barcode`
+			# 	WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
+			# 	LIMIT 1
+			# ), 0) AS barcode,
 		)
 
 	elif filters.voucher_type == "Purchase Invoice":
@@ -324,11 +329,11 @@ def get_data1(filters):
 			SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
 			`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
 			tabBatch.custom_barcode,
-			IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
+			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
 				LIMIT 1
-			), 0) AS barcode,
+			) AS barcode,
 			`tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty, `tabPurchase Invoice Item`.custom_selling_price,
 			IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
 			FROM `tabPurchase Invoice Item`
@@ -340,6 +345,11 @@ def get_data1(filters):
 			ON `tabPurchase Invoice Item`.batch_no = tabBatch.name
 			""".format(filters.posting_date, filters.from_time, filters.to_time),
 			as_dict=True
+			# IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
+			# 	SELECT barcode from `tabItem Barcode`
+			# 	WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
+			# 	LIMIT 1
+			# ), 0) AS barcode,
 		)
 
 	elif filters.voucher_type == "Repack Stock Entry":
@@ -350,11 +360,11 @@ def get_data1(filters):
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
 			item_code, batch_no, tabBatch.custom_barcode,
-			IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
 				LIMIT 1
-			), 0) AS barcode,
+			) AS barcode,
 			`tabStock Entry Detail`.item_name, qty,
 			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
@@ -368,6 +378,11 @@ def get_data1(filters):
 			ON `tabStock Entry Detail`.batch_no = tabBatch.name
 			""".format(filters.posting_date, warehouse, filters.from_time, filters.to_time),
 			as_dict=True
+			# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+			# 	SELECT barcode from `tabItem Barcode`
+			# 	WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+			# 	LIMIT 1
+			# ), 0) AS barcode,
 		)
 
 	elif filters.voucher_type == "Repack Stock Label":
@@ -378,11 +393,11 @@ def get_data1(filters):
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
 			item_code, batch_no, tabBatch.custom_barcode,
-			IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
 				LIMIT 1
-			), 0) AS barcode,
+			) AS barcode,
 			`tabStock Entry Detail`.item_name, qty,
 			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
@@ -396,6 +411,11 @@ def get_data1(filters):
 			ON `tabStock Entry Detail`.batch_no = tabBatch.name
 			""".format(filters.posting_date, filters.to_date, warehouse, filters.from_time, filters.to_time),
 			as_dict=True
+			# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+			# 	SELECT barcode from `tabItem Barcode`
+			# 	WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+			# 	LIMIT 1
+			# ), 0) AS barcode,
 		)
 
 	else:
@@ -406,11 +426,11 @@ def get_data1(filters):
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
 			item_code, batch_no, tabBatch.custom_barcode, 
-			IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
 				LIMIT 1
-			), 0) AS barcode,
+			) AS barcode,
 			`tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
@@ -422,6 +442,11 @@ def get_data1(filters):
 			ON `tabStock Entry Detail`.batch_no = tabBatch.name
 			""".format(filters.posting_date, warehouse, filters.from_time, filters.to_time),
 			as_dict=True
+			# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+			# 	SELECT barcode from `tabItem Barcode`
+			# 	WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+			# 	LIMIT 1
+			# ), 0) AS barcode,
 		)
 
 	return query
@@ -436,11 +461,11 @@ def get_data2(filters):
 			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
 			`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
 			tabBatch.custom_barcode,
-			IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
+			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
 				LIMIT 1
-			), 0) AS barcode,
+			) AS barcode,
 			`tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
 			IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
 			FROM `tabPurchase Receipt Item`
@@ -451,6 +476,11 @@ def get_data2(filters):
 			ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
 			""".format(filters.posting_date),
 			as_dict=True
+			# IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
+			# 	SELECT barcode from `tabItem Barcode`
+			# 	WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
+			# 	LIMIT 1
+			# ), 0) AS barcode,
 		)
 
 	elif filters.voucher_type == "Purchase Invoice":
@@ -459,11 +489,11 @@ def get_data2(filters):
 			SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
 			`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
 			tabBatch.custom_barcode,
-			IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
+			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
 				LIMIT 1
-			), 0) AS barcode,
+			) AS barcode,
 			`tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty, `tabPurchase Invoice Item`.custom_selling_price,
 			IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
 			FROM `tabPurchase Invoice Item`
@@ -474,6 +504,11 @@ def get_data2(filters):
 			ON `tabPurchase Invoice Item`.batch_no = tabBatch.name
 			""".format(filters.posting_date),
 			as_dict=True
+			# IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
+			# 	SELECT barcode from `tabItem Barcode`
+			# 	WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
+			# 	LIMIT 1
+			# ), 0) AS barcode,
 		)
 
 	elif filters.voucher_type == "Repack Stock Entry":
@@ -484,11 +519,11 @@ def get_data2(filters):
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
 			item_code, batch_no, tabBatch.custom_barcode,
-			IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
 				LIMIT 1
-			), 0) AS barcode,
+			) AS barcode,
 			`tabStock Entry Detail`.item_name, qty,
 			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
@@ -501,6 +536,11 @@ def get_data2(filters):
 			ON `tabStock Entry Detail`.batch_no = tabBatch.name
 			""".format(filters.posting_date, warehouse),
 			as_dict=True
+			# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+			# 	SELECT barcode from `tabItem Barcode`
+			# 	WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+			# 	LIMIT 1
+			# ), 0) AS barcode,
 		)
 
 	else:
@@ -511,11 +551,11 @@ def get_data2(filters):
 			"""
 			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
 			item_code, batch_no, tabBatch.custom_barcode,
-			IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
 				LIMIT 1
-			), 0) AS barcode,
+			) AS barcode,
 			`tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
@@ -526,6 +566,11 @@ def get_data2(filters):
 			ON `tabStock Entry Detail`.batch_no = tabBatch.name
 			""".format(filters.posting_date, warehouse),
 			as_dict=True
+			# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+			# 	SELECT barcode from `tabItem Barcode`
+			# 	WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+			# 	LIMIT 1
+			# ), 0) AS barcode,
 		)
 
 	return query

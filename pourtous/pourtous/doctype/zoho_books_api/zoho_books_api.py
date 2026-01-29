@@ -2671,7 +2671,8 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 	# Check if Supplier is Inter/Intra state
 
 	contact_id = frappe.get_value("Supplier", supplier, "custom_zoho_contact_id")
-	#is_reverse_charge_applied = False # default value initialised here (context: GST-unregistered Vendors)
+	is_reverse_charge_applied = False # default value initialised here (context: GST-unregistered Vendors)
+	is_inclusive_tax = None
 
 	# for better design: need to fetch the is_inclusive_tax from the settings in the ERP tax table
 	# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
@@ -2700,7 +2701,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		# in case tax info is not available, i.e. in case the GSTIN of supplier is not updated:-
 		else:
 			tax_specification = "intra"
-			is_reverse_charge_applied = True
+			is_reverse_charge_applied = True # to set "is_inclusive_tax = False" below
 
 			reference_invoice_type = "b2c_others" # used in case of "Vendor Credits"
 			#with open('tax_info_list_empty.txt', 'w') as file:
@@ -2723,16 +2724,17 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 			else:
 				item_tax_template = item_doc.taxes[0].item_tax_template
 
-			if is_reverse_charge_applied:
-				if tax_specification == "intra":
-					reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_rcm_group_id")
-				else: # for "inter"
-					reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_igst_rcm_id")
-			else:
-				if tax_specification == "intra":
-					tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_tax_group_id")
-				else: # for "inter"
-					tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_tax_igst_id")
+			# if is_reverse_charge_applied:
+			# 	if tax_specification == "intra":
+			# 		reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_rcm_group_id")
+			# 	else: # for "inter"
+			# 		reverse_charge_tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_igst_rcm_id")
+			# else:
+
+			if tax_specification == "intra":
+				tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_tax_group_id")
+			else: # for "inter"
+				tax_id = frappe.get_value("Item Tax Template", item_tax_template, "custom_zoho_tax_igst_id")
 		except Exception as err:
 			frappe.msgprint(str(err))
 			msg = "Please verify the Tax-template/Supplier/ZB-tax_id for Item Code " + item.item_code

@@ -111,6 +111,12 @@ def get_columns(filters):
 					"width": "150"
 				},
 				{
+					"fieldname": "barcode",
+					"label": "Item Barcode",
+					"fieldtype": "Data",
+					"width": "150"
+				},
+				{
 					"fieldname": "qty",
 					"label": "Qty",
 					"fieldtype": "Float",
@@ -265,6 +271,12 @@ def get_columns(filters):
 					"width": "150"
 				},
 				{
+					"fieldname": "barcode",
+					"label": "Item Barcode",
+					"fieldtype": "Data",
+					"width": "150"
+				},
+				{
 					"fieldname": "qty",
 					"label": "Qty",
 					"fieldtype": "Float",
@@ -370,8 +382,14 @@ def get_data(filters):
 					AND price_list = "Standard Buying"
 				) AS buying_price,
 				tabBatch.custom_buying_price AS batch_buying_price,
-				tabBatch.posa_batch_price AS selling_price, tabBatch.custom_barcode
-				FROM `tabStock Ledger Entry`, `tabItem Supplier`, tabBatch
+				tabBatch.posa_batch_price AS selling_price, tabBatch.custom_barcode,
+				(
+					SELECT barcode FROM `tabItem Barcode`
+					WHERE `tabItem Barcode`.parent = tabItem.item_code
+					AND tabItem.item_code = '{5}'
+					limit 1
+				) AS barcode
+				FROM `tabStock Ledger Entry`, `tabItem Supplier`, tabBatch, tabItem
 				WHERE `tabStock Ledger Entry`.is_cancelled = 0
 				AND tabBatch.name = `tabStock Ledger Entry`.batch_no
 				AND `tabItem Supplier`.parent = `tabStock Ledger Entry`.item_code
@@ -406,6 +424,7 @@ def get_data(filters):
 					AND batch_no = tabBatch.name
 				) != 0
 				)
+				AND `tabStock Ledger Entry`.item_code = tabItem.item_code
 				AND `tabStock Ledger Entry`.item_code = '{5}'
 				GROUP BY `tabStock Ledger Entry`.batch_no
 				""".format("Stores%", "Stall%", "Store 1%", "Store 2%", "Store 3%", filters.name),
@@ -496,8 +515,14 @@ def get_data(filters):
 					AND price_list = "Standard Buying"
 				) AS buying_price,
 				tabBatch.custom_buying_price AS batch_buying_price,
-				tabBatch.posa_batch_price AS selling_price, tabBatch.custom_barcode
-				FROM `tabStock Ledger Entry`, `tabItem Supplier`, tabBatch
+				tabBatch.posa_batch_price AS selling_price, tabBatch.custom_barcode,
+				(
+					SELECT barcode FROM `tabItem Barcode`
+					WHERE `tabItem Barcode`.parent = tabItem.item_code
+					AND tabItem.item_code = '{5}'
+					limit 1
+				) AS barcode
+				FROM `tabStock Ledger Entry`, `tabItem Supplier`, tabBatch, tabItem
 				WHERE `tabStock Ledger Entry`.is_cancelled = 0
 				AND tabBatch.name = `tabStock Ledger Entry`.batch_no
 				AND `tabItem Supplier`.parent = `tabStock Ledger Entry`.item_code
@@ -514,6 +539,7 @@ def get_data(filters):
 					AND batch_no = tabBatch.name
 				) != 0
 				)
+				AND `tabStock Ledger Entry`.item_code = tabItem.item_code,
 				AND `tabStock Ledger Entry`.item_code = '{2}'
 				GROUP BY `tabStock Ledger Entry`.batch_no
 				""".format("Stores%", "Sunship%", filters.name),
