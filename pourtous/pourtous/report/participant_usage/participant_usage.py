@@ -292,6 +292,7 @@ def get_data(filters):
 				) AS usage_order
 				FROM tabCustomer c
 				LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
+				AND dl.parenttype = "Address"
 				LEFT JOIN tabAddress a ON dl.parent = a.name
 
 				WHERE c.custom_fs_account_number = '{2}'
@@ -333,6 +334,7 @@ def get_data(filters):
 				) AS usage_order
 				FROM tabCustomer c
 				LEFT JOIN `tabDynamic Link` dl ON dl.link_name = c.name
+				AND dl.parenttype = "Address"
 				LEFT JOIN tabAddress a ON dl.parent = a.name
 
 				GROUP BY c.name) table1

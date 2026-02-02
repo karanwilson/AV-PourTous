@@ -122,7 +122,7 @@ def get_columns(filters):
 				"width": "130"
 			},
 			{
-				"fieldname": "total",
+				"fieldname": "net_total",
 				"label": "Net Total",
 				"fieldtype": "Currency",
 				"width": "100"
@@ -199,7 +199,7 @@ def get_data(filters):
 	else:
 		query = frappe.db.sql(
 			"""
-			SELECT si.name, si.branch, si.customer_name, si.custom_fs_account_number, si.posting_date, si.total, si.total_taxes_and_charges,
+			SELECT si.name, si.branch, si.customer_name, si.custom_fs_account_number, si.posting_date, si.net_total, si.total_taxes_and_charges,
 			si.grand_total, si.return_against
 			FROM `tabSales Invoice` si, `tabSales Invoice Item` sii
 			LEFT JOIN `tabSales Order` so 
