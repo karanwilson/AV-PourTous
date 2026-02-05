@@ -2778,6 +2778,13 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 	if bill_doc.taxes:
 		data['is_inclusive_tax'] = is_inclusive_tax
 
+	if bill_doc.discount_amount:
+		data['discount'] = bill_doc.discount_amount
+		if bill_doc.apply_discount_on == "Grand Total":
+			data['is_discount_before_tax'] = False
+		else:
+			data['is_discount_before_tax'] = True
+
 	if bill_doc.is_return and bill_doc.custom_zb_vendor_credit_id == None:
 		if bill_doc.bill_no:
 			data["vendor_credit_number"] = bill_doc.bill_no[:16] # Supplier/Vendor Bill Number
@@ -3147,6 +3154,13 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 		if invoice_doc.taxes:
 			creditnote_data['is_inclusive_tax'] = is_inclusive_tax
 
+		if invoice_doc.discount_amount:
+			creditnote_data['discount'] = invoice_doc.discount_amount
+			if invoice_doc.apply_discount_on == "Grand Total":
+				creditnote_data['is_discount_before_tax'] = False
+			else:
+				creditnote_data['is_discount_before_tax'] = True
+
 		# for Returns
 		zb_inv_id = frappe.get_value("Sales Invoice", invoice_doc.return_against, "custom_zoho_invoice_id")
 		if not zb_inv_id:
@@ -3461,6 +3475,13 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			"line_items": line_items,
 		}
 
+		if invoice_doc.discount_amount:
+			invoice_data['discount'] = invoice_doc.discount_amount
+			if invoice_doc.apply_discount_on == "Grand Total":
+				invoice_data['is_discount_before_tax'] = False
+			else:
+				invoice_data['is_discount_before_tax'] = True
+
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
 
@@ -3614,6 +3635,13 @@ def sync_entity_inv_with_zoho_books(invoice, customer):
 			"discount_type": "entity_level",
 			"line_items": line_items,
 		}
+
+		if invoice_doc.discount_amount:
+			invoice_data['discount'] = invoice_doc.discount_amount
+			if invoice_doc.apply_discount_on == "Grand Total":
+				invoice_data['is_discount_before_tax'] = False
+			else:
+				invoice_data['is_discount_before_tax'] = True
 
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
@@ -3808,6 +3836,13 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 			"discount_type": "entity_level",
 			"line_items": line_items,
 		}
+
+		if invoice_doc.discount_amount:
+			invoice_data['discount'] = invoice_doc.discount_amount
+			if invoice_doc.apply_discount_on == "Grand Total":
+				invoice_data['is_discount_before_tax'] = False
+			else:
+				invoice_data['is_discount_before_tax'] = True
 
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
@@ -4035,6 +4070,13 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			"line_items": line_items
 		}
 
+		if invoice_doc.discount_amount:
+			invoice_data['discount'] = invoice_doc.discount_amount
+			if invoice_doc.apply_discount_on == "Grand Total":
+				invoice_data['is_discount_before_tax'] = False
+			else:
+				invoice_data['is_discount_before_tax'] = True
+
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
 
@@ -4228,6 +4270,13 @@ def sync_upi_inv_with_zoho_books(invoice):
 			"line_items": line_items
 		}
 
+		if invoice_doc.discount_amount:
+			invoice_data['discount'] = invoice_doc.discount_amount
+			if invoice_doc.apply_discount_on == "Grand Total":
+				invoice_data['is_discount_before_tax'] = False
+			else:
+				invoice_data['is_discount_before_tax'] = True
+
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
 
@@ -4403,6 +4452,13 @@ def sync_neft_inv_with_zoho_books(invoice, customer):
 			"discount_type": "entity_level",
 			"line_items": line_items
 		}
+
+		if invoice_doc.discount_amount:
+			invoice_data['discount'] = invoice_doc.discount_amount
+			if invoice_doc.apply_discount_on == "Grand Total":
+				invoice_data['is_discount_before_tax'] = False
+			else:
+				invoice_data['is_discount_before_tax'] = True
 
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
@@ -4585,6 +4641,13 @@ def sync_card_inv_with_zoho_books(invoice):
 			"line_items": line_items
 		}
 
+		if invoice_doc.discount_amount:
+			invoice_data['discount'] = invoice_doc.discount_amount
+			if invoice_doc.apply_discount_on == "Grand Total":
+				invoice_data['is_discount_before_tax'] = False
+			else:
+				invoice_data['is_discount_before_tax'] = True
+
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
 
@@ -4758,6 +4821,13 @@ def sync_cash_inv_with_zoho_books(invoice):
 			"discount_type": "entity_level",
 			"line_items": line_items
 		}
+
+		if invoice_doc.discount_amount:
+			invoice_data['discount'] = invoice_doc.discount_amount
+			if invoice_doc.apply_discount_on == "Grand Total":
+				invoice_data['is_discount_before_tax'] = False
+			else:
+				invoice_data['is_discount_before_tax'] = True
 
 		if invoice_doc.taxes:
 			invoice_data['is_inclusive_tax'] = is_inclusive_tax
