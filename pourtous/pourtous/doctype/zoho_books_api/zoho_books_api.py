@@ -2058,7 +2058,7 @@ def sync_erp_taxes_with_zoho(erp_tax):
 		"However, please replicate the ERP Item Tax template names with the tax group names in Zoho Books, for an accurate Item-Tax mapping")
 
 
-def update_item_in_zoho(doc, method):
+def update_item_in_zoho(doc, method=None):
 	#frappe.throw(str(doc.custom_skip_zoho_trigger))
 
 	if doc.custom_skip_zoho_trigger and doc.custom_zoho_item_id != None:
@@ -2299,7 +2299,7 @@ def fetch_erp_items_list():
 @frappe.whitelist()
 def add_erp_item_in_zb(erp_item):
 	doc = frappe.get_doc("Item", erp_item)
-	custom_zoho_item_id = update_item_in_zoho(doc, method=None)
+	custom_zoho_item_id = update_item_in_zoho(doc)
 	if custom_zoho_item_id:
 		doc.custom_zoho_item_id = custom_zoho_item_id
 		doc.save()
@@ -2346,7 +2346,7 @@ def custom_fetch_erp_items_list_from_file():
 @frappe.whitelist()
 def update_erp_item_in_zb(erp_item):
 	doc = frappe.get_doc("Item", erp_item)
-	res = update_item_in_zoho(doc, method=None)
+	res = update_item_in_zoho(doc)
 
 	if res.get('item').get('item_id'):
 		doc.custom_zoho_item_id = res.get('item').get('item_id')
