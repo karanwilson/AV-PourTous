@@ -5,6 +5,8 @@ from frappe.utils import nowdate, get_first_day #, flt
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 
+from payments.payment_gateways.doctype.fs_settings.fs_settings import add_transfer_fs_credit_bill
+
 from stdnum import ean
 
 
@@ -12,17 +14,43 @@ from stdnum import ean
 # def check_user(doc, method):
 # 	frappe.throw(str(frappe.session.user))
 
-def cancel_payment_entry(doc, method):
-	if doc.doctype == "Sales Invoice" and doc.advances:
-		payment_doc = frappe.get_doc(doc.advances[0].reference_type, doc.advances[0].reference_name)
-		if len(payment_doc.references) == 1 and doc.unallocated_amount == 0: # cancel only in case the Payment Entry voucher is being used solely by this Invoice
-			payment_doc.cancel()
+# def pe_before_validate(doc, method):
+# 	frappe.throw("test")
+# 	if doc.custom_receive_from_fs_api and doc.mode_of_payment == "FS":
+# 		frappe.throw("if")
+# 		doc.reference_no = "Temp ref no: pre-fs-transaction"
+# 		doc.reference_date = nowdate()
+# 	else:
+# 		frappe.throw("else")
 
-	elif doc.doctype == "Sales Order" and doc.advance_paid > 0:
-		payment_entry = frappe.db.get_list("Payment Entry", filters={"reference_doctype": doc.doctype, "reference_name": doc.name}, fields=["name"])
-		payment_doc = frappe.get_doc("Payment Entry", payment_entry)
-		if len(payment_doc.references) == 1 and doc.unallocated_amount == 0: # cancel only in case the Payment Entry voucher is being used solely by this Order
-			payment_doc.cancel()
+def pe_fapi_transfer(doc, method):
+	if doc.custom_receive_from_fs_api and doc.mode_of_payment == "FS":
+		if len(doc.references) == 1:
+			res = add_transfer_fs_credit_bill(doc.references[0].reference_name, doc.name)
+			if res:
+				if res['custom_fs_transfer_status'] == "OK" or res['custom_fs_transfer_status'] == "OK - Paid":
+					doc.custom_fs_transfer_status = res['custom_fs_transfer_status']
+					doc.reference_no = res['reference_no']
+					doc.remarks = res['remarks']
+			else:
+				frappe.throw("No Response")
+		else:
+			frappe.throw("Receiving Payment via FS API is configured for a single Invoice/Order only")
+
+
+def cancel_payment_entry(doc, method):
+	if frappe.defaults.get_user_default("company") == 'Pour Tous Purchasing Service':
+		if doc.doctype == "Sales Invoice" and doc.advances:
+			payment_doc = frappe.get_doc(doc.advances[0].reference_type, doc.advances[0].reference_name)
+			if len(payment_doc.references) == 1 and doc.unallocated_amount == 0: # cancel only in case the Payment Entry voucher is being used solely by this Invoice
+				payment_doc.cancel()
+
+		elif doc.doctype == "Sales Order" and doc.advance_paid > 0:
+			payment_entry = frappe.db.get_list("Payment Entry", filters={"reference_doctype": doc.doctype, "reference_name": doc.name}, fields=["name"])
+			payment_doc = frappe.get_doc("Payment Entry", payment_entry)
+			if len(payment_doc.references) == 1 and doc.unallocated_amount == 0: # cancel only in case the Payment Entry voucher is being used solely by this Order
+				payment_doc.cancel()
+
 
 def verify_cancel_permission(doc,method):
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center" and (frappe.session.user not in 
@@ -670,18 +698,18 @@ def create_batch_barcode(doc, method):
 	doc.custom_barcode = pre_barcode + ean.calc_check_digit(pre_barcode)
 	doc.save()
 	#save the barcode in the Item table's barcode child-table
-	item_doc = frappe.get_doc("Item", doc.item)
-	item_doc.append("barcodes",
-				{
-					"barcode": doc.custom_barcode,
-					"barcode_type": "EAN"
-				}
-	)
-	item_doc.custom_skip_zoho_trigger = 1
-	item_doc.save()
+	# item_doc = frappe.get_doc("Item", doc.item)
+	# item_doc.append("barcodes",
+	# 			{
+	# 				"barcode": doc.custom_barcode,
+	# 				"barcode_type": "EAN"
+	# 			}
+	# )
+	# item_doc.custom_skip_zoho_trigger = 1
+	# item_doc.save()
 
 
-def create_item_barcode(item_code):
+""" def create_item_barcode(item_code):
 	item_doc = frappe.get_doc("Item", item_code)
 
 	if not item_doc.barcodes: # in case there is no barcode, create/add one
@@ -697,12 +725,56 @@ def create_item_barcode(item_code):
 		)
 
 		item_doc.custom_skip_zoho_trigger = 1
-		item_doc.save()
+		item_doc.save() """
 
 
-def verify_batch_qty_for_barcode(doc, method):
-	if doc.batch_qty == 0: #drop batch barcode from Item batch table, wben batch becomes empty
-		frappe.db.delete("Item Barcode", {"barcode": doc.custom_barcode})
+@frappe.whitelist()
+def fetch_items_list_for_barcode():
+	return frappe.db.get_list('Item',
+		filters={
+			'disabled': 0
+		},
+		fields=['name']
+	)
+
+@frappe.whitelist()
+def update_item_barcode(item_code):
+	item_doc = frappe.get_doc("Item", item_code)
+
+	if item_doc.barcodes:
+		frappe.db.delete("Item Barcode", {"parent": item_code})
+
+	pre_barcode = '890' + item_code.zfill(9) # adding leading zeros to make 9 digits, plus the 3 digit country code
+	item_barcode = pre_barcode + ean.calc_check_digit(pre_barcode)
+
+	#save the barcode in the Item table's barcode child-table
+	item_doc.append("barcodes",
+				{
+					"barcode": item_barcode,
+					"barcode_type": "EAN"
+				}
+	)
+	item_doc.custom_skip_zoho_trigger = 1
+	item_doc.save()
+
+	return { "Updated" }
+
+
+def add_item_barcode(doc, method):
+	pre_barcode = '890' + doc.name.zfill(9) # adding leading zeros to make 9 digits, plus the 3 digit country code
+	item_barcode = pre_barcode + ean.calc_check_digit(pre_barcode)
+
+	#save the barcode in the Item table's barcode child-table
+	doc.append("barcodes",
+				{
+					"barcode": item_barcode,
+					"barcode_type": "EAN"
+				}
+	)
+
+# def verify_batch_qty_for_barcode(doc, method):
+# 	if doc.batch_qty == 0: #drop batch barcode from Item batch table, wben batch becomes empty
+# 		frappe.db.delete("Item Barcode", {"barcode": doc.custom_barcode})
 
 		# existing_item_barcode = frappe.db.get_value("Item Barcode", {"barcode": doc.custom_barcode}, "name")
 		# if existing_item_barcode:
@@ -710,12 +782,11 @@ def verify_batch_qty_for_barcode(doc, method):
 		# 	item_barcode_doc.delete()
 		# 	frappe.db.commit()
 
-
-def verify_item_prerequisites(doc, method):
-	if not doc.taxes:
-		frappe.throw("Please enter a Tax Template")
-	if not doc.valuation_rate:
-		frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
+# def verify_item_prerequisites(doc, method):
+# 	if not doc.taxes:
+# 		frappe.throw("Please enter a Tax Template")
+# 	if not doc.valuation_rate:
+# 		frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
 
 
 @frappe.whitelist()
@@ -882,7 +953,7 @@ def update_selling_price(doc, method):
 		if item.custom_selling_price == 0:
 			item.custom_selling_price = item.price_list_rate
 
-def update_price_lists_item_barcode(doc, method):
+def update_price_lists(doc, method):
 	if (doc.doctype == "Purchase Invoice" and not doc.update_stock) or doc.is_return:
 		return
 
@@ -904,9 +975,9 @@ def update_price_lists_item_barcode(doc, method):
 
 			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
 
-		else:
+		#else:
 			# Update the Item Barcode for non-batch Items
-			create_item_barcode(item.item_code)
+			#create_item_barcode(item.item_code)
 
 		#existing_item_sell_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
 		existing_item_sell_price_entry = frappe.db.get_list(

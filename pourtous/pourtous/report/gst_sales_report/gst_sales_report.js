@@ -19,36 +19,12 @@ frappe.query_reports["GST Sales Report"] = {
 		},
 
 		{
-			"fieldname": "customer",
-			"label": __("Customer"),
-			"fieldtype": "Link",
-			"options": "Customer",
-			"width": "60px",
-		},
-
-		{
-			"fieldname": "customer_type",
-			"label": __("Participant Type"),
-			"fieldtype": "Select",
-			"options": "\nIndividual\nCompany",
-			"width": "60px",
-		},
-
-		{
-			"fieldname": "customer_group",
-			"label": __("Participant Group"),
-			"fieldtype": "Link",
-			"options": "Customer Group",
-			"width": "60px",
-		},
-
-		{
 			"fieldname": "mop",
-			"label": __("MOP"),
-			"fieldtype": "Link",
-			"options": "Mode of Payment",
-			//"fieldtype": "Select",
-			//"options": "\nFS\nAurocard\nUPI\nCash\nCards\nNEFT\nDonations",
+			"label": __("Mode Of Payment"),
+			// "fieldtype": "Link",
+			// "options": "Mode of Payment",
+			"fieldtype": "Select",
+			"options": "\nFS\nAurocard\nUPI\nCash\nCards\nNEFT",
 			"width": "60px",
 		}
 	]

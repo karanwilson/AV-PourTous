@@ -19,7 +19,7 @@ frappe.ui.form.on('Purchase Invoice', {
 		frm.set_value('disable_rounded_total', 0);
 		frm.set_value('title', frm.doc.supplier_name);
 
-		if (frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service") {
+		if (frm.doc.items && frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service") {
 			if (frm.doc.update_stock && !frm.doc.is_return) {
 				frm.doc.items.forEach((item) => {
 					if (item.warehouse == "Stores - PTPS") {

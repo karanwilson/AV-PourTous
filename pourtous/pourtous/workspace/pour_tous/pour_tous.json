@@ -219,8 +219,8 @@
    "type": "Link"
   }
  ],
- "modified": "2026-01-20 13:52:14.221333",
- "modified_by": "murugan91@auroville.org.in",
+ "modified": "2026-01-23 07:41:52.115942",
+ "modified_by": "karan.wilson@auroville.org.in",
  "module": "pourtous",
  "name": "Pour Tous",
  "number_cards": [],
@@ -260,7 +260,7 @@
    "color": "Grey",
    "doc_view": "List",
    "label": "Customer Credit Balance",
-   "link_to": "Customer Credit Balance",
+   "link_to": "Customer Credit Balance Custom",
    "type": "Report"
   },
   {

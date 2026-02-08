@@ -132,19 +132,27 @@ doc_events = {
         ], # cancel invoice in ZB
 	},
     "Payment Entry": {
-        "before_cancel": "payments.payment_gateways.doctype.fs_settings.fs_settings.refund_fs_payments",
+        #"before_validate": "pourtous.api.pe_before_validate",
+        "before_submit": "pourtous.api.pe_fapi_transfer",
+        "before_cancel": "payments.payment_gateways.doctype.fs_settings.fs_settings.refund_fs_payments"
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)
         #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
 	},
 	"Item": {
 		#"before_insert": "pourtous.api.verify_item_prerequisites",
-        "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho", # update Zoho Books
+        "before_save": [
+            "pourtous.api.add_item_barcode",
+            "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_item_in_zoho" # update Zoho Books
+        ],
         "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_item_in_zoho" # update Zoho Books
 	},
     #"Item Tax Template": {
     #    "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_tax_in_zoho", # update Zoho Books
     #    "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_tax_in_zoho" # update Zoho Books
     #},
+    "File": {
+        "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_zb_bill_attachment" # verify if file is an attachment in ZB, and delete attachment in ZB
+    },
 	"Customer": {
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.update_contact_in_zoho",
         "on_trash": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.delete_contact_in_zoho"
@@ -156,13 +164,13 @@ doc_events = {
     # comment the hook below until the pricing rule/method is defined
 	"Purchase Receipt": {
         "before_save": "pourtous.api.update_selling_price", # Add the 'Item Price'
-		"on_submit": "pourtous.api.update_price_lists_item_barcode", # Add the 'Item Price'
+		"on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
         #"before_insert": "pourtous.api.get_purchase_tax_template",
 	},
 	"Purchase Invoice": {
         #"before_insert": "pourtous.api.get_purchase_tax_template",
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_return_purchase_invoice",
-        "on_submit": "pourtous.api.update_price_lists_item_barcode", # Add the 'Item Price'
+        "on_submit": "pourtous.api.update_price_lists", # Add the 'Item Price'
         "before_cancel": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_bill_in_zoho" # cancel bill in ZB
 	},
     #"Delivery Note": {
@@ -177,7 +185,7 @@ doc_events = {
     },
     "Batch": {
         "after_insert": "pourtous.api.create_batch_barcode", # Adds a Batch Barcode
-        "before_save": "pourtous.api.verify_batch_qty_for_barcode",
+        #"before_save": "pourtous.api.verify_batch_qty_for_barcode",
     },
     "Sales Order": {
         #"before_insert": "pourtous.api.get_sales_tax_template",
@@ -326,6 +334,8 @@ fixtures = [
                     "Sales Invoice-custom_zb_consol_creditnote_id",
                     #"Sales Invoice-custom_zb_creditnote_refund_id",
                     "Sales Invoice-custom_zoho_void_invoice_id",
+                    "Sales Invoice-custom_token_number", # for AV Bakery
+                    "Sales Invoice-custom_is_donation", # for AV Bakery
 
                     "Sales Order-custom_fs_account_number", # to Identify Sales Order based on FS Account number
                     "Sales Order-custom_fs_transfer_status", # for FS Transactions
@@ -372,6 +382,8 @@ fixtures = [
                     "Purchase Invoice-custom_zoho_bill_id",
                     "Purchase Invoice-custom_zb_vendor_credit_id",
                     "Purchase Invoice-custom_zoho_void_bill_id",
+
+                    "File-custom_zoho_bill_id", # for Vendor Bill attachments
 
                     "Purchase Receipt-custom_zoho_bill_id",
                     "Purchase Receipt-custom_zb_vendor_credit_id",

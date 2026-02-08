@@ -37,6 +37,13 @@ def get_columns(filters):
 			"width": "150"
 		},
 		{
+			"fieldname": "custom_customer_group",
+			"label": "Customer Group",
+			"fieldtype": "Link",
+			"options": "Customer Group",
+			"width": "150"
+		},
+		{
 			"fieldname": "custom_fs_account_number",
 			"label": "FS Account",
 			"fieldtype": "Data",
@@ -79,7 +86,7 @@ def get_columns(filters):
 def get_data(filters):
 	query = frappe.db.sql(
 		"""
-		SELECT si.name, si.customer_name, si.custom_fs_account_number, si.posting_date, si.total,
+		SELECT si.name, si.customer_name, si.custom_customer_group, si.custom_fs_account_number, si.posting_date, si.total,
 		si.total_taxes_and_charges, si.grand_total, si.is_return
 		FROM `tabSales Invoice` si
 		WHERE si.docstatus = 1
@@ -90,4 +97,3 @@ def get_data(filters):
 	)
 
 	return query
-
