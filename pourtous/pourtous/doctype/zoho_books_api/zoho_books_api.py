@@ -2780,6 +2780,7 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 
 	if bill_doc.discount_amount:
 		data['discount'] = bill_doc.discount_amount
+		data['discount_account_id'] = api_controller.purchase_discount_account_id
 		if bill_doc.apply_discount_on == "Grand Total":
 			data['is_discount_before_tax'] = False
 		else:
@@ -3477,6 +3478,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 
 		if invoice_doc.discount_amount:
 			invoice_data['discount'] = invoice_doc.discount_amount
+			invoice_data['discount_account_id'] = api_controller.sales_discount_account_id
 			if invoice_doc.apply_discount_on == "Grand Total":
 				invoice_data['is_discount_before_tax'] = False
 			else:
