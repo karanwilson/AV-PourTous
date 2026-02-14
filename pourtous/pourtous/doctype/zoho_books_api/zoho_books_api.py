@@ -2786,6 +2786,10 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		else:
 			data['is_discount_before_tax'] = True
 
+	if bill_doc.rounding_adjustment:
+		data['adjustment'] = bill_doc.rounding_adjustment
+		data['adjustment_description'] = 'Rounding'
+
 	if bill_doc.is_return and bill_doc.custom_zb_vendor_credit_id == None:
 		if bill_doc.bill_no:
 			data["vendor_credit_number"] = bill_doc.bill_no[:16] # Supplier/Vendor Bill Number
