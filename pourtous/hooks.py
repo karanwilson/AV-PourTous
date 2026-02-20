@@ -131,6 +131,10 @@ doc_events = {
             "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_invoice_in_zoho" # cancel invoice in ZB"
         ], # cancel invoice in ZB
 	},
+    "Integration Request": {
+        "before_insert": "payments.payment_gateways.doctype.fs_settings.fs_settings.verify_existing_integration_request",
+        #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.verify_existing_integration_request",
+    },
     "Payment Entry": {
         #"before_validate": "pourtous.api.pe_before_validate",
         "before_submit": "pourtous.api.pe_fapi_transfer",
