@@ -21,7 +21,7 @@
 	{{ doc.company }}<br>
 	{{ _("GSTIN/UIN") }}: {{ doc.company_gstin }}<br>
 	{%- if doc.company_address -%}
-		{{ _("Phone") }}: {{ frappe.db.get_value("Address", doc.company_address, "phone") }},&nbsp;
+		{{ _("Phone") }}: {{ frappe.db.get_value("Address", doc.company_address, "phone") }}<br>
 		{{ _("Email") }}: {{ frappe.db.get_value("Address", doc.company_address, "email_id") }}<br>
 	{%- endif -%}
 
@@ -33,11 +33,14 @@
 </p>
 <p style="font-size: smaller;">
 	{% if doc.doctype == "Sales Invoice" %}
-		<b>{{ _("Receipt No") }}:</b> {{ doc.name }}<br>
+		<b>{{ _("Receipt No") }}:</b> {{ doc.name }},&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		{%- if doc.custom_token_number -%}
+			<b>{{ _("Token No") }}:</b> <b style="font-size: small;">{{ doc.custom_token_number }}</b><br>
+		{%- endif -%}
 	{% else %}
 		<b>{{ _("Order No") }}:</b> {{ doc.name }}<br>
 	{% endif %}
-	<b>{{ _("Cashier") }}:</b> {{ doc.owner }}<br>
+	<br><b>{{ _("Cashier") }}:</b> {{ doc.owner }}<br>
 	<b>{{ _("Customer") }}:</b> {{ doc.customer_name }}<br>
 	{%- if doc.custom_fs_account_number -%}
 		<b>{{ _("FS Account") }}:</b>
@@ -76,7 +79,11 @@
 				{{ item.serial_no | replace("\n", ", ") }}
 			{%- endif -%}
 		</td>
-		<td class="text-right" style="font-size: x-small;"><b>{{ item.qty }}</b></td>
+		{%- if item.qty == 1 -%}
+			<td class="text-right" style="font-size: x-small;"><b>{{ item.qty }}</b></td>
+		{%- else -%}
+			<td class="text-right" style="font-size: smaller;"><b>{{ item.qty }}</b></td>
+		{%- endif -%}
 		<td class="text-right" style="font-size: x-small;">
 			<!-- <b>{{ item.get_formatted("net_rate") }}</b> -->
 			<b>{{ item.net_rate }}</b>
@@ -131,6 +138,12 @@
 {%- if doc.custom_fs_transfer_status -%}
 <p style="font-size: smaller;">
 	<b>{{ _("FS Transfer Status") }}: {{ doc.custom_fs_transfer_status }}</b><br>
+</p>
+{%- endif -%}
+
+{%- if doc.custom_staff_customer_detail -%}
+<p style="font-size: smaller;">
+	<b>{{ _("Staff/Customer") }}</b>: {{ doc.custom_staff_customer_detail }}<br>
 </p>
 {%- endif -%}
 <!-- <p style="font-size: smaller;">

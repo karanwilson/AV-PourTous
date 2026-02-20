@@ -761,16 +761,27 @@ def update_item_barcode(item_code):
 
 
 def add_item_barcode(doc, method):
-	pre_barcode = '890' + doc.name.zfill(9) # adding leading zeros to make 9 digits, plus the 3 digit country code
-	item_barcode = pre_barcode + ean.calc_check_digit(pre_barcode)
+	if frappe.defaults.get_user_default("company") == 'Pour Tous Purchasing Service':
+		pre_barcode = '890' + doc.name.zfill(9) # adding leading zeros to make 9 digits, plus the 3 digit country code
+		item_barcode = pre_barcode + ean.calc_check_digit(pre_barcode)
 
-	#save the barcode in the Item table's barcode child-table
-	doc.append("barcodes",
-				{
-					"barcode": item_barcode,
-					"barcode_type": "EAN"
-				}
-	)
+		if len(doc.barcodes) > 1:
+			doc.barcodes = []
+
+		elif len(doc.barcodes) == 1:
+			existing_item_barcode = frappe.db.get_value("Item Barcode", {"barcode": item_barcode}, "name")
+			if existing_item_barcode:
+				return
+			else:
+				doc.barcodes = []
+
+		#save the barcode in the Item table's barcode child-table
+		doc.append("barcodes",
+			{
+				"barcode": item_barcode,
+				"barcode_type": "EAN"
+			}
+		)
 
 # def verify_batch_qty_for_barcode(doc, method):
 # 	if doc.batch_qty == 0: #drop batch barcode from Item batch table, wben batch becomes empty

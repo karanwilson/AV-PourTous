@@ -131,6 +131,10 @@ doc_events = {
             "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.void_invoice_in_zoho" # cancel invoice in ZB"
         ], # cancel invoice in ZB
 	},
+    "Integration Request": {
+        "before_insert": "payments.payment_gateways.doctype.fs_settings.fs_settings.verify_existing_integration_request",
+        #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.verify_existing_integration_request",
+    },
     "Payment Entry": {
         #"before_validate": "pourtous.api.pe_before_validate",
         "before_submit": "pourtous.api.pe_fapi_transfer",
@@ -321,7 +325,7 @@ fixtures = [
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
                     "Sales Invoice-custom_fs_account_number", # to Identify Invoice based on FS Account number
                     "Sales Invoice-custom_transaction_date", # in case transaction date is earlier than the posting date
-                    "Sales Invoice-custom_staff_member", # in case of accounts shared by a group
+                    "Sales Invoice-custom_staff_customer_detail", # in case of FS-accounts shared by a group
 
                     "Sales Invoice-custom_pos_transfer_status", # ICICI POS-UPI Integration
                     "Sales Invoice-custom_upi_transaction_id", # ICICI POS-UPI Integration
@@ -392,7 +396,7 @@ fixtures = [
                     "Purchase Receipt Item-custom_selling_price", # for setting the Selling Price
                     "Purchase Invoice Item-custom_selling_price", # for setting the Selling Price
 
-                    "Stock Entry-custom_batch_barcode", # for scanning batch barcodes
+                    #"Stock Entry-custom_batch_barcode", # for scanning batch barcodes
 
                     "Stock Entry Detail-custom_buying_price",
                     "Stock Entry Detail-custom_selling_price",

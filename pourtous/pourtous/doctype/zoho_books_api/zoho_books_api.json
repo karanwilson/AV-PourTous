@@ -29,6 +29,10 @@
   "income_account_id",
   "expense_account",
   "expense_account_id",
+  "purchase_discount_account",
+  "purchase_discount_account_id",
+  "sales_discount_account",
+  "sales_discount_account_id",
   "walk_in_fs_customer",
   "walk_in_fs_contact_id",
   "walk_in_aurocard_customer",
@@ -237,12 +241,36 @@
    "fieldname": "walk_in_card_contact_id",
    "fieldtype": "Data",
    "label": "Walk In Card Contact ID"
+  },
+  {
+   "fieldname": "purchase_discount_account",
+   "fieldtype": "Link",
+   "label": "Purchase Discount Account",
+   "options": "Zoho Accounts"
+  },
+  {
+   "fetch_from": "purchase_discount_account.account_id",
+   "fieldname": "purchase_discount_account_id",
+   "fieldtype": "Data",
+   "label": "Purchase Discount Account ID"
+  },
+  {
+   "fieldname": "sales_discount_account",
+   "fieldtype": "Link",
+   "label": "Sales Discount Account",
+   "options": "Zoho Accounts"
+  },
+  {
+   "fetch_from": "sales_discount_account.account_id",
+   "fieldname": "sales_discount_account_id",
+   "fieldtype": "Data",
+   "label": "Sales Discount Account ID"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-11-06 13:15:18.685755",
+ "modified": "2026-02-11 16:05:42.226601",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Books API",
