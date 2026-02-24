@@ -6,9 +6,9 @@ from frappe import _, msgprint
 
 
 def execute(filters=None):
-	if not (filters.voucher_type and filters.posting_date): # don't execute until filters are set
+	if not (filters.voucher_type and filters.posting_date and filters.to_date): # don't execute until filters are set
 		return [], []
-	
+
 	if filters.voucher_type == "Repack Stock Label":
 		if not (filters.voucher_type and filters.posting_date and filters.to_date): # don't execute until filters are set
 			return [], []
@@ -30,265 +30,433 @@ def execute(filters=None):
 
 
 def get_columns(filters):
-	if filters.voucher_type == "Purchase Receipt":
-		return [
-			{
-				"fieldname": "voucher_name",
-				"label": "Voucher ID",
-				"fieldtype": "Link",
-				"options": "Purchase Receipt",
-				"width": "135"
-			},
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		if filters.voucher_type == "Purchase Receipt":
+			return [
+				{
+					"fieldname": "voucher_name",
+					"label": "Voucher ID",
+					"fieldtype": "Link",
+					"options": "Purchase Receipt",
+					"width": "135"
+				},
 
-			{
-				"fieldname": "posting_time",
-				"label": "Time",
-				"fieldtype": "Time",
-				"width": "100",
-			},
+				{
+					"fieldname": "posting_time",
+					"label": "Time",
+					"fieldtype": "Time",
+					"width": "100",
+				},
 
-			{
-				"fieldname": "supplier",
-				"label": "Supplier",
-				"fieldtype": "Data",
-				"width": "150"
-			},
+				{
+					"fieldname": "supplier",
+					"label": "Supplier",
+					"fieldtype": "Data",
+					"width": "150"
+				},
 
-			{
-				"fieldname": "item_code",
-				"label": "Item Code",
-				"fieldtype": "Data",
-				"width": "90"
-			},
+				{
+					"fieldname": "item_code",
+					"label": "Item Code",
+					"fieldtype": "Data",
+					"width": "90"
+				},
 
-			{
-				"fieldname": "batch_no",
-				"label": "Batch",
-				"fieldtype": "Link",
-				"options": "Batch",
-				"width": "120"
-			},
+				{
+					"fieldname": "batch_no",
+					"label": "Batch",
+					"fieldtype": "Link",
+					"options": "Batch",
+					"width": "120"
+				},
 
-			{
-				"fieldname": "custom_barcode",
-				"label": "Batch Barcode",
-				"fieldtype": "Data",
-				"width": "150"
-			},
+				{
+					"fieldname": "custom_barcode",
+					"label": "Batch Barcode",
+					"fieldtype": "Data",
+					"width": "150"
+				},
 
-			{
-				"fieldname": "barcode",
-				"label": "Item Barcode",
-				"fieldtype": "Data",
-				"width": "150"
-			},
+				{
+					"fieldname": "barcode",
+					"label": "Item Barcode",
+					"fieldtype": "Data",
+					"width": "150"
+				},
 
-			{
-				"fieldname": "item_name",
-				"label": "Item Name",
-				"fieldtype": "Data",
-				"width": "250"
-			},
+				{
+					"fieldname": "item_name",
+					"label": "Item Name",
+					"fieldtype": "Data",
+					"width": "250"
+				},
 
-			{
-				"fieldname": "qty",
-				"label": "Qty",
-				"fieldtype": "Float",
-				"width": "90"
-			},
+				{
+					"fieldname": "qty",
+					"label": "Qty",
+					"fieldtype": "Float",
+					"width": "90"
+				},
 
-			{
-				"fieldname": "custom_selling_price",
-				"label": "S Price",
-				"fieldtype": "Currency",
-				"width": "100"
-			},
+				{
+					"fieldname": "custom_selling_price",
+					"label": "S Price",
+					"fieldtype": "Currency",
+					"width": "100"
+				},
 
-			{
-				"fieldname": "rate",
-				"label": "Rate (Old PR)",
-				"fieldtype": "Currency",
-				"width": "120"
-			},
-		]
+				{
+					"fieldname": "rate",
+					"label": "Rate (Old PR)",
+					"fieldtype": "Currency",
+					"width": "120"
+				},
+			]
 
-	elif filters.voucher_type == "Purchase Invoice":
-		return [
-			{
-				"fieldname": "voucher_name",
-				"label": "Voucher ID",
-				"fieldtype": "Link",
-				"options": "Purchase Invoice",
-				"width": "135"
-			},
+		elif filters.voucher_type == "Purchase Invoice":
+			return [
+				{
+					"fieldname": "voucher_name",
+					"label": "Voucher ID",
+					"fieldtype": "Link",
+					"options": "Purchase Invoice",
+					"width": "135"
+				},
 
-			{
-				"fieldname": "posting_time",
-				"label": "Time",
-				"fieldtype": "Time",
-				"width": "100",
-			},
+				{
+					"fieldname": "posting_time",
+					"label": "Time",
+					"fieldtype": "Time",
+					"width": "100",
+				},
 
-			{
-				"fieldname": "supplier",
-				"label": "Supplier",
-				"fieldtype": "Data",
-				"width": "150"
-			},
+				{
+					"fieldname": "supplier",
+					"label": "Supplier",
+					"fieldtype": "Data",
+					"width": "150"
+				},
 
-			{
-				"fieldname": "item_code",
-				"label": "Item Code",
-				"fieldtype": "Data",
-				"width": "90"
-			},
+				{
+					"fieldname": "item_code",
+					"label": "Item Code",
+					"fieldtype": "Data",
+					"width": "90"
+				},
 
-			{
-				"fieldname": "batch_no",
-				"label": "Batch",
-				"fieldtype": "Link",
-				"options": "Batch",
-				"width": "120"
-			},
+				{
+					"fieldname": "batch_no",
+					"label": "Batch",
+					"fieldtype": "Link",
+					"options": "Batch",
+					"width": "120"
+				},
 
-			{
-				"fieldname": "custom_barcode",
-				"label": "Batch Barcode",
-				"fieldtype": "Data",
-				"width": "150"
-			},
+				{
+					"fieldname": "custom_barcode",
+					"label": "Batch Barcode",
+					"fieldtype": "Data",
+					"width": "150"
+				},
 
-			{
-				"fieldname": "barcode",
-				"label": "Item Barcode",
-				"fieldtype": "Data",
-				"width": "150"
-			},
+				{
+					"fieldname": "barcode",
+					"label": "Item Barcode",
+					"fieldtype": "Data",
+					"width": "150"
+				},
 
-			{
-				"fieldname": "item_name",
-				"label": "Item Name",
-				"fieldtype": "Data",
-				"width": "250"
-			},
+				{
+					"fieldname": "item_name",
+					"label": "Item Name",
+					"fieldtype": "Data",
+					"width": "250"
+				},
 
-			{
-				"fieldname": "qty",
-				"label": "Qty",
-				"fieldtype": "Float",
-				"width": "90"
-			},
+				{
+					"fieldname": "qty",
+					"label": "Qty",
+					"fieldtype": "Float",
+					"width": "90"
+				},
 
-			{
-				"fieldname": "custom_selling_price",
-				"label": "S Price",
-				"fieldtype": "Currency",
-				"width": "100"
-			},
+				{
+					"fieldname": "custom_selling_price",
+					"label": "S Price",
+					"fieldtype": "Currency",
+					"width": "100"
+				},
 
-			{
-				"fieldname": "rate",
-				"label": "Rate (Old PR)",
-				"fieldtype": "Currency",
-				"width": "120"
-			},
-		]
+				{
+					"fieldname": "rate",
+					"label": "Rate (Old PR)",
+					"fieldtype": "Currency",
+					"width": "120"
+				},
+			]
+
+		else:
+			return [
+				{
+					"fieldname": "voucher_type",
+					"label": "Voucher Type",
+					"fieldtype": "Data",
+					"width": "135"
+				},
+
+				{
+					"fieldname": "voucher_name",
+					"label": "Voucher ID",
+					"fieldtype": "Link",
+					"options": "Stock Entry",
+					"width": "200"
+				},
+
+				{
+					"fieldname": "posting_time",
+					"label": "Time",
+					"fieldtype": "Time",
+					"width": "100",
+				},
+
+				{
+					"fieldname": "item_code",
+					"label": "Item Code",
+					"fieldtype": "Data",
+					"width": "90"
+				},
+
+				{
+					"fieldname": "batch_no",
+					"label": "Batch",
+					"fieldtype": "Link",
+					"options": "Batch",
+					"width": "130"
+				},
+
+				{
+					"fieldname": "custom_barcode",
+					"label": "Batch Barcode",
+					"fieldtype": "Data",
+					"width": "150"
+				},
+
+				{
+					"fieldname": "barcode",
+					"label": "Item Barcode",
+					"fieldtype": "Data",
+					"width": "150"
+				},
+
+				{
+					"fieldname": "item_name",
+					"label": "Item Name",
+					"fieldtype": "Data",
+					"width": "250"
+				},
+
+				{
+					"fieldname": "qty",
+					"label": "Quantity",
+					"fieldtype": "Float",
+					"width": "100"
+				},
+
+				{
+					"fieldname": "net_qty",
+					"label": "Net Qty",
+					"fieldtype": "Data",
+					"width": "100"
+				},
+
+				{
+					"fieldname": "stock_uom",
+					"label": "UOM",
+					"fieldtype": "Data",
+					"width": "80"
+				},
+
+				{
+					"fieldname": "expiry_date",
+					"label": "Use By",
+					"fieldtype": "Date",
+					"width": "100"
+				},
+
+				{
+					"fieldname": "posa_batch_price",
+					"label": "S Price",
+					"fieldtype": "Currency",
+					"width": "100"
+				}
+			]
 
 	else:
-		return [
-			{
-				"fieldname": "voucher_type",
-				"label": "Voucher Type",
-				"fieldtype": "Data",
-				"width": "135"
-			},
+		if filters.voucher_type == "Purchase Receipt":
+			return [
+				{
+					"fieldname": "voucher_name",
+					"label": "Voucher ID",
+					"fieldtype": "Link",
+					"options": "Purchase Receipt",
+					"width": "135"
+				},
 
-			{
-				"fieldname": "voucher_name",
-				"label": "Voucher ID",
-				"fieldtype": "Link",
-				"options": "Stock Entry",
-				"width": "200"
-			},
+				{
+					"fieldname": "posting_time",
+					"label": "Time",
+					"fieldtype": "Time",
+					"width": "100",
+				},
 
-			{
-				"fieldname": "posting_time",
-				"label": "Time",
-				"fieldtype": "Time",
-				"width": "100",
-			},
+				{
+					"fieldname": "supplier",
+					"label": "Supplier",
+					"fieldtype": "Data",
+					"width": "150"
+				},
 
-			{
-				"fieldname": "item_code",
-				"label": "Item Code",
-				"fieldtype": "Data",
-				"width": "90"
-			},
+				{
+					"fieldname": "item_code",
+					"label": "Item Code",
+					"fieldtype": "Data",
+					"width": "90"
+				},
 
-			{
-				"fieldname": "batch_no",
-				"label": "Batch",
-				"fieldtype": "Link",
-				"options": "Batch",
-				"width": "130"
-			},
+				{
+					"fieldname": "item_name",
+					"label": "Item Name",
+					"fieldtype": "Data",
+					"width": "250"
+				},
 
-			{
-				"fieldname": "custom_barcode",
-				"label": "Batch Barcode",
-				"fieldtype": "Data",
-				"width": "150"
-			},
+				{
+					"fieldname": "qty",
+					"label": "Qty",
+					"fieldtype": "Float",
+					"width": "90"
+				},
 
-			{
-				"fieldname": "barcode",
-				"label": "Item Barcode",
-				"fieldtype": "Data",
-				"width": "150"
-			},
+				{
+					"fieldname": "custom_selling_price",
+					"label": "S Price",
+					"fieldtype": "Currency",
+					"width": "100"
+				},
+			]
 
-			{
-				"fieldname": "item_name",
-				"label": "Item Name",
-				"fieldtype": "Data",
-				"width": "250"
-			},
+		elif filters.voucher_type == "Purchase Invoice":
+			return [
+				{
+					"fieldname": "voucher_name",
+					"label": "Voucher ID",
+					"fieldtype": "Link",
+					"options": "Purchase Invoice",
+					"width": "135"
+				},
 
-			{
-				"fieldname": "qty",
-				"label": "Quantity",
-				"fieldtype": "Float",
-				"width": "100"
-			},
+				{
+					"fieldname": "posting_time",
+					"label": "Time",
+					"fieldtype": "Time",
+					"width": "100",
+				},
 
-			{
-				"fieldname": "net_qty",
-				"label": "Net Qty",
-				"fieldtype": "Data",
-				"width": "100"
-			},
+				{
+					"fieldname": "supplier",
+					"label": "Supplier",
+					"fieldtype": "Data",
+					"width": "150"
+				},
 
-			{
-				"fieldname": "stock_uom",
-				"label": "UOM",
-				"fieldtype": "Data",
-				"width": "80"
-			},
+				{
+					"fieldname": "item_code",
+					"label": "Item Code",
+					"fieldtype": "Data",
+					"width": "90"
+				},
 
-			{
-				"fieldname": "expiry_date",
-				"label": "Use By",
-				"fieldtype": "Date",
-				"width": "100"
-			},
+				{
+					"fieldname": "item_name",
+					"label": "Item Name",
+					"fieldtype": "Data",
+					"width": "250"
+				},
 
-			{
-				"fieldname": "posa_batch_price",
-				"label": "S Price",
-				"fieldtype": "Currency",
-				"width": "100"
-			}
-		]
+				{
+					"fieldname": "qty",
+					"label": "Qty",
+					"fieldtype": "Float",
+					"width": "90"
+				},
+
+				{
+					"fieldname": "custom_selling_price",
+					"label": "S Price",
+					"fieldtype": "Currency",
+					"width": "100"
+				},
+			]
+
+		else:
+			return [
+				{
+					"fieldname": "voucher_type",
+					"label": "Voucher Type",
+					"fieldtype": "Data",
+					"width": "135"
+				},
+
+				{
+					"fieldname": "voucher_name",
+					"label": "Voucher ID",
+					"fieldtype": "Link",
+					"options": "Stock Entry",
+					"width": "200"
+				},
+
+				{
+					"fieldname": "posting_time",
+					"label": "Time",
+					"fieldtype": "Time",
+					"width": "100",
+				},
+
+				{
+					"fieldname": "item_code",
+					"label": "Item Code",
+					"fieldtype": "Data",
+					"width": "90"
+				},
+
+				{
+					"fieldname": "item_name",
+					"label": "Item Name",
+					"fieldtype": "Data",
+					"width": "250"
+				},
+
+				{
+					"fieldname": "qty",
+					"label": "Quantity",
+					"fieldtype": "Float",
+					"width": "100"
+				},
+
+				{
+					"fieldname": "net_qty",
+					"label": "Net Qty",
+					"fieldtype": "Data",
+					"width": "100"
+				},
+
+				{
+					"fieldname": "stock_uom",
+					"label": "UOM",
+					"fieldtype": "Data",
+					"width": "80"
+				},
+			]
 
 
 def get_data1(filters):
@@ -310,11 +478,11 @@ def get_data1(filters):
 			FROM `tabPurchase Receipt Item`
 			INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
 			AND `tabPurchase Receipt`.docstatus = 1
-			AND `tabPurchase Receipt`.posting_date = '{0}'
-			AND `tabPurchase Receipt`.posting_time BETWEEN '{1}' AND '{2}'
+			AND `tabPurchase Receipt`.posting_date BETWEEN '{0}' AND '{1}'
+			AND `tabPurchase Receipt`.posting_time BETWEEN '{2}' AND '{3}'
 			LEFT JOIN tabBatch
 			ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
-			""".format(filters.posting_date, filters.from_time, filters.to_time),
+			""".format(filters.posting_date, filters.to_date, filters.from_time, filters.to_time),
 			as_dict=True
 			# IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
 			# 	SELECT barcode from `tabItem Barcode`
@@ -339,11 +507,12 @@ def get_data1(filters):
 			FROM `tabPurchase Invoice Item`
 			INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
 			AND `tabPurchase Invoice`.docstatus = 1
-			AND `tabPurchase Invoice`.posting_date = '{0}'
-			AND `tabPurchase Invoice`.posting_time BETWEEN '{1}' AND '{2}'
+			AND `tabPurchase Invoice`.posting_date BETWEEN '{0}' AND '{1}'
+			AND `tabPurchase Invoice`.posting_time BETWEEN '{2}' AND '{3}'
 			LEFT JOIN tabBatch
 			ON `tabPurchase Invoice Item`.batch_no = tabBatch.name
-			""".format(filters.posting_date, filters.from_time, filters.to_time),
+			WHERE update_stock = 1
+			""".format(filters.posting_date, filters.to_date, filters.from_time, filters.to_time),
 			as_dict=True
 			# IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
 			# 	SELECT barcode from `tabItem Barcode`
@@ -369,43 +538,10 @@ def get_data1(filters):
 			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
-			AND `tabStock Entry Detail`.t_warehouse != '{1}'
-			AND `tabStock Entry`.stock_entry_type = "Repack"
-			AND `tabStock Entry`.docstatus = 1
-			AND `tabStock Entry`.posting_date = '{0}'
-			AND `tabStock Entry`.posting_time BETWEEN '{2}' AND '{3}'
-			LEFT JOIN tabBatch
-			ON `tabStock Entry Detail`.batch_no = tabBatch.name
-			""".format(filters.posting_date, warehouse, filters.from_time, filters.to_time),
-			as_dict=True
-			# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
-			# 	SELECT barcode from `tabItem Barcode`
-			# 	WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
-			# 	LIMIT 1
-			# ), 0) AS barcode,
-		)
-
-	elif filters.voucher_type == "Repack Stock Label":
-		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
-		# get company abbreviation
-		warehouse = "Sales Order Reserve - " + abbr
-		query = frappe.db.sql(
-			"""
-			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode,
-			(
-				SELECT barcode from `tabItem Barcode`
-				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
-				LIMIT 1
-			) AS barcode,
-			`tabStock Entry Detail`.item_name, qty,
-			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
-			FROM `tabStock Entry Detail`
-			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
 			AND `tabStock Entry Detail`.t_warehouse != '{2}'
 			AND `tabStock Entry`.stock_entry_type = "Repack"
 			AND `tabStock Entry`.docstatus = 1
-			AND `tabStock Entry`.posting_date BETWEEN '{0}' AND '{1}'
+			AND `tabStock Entry`.posting_date BETWEEB '{0}' AND '{1}'
 			AND `tabStock Entry`.posting_time BETWEEN '{3}' AND '{4}'
 			LEFT JOIN tabBatch
 			ON `tabStock Entry Detail`.batch_no = tabBatch.name
@@ -417,6 +553,39 @@ def get_data1(filters):
 			# 	LIMIT 1
 			# ), 0) AS barcode,
 		)
+
+	# elif filters.voucher_type == "Repack Stock Label":
+	# 	abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
+	# 	# get company abbreviation
+	# 	warehouse = "Sales Order Reserve - " + abbr
+	# 	query = frappe.db.sql(
+	# 		"""
+	# 		SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
+	# 		item_code, batch_no, tabBatch.custom_barcode,
+	# 		(
+	# 			SELECT barcode from `tabItem Barcode`
+	# 			WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+	# 			LIMIT 1
+	# 		) AS barcode,
+	# 		`tabStock Entry Detail`.item_name, qty,
+	# 		tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
+	# 		FROM `tabStock Entry Detail`
+	# 		INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
+	# 		AND `tabStock Entry Detail`.t_warehouse != '{2}'
+	# 		AND `tabStock Entry`.stock_entry_type = "Repack"
+	# 		AND `tabStock Entry`.docstatus = 1
+	# 		AND `tabStock Entry`.posting_date BETWEEN '{0}' AND '{1}'
+	# 		AND `tabStock Entry`.posting_time BETWEEN '{3}' AND '{4}'
+	# 		LEFT JOIN tabBatch
+	# 		ON `tabStock Entry Detail`.batch_no = tabBatch.name
+	# 		""".format(filters.posting_date, filters.to_date, warehouse, filters.from_time, filters.to_time),
+	# 		as_dict=True
+	# 		# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
+	# 		# 	SELECT barcode from `tabItem Barcode`
+	# 		# 	WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
+	# 		# 	LIMIT 1
+	# 		# ), 0) AS barcode,
+	# 	)
 
 	else:
 		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
@@ -434,13 +603,13 @@ def get_data1(filters):
 			`tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
-			AND `tabStock Entry Detail`.t_warehouse != '{1}'
+			AND `tabStock Entry Detail`.t_warehouse != '{2}'
 			AND `tabStock Entry`.docstatus = 1
-			AND `tabStock Entry`.posting_date = '{0}'
-			AND `tabStock Entry`.posting_time BETWEEN '{2}' AND '{3}'
+			AND `tabStock Entry`.posting_date BETWEEN '{0}' AND '{1}'
+			AND `tabStock Entry`.posting_time BETWEEN '{3}' AND '{4}'
 			LEFT JOIN tabBatch
 			ON `tabStock Entry Detail`.batch_no = tabBatch.name
-			""".format(filters.posting_date, warehouse, filters.from_time, filters.to_time),
+			""".format(filters.posting_date, filters.to_date, warehouse, filters.from_time, filters.to_time),
 			as_dict=True
 			# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
 			# 	SELECT barcode from `tabItem Barcode`
@@ -471,10 +640,10 @@ def get_data2(filters):
 			FROM `tabPurchase Receipt Item`
 			INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
 			AND `tabPurchase Receipt`.docstatus = 1
-			AND `tabPurchase Receipt`.posting_date = '{0}'
+			AND `tabPurchase Receipt`.posting_date BETWEEN '{0}' AND '{1}'
 			LEFT JOIN tabBatch
 			ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
-			""".format(filters.posting_date),
+			""".format(filters.posting_date, filters.to_date),
 			as_dict=True
 			# IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
 			# 	SELECT barcode from `tabItem Barcode`
@@ -499,10 +668,11 @@ def get_data2(filters):
 			FROM `tabPurchase Invoice Item`
 			INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
 			AND `tabPurchase Invoice`.docstatus = 1
-			AND `tabPurchase Invoice`.posting_date = '{0}'
+			AND `tabPurchase Invoice`.posting_date BETWEEN '{0}' AND '{1}'
 			LEFT JOIN tabBatch
 			ON `tabPurchase Invoice Item`.batch_no = tabBatch.name
-			""".format(filters.posting_date),
+			WHERE update_stock = 1
+			""".format(filters.posting_date, filters.to_date),
 			as_dict=True
 			# IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
 			# 	SELECT barcode from `tabItem Barcode`
@@ -528,13 +698,13 @@ def get_data2(filters):
 			tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
-			AND `tabStock Entry Detail`.t_warehouse != '{1}'
+			AND `tabStock Entry Detail`.t_warehouse != '{2}'
 			AND `tabStock Entry`.stock_entry_type = "Repack"
 			AND `tabStock Entry`.docstatus = 1
-			AND `tabStock Entry`.posting_date = '{0}'
+			AND `tabStock Entry`.posting_date BETWEEN '{0}' AND '{1}'
 			LEFT JOIN tabBatch
 			ON `tabStock Entry Detail`.batch_no = tabBatch.name
-			""".format(filters.posting_date, warehouse),
+			""".format(filters.posting_date, filters.to_date, warehouse),
 			as_dict=True
 			# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
 			# 	SELECT barcode from `tabItem Barcode`
@@ -559,12 +729,12 @@ def get_data2(filters):
 			`tabStock Entry Detail`.item_name, qty, tabBatch.posa_batch_price
 			FROM `tabStock Entry Detail`
 			INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
-			AND `tabStock Entry Detail`.t_warehouse != '{1}'
+			AND `tabStock Entry Detail`.t_warehouse != '{2}'
 			AND `tabStock Entry`.docstatus = 1
-			AND `tabStock Entry`.posting_date = '{0}'
+			AND `tabStock Entry`.posting_date BETWEEN '{0}' AND '{1}'
 			LEFT JOIN tabBatch
 			ON `tabStock Entry Detail`.batch_no = tabBatch.name
-			""".format(filters.posting_date, warehouse),
+			""".format(filters.posting_date, filters.to_date, warehouse),
 			as_dict=True
 			# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
 			# 	SELECT barcode from `tabItem Barcode`

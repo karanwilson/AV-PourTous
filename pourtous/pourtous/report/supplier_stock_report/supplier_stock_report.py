@@ -106,14 +106,14 @@ def get_columns():
 				"width": "200"
 			},
 			{
-				"fieldname": "store_qty",
-				"label": "Store Qty",
+				"fieldname": "stores_qty",
+				"label": "Stores Qty",
 				"fieldtype": "Float",
 				"width": "100"
 			},
 			{
-				"fieldname": "stall_qty",
-				"label": "Stall Qty",
+				"fieldname": "sunship_qty",
+				"label": "Sunship Qty",
 				"fieldtype": "Float",
 				"width": "100"
 			},
@@ -136,7 +136,7 @@ def get_data(filters):
 					and warehouse like '{0}'
 					order by posting_date desc, posting_time desc, creation desc
 					limit 1
-				) AS store_qty,
+				) AS stores_qty,
 				(
 					select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 					where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
@@ -187,7 +187,7 @@ def get_data(filters):
 					and warehouse like '{0}'
 					order by posting_date desc, posting_time desc, creation desc
 					limit 1
-				) AS store_qty,
+				) AS stores_qty,
 				(
 					select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 					where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
@@ -240,19 +240,19 @@ def get_data(filters):
 					and warehouse like '{0}'
 					order by posting_date desc, posting_time desc, creation desc
 					limit 1
-				) AS store_qty,
+				) AS stores_qty,
 				(
 					select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 					where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
 					and warehouse like '{1}'
 					order by posting_date desc, posting_time desc, creation desc
 					limit 1
-				) AS stall_qty,
+				) AS sunship_qty
 				FROM tabItem, `tabItem Supplier`
 				WHERE tabItem.item_code = `tabItem Supplier`.parent
-				AND `tabItem Supplier`.supplier = '{3}'
+				AND `tabItem Supplier`.supplier = '{2}'
 				) table1
-				""".format("Stores%", "Stall%", filters.supplier),
+				""".format("Stores%", "Sunship%", filters.supplier),
 				as_dict=True
 			)
 
@@ -270,18 +270,18 @@ def get_data(filters):
 					and warehouse like '{0}'
 					order by posting_date desc, posting_time desc, creation desc
 					limit 1
-				) AS store_qty,
+				) AS stores_qty,
 				(
 					select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 					where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
 					and warehouse like '{1}'
 					order by posting_date desc, posting_time desc, creation desc
 					limit 1
-				) AS stall_qty,
+				) AS sunship_qty
 				FROM tabItem, `tabItem Supplier`
 				WHERE tabItem.item_code = `tabItem Supplier`.parent
 				) table1
-				""".format("Stores%", "Stall%"),
+				""".format("Stores%", "Sunship%"),
 				as_dict=True
 			)
 

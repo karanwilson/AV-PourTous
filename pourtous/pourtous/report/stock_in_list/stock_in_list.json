@@ -1,5 +1,5 @@
 {
- "add_total_row": 0,
+ "add_total_row": 1,
  "columns": [],
  "creation": "2024-11-18 20:29:00.527048",
  "disable_prepared_report": 0,
@@ -7,9 +7,9 @@
  "docstatus": 0,
  "doctype": "Report",
  "filters": [],
- "idx": 0,
+ "idx": 2,
  "is_standard": "Yes",
- "modified": "2024-11-18 20:29:00.527048",
+ "modified": "2026-02-24 05:34:06.799280",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Stock-In List",
