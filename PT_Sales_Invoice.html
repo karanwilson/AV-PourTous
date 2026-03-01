@@ -18,10 +18,15 @@
 {% endif %}
 
 <p class="text-center" style="margin-bottom: 1rem; font-size: smaller;">
-	{{ doc.company }}<br>
+	{%- if doc.branch -%}
+		{{ doc.company }} - <b>{{ doc.branch }}</b><br>
+	{% else %}
+		{{ doc.company }}<br>
+	{%- endif -%}
+
 	{{ _("GSTIN/UIN") }}: {{ doc.company_gstin }}<br>
 	{%- if doc.company_address -%}
-		{{ _("Phone") }}: {{ frappe.db.get_value("Address", doc.company_address, "phone") }}<br>
+		{{ _("Phone") }}: {{ frappe.db.get_value("Address", doc.company_address, "phone") }},&nbsp;&nbsp;
 		{{ _("Email") }}: {{ frappe.db.get_value("Address", doc.company_address, "email_id") }}<br>
 	{%- endif -%}
 
