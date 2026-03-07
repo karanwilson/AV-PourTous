@@ -32,6 +32,8 @@ def pe_fapi_transfer(doc, method):
 					doc.custom_fs_transfer_status = res['custom_fs_transfer_status']
 					doc.reference_no = res['reference_no']
 					doc.remarks = res['remarks']
+				else:
+					frappe.throw(res['remarks'])
 			else:
 				frappe.throw("No Response")
 		else:
