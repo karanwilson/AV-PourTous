@@ -34,6 +34,10 @@ frappe.ui.form.on('Purchase Invoice', {
 				});
 			}
 		}
+		if (frm.doc.discount_amount < 0 || frm.doc.additional_discount_percentage < 0) {
+			frappe.throw(__("Discount Amount/Percentage should be positive"));
+		}
+
 		/* frm.doc.items.forEach((row) => {
 			row.stock_qty = row.qty;
 		});
