@@ -138,7 +138,7 @@ doc_events = {
     "Payment Entry": {
         #"before_validate": "pourtous.api.pe_before_validate",
         "before_submit": "pourtous.api.pe_fapi_transfer",
-        "before_cancel": "payments.payment_gateways.doctype.fs_settings.fs_settings.refund_fs_payments"
+        "before_cancel": "payments.payment_gateways.doctype.fs_settings.fs_settings.refund_fs_payments_pe"
         # initiates an FS transfer for Participant Contributions (Monthly and Extra)
         #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.add_transfer_contribution"
 	},

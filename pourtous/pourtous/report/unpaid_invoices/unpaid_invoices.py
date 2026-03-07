@@ -76,7 +76,9 @@ def get_data(filters):
 	query = """
 			SELECT name, customer_name, custom_fs_account_number, posting_date, status, custom_fs_transfer_status, grand_total
 			FROM `tabSales Invoice`
-			WHERE docstatus = 1 AND outstanding_amount > 0 AND status IN
+			WHERE docstatus = 1 AND outstanding_amount > 0
+			AND custom_fs_account_number IS NOT NULL AND custom_customer_group != "Credit Customers"
+			AND status IN
 			("Unpaid", "Unpaid and Discounted", "Partly Paid", "Partly Paid and Discounted", "Overdue", "Overdue and Discounted")
 			"""
 
