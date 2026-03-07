@@ -990,57 +990,93 @@ def update_price_lists(doc, method):
 			# Update the Item Barcode for non-batch Items
 			#create_item_barcode(item.item_code)
 
-		#existing_item_sell_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
-		existing_item_sell_price_entry = frappe.db.get_list(
-			"Item Price",
-			filters={"price_list": "Standard Selling", "item_code": item.item_code},
-			fields = ["name"],
-			order_by='creation desc',
-		)
-		if len(existing_item_sell_price_entry) > 1:
-			frappe.db.delete("Item Price", {"name": existing_item_sell_price_entry[1]['name']})
+		#existing_item_sell_price_entry_list = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
 
-		if existing_item_sell_price_entry:
-			if item.custom_selling_price > 0:
-				frappe.db.set_value("Item Price", existing_item_sell_price_entry[0]['name'], "price_list_rate", item.custom_selling_price)
-			# else:
-			# 	frappe.db.set_value("Item Price", existing_item_sell_price_entry, "price_list_rate", item.price_list_rate)
+		if doc.company == "Pour Tous Distribution Center" and doc.branch == "Sunship":
+			existing_item_sell_price_entry_list = frappe.db.get_list(
+				"Item Price",
+				filters={"price_list": "Sunship Selling", "item_code": item.item_code},
+				fields = ["name"],
+				order_by='creation desc',
+			)
+			# if len(existing_item_sell_price_entry_list) > 1:
+			# 	frappe.db.delete("Item Price", {"name": existing_item_sell_price_entry_list[1]['name']})
+
+			# Delete duplicate Item Price records
+			if existing_item_sell_price_entry_list:
+				if len(existing_item_sell_price_entry_list) > 1:
+					for i in range(len(existing_item_sell_price_entry_list)):
+						frappe.db.delete("Item Price", {"name": existing_item_sell_price_entry_list[i+1].name})
+
+				if item.custom_selling_price > 0:
+					frappe.db.set_value("Item Price", existing_item_sell_price_entry_list[0]['name'], "price_list_rate", item.custom_selling_price)
+				# else:
+				# 	frappe.db.set_value("Item Price", existing_item_sell_price_entry_list, "price_list_rate", item.price_list_rate)
+
+			else:
+				if item.custom_selling_price > 0:
+					item_price = frappe.get_doc({
+						"doctype": "Item Price",
+						"item_code": item.item_code,
+						"uom": item.uom,
+						"price_list": "Sunship Selling",
+						"price_list_rate": item.custom_selling_price,
+						#"batch_no": item.batch_no
+					})
+
+				item_price.insert()
 
 		else:
-			if item.custom_selling_price > 0:
-				item_price = frappe.get_doc({
-					"doctype": "Item Price",
-					"item_code": item.item_code,
-					"uom": item.uom,
-					"price_list": "Standard Selling",
-					"price_list_rate": item.custom_selling_price,
-					#"batch_no": item.batch_no
-				})
+			existing_item_sell_price_entry_list = frappe.db.get_list(
+				"Item Price",
+				filters={"price_list": "Standard Selling", "item_code": item.item_code},
+				fields = ["name"],
+				order_by='creation desc',
+			)
+			# if len(existing_item_sell_price_entry_list) > 1:
+			# 	frappe.db.delete("Item Price", {"name": existing_item_sell_price_entry_list[1]['name']})
 
-			""" else:
-				item_price = frappe.get_doc({
-					"doctype": "Item Price",
-					"item_code": item.item_code,
-					"uom": item.uom,
-					"price_list": "Standard Selling",
-					"price_list_rate": item.price_list_rate,
-					#"batch_no": item.batch_no
-				}) """
+			# Delete duplicate Item Price records
+			if existing_item_sell_price_entry_list:
+				if len(existing_item_sell_price_entry_list) > 1:
+					for i in range(len(existing_item_sell_price_entry_list)):
+						frappe.db.delete("Item Price", {"name": existing_item_sell_price_entry_list[i+1].name})
 
-			item_price.insert()
+				if item.custom_selling_price > 0:
+					frappe.db.set_value("Item Price", existing_item_sell_price_entry_list[0]['name'], "price_list_rate", item.custom_selling_price)
+				# else:
+				# 	frappe.db.set_value("Item Price", existing_item_sell_price_entry_list, "price_list_rate", item.price_list_rate)
+
+			else:
+				if item.custom_selling_price > 0:
+					item_price = frappe.get_doc({
+						"doctype": "Item Price",
+						"item_code": item.item_code,
+						"uom": item.uom,
+						"price_list": "Standard Selling",
+						"price_list_rate": item.custom_selling_price,
+						#"batch_no": item.batch_no
+					})
+
+				item_price.insert()
 
 		if custom_update_buying_price:
-			existing_item_buy_price_entry = frappe.db.get_list(
+			existing_item_buy_price_entry_list = frappe.db.get_list(
 				"Item Price",
 				filters={"price_list": "Standard Buying", "item_code": item.item_code},
 				fields = ["name"],
 				order_by='creation desc',
 			)
-			if len(existing_item_buy_price_entry) > 1:
-				frappe.db.delete("Item Price", {"name": existing_item_buy_price_entry[1]['name']})
 
-			if existing_item_buy_price_entry:
-				frappe.db.set_value("Item Price", existing_item_buy_price_entry[0]['name'], "price_list_rate", item.price_list_rate)
+			# if len(existing_item_buy_price_entry_list) > 1:
+			# 	frappe.db.delete("Item Price", {"name": existing_item_buy_price_entry_list[1]['name']})
+
+			if existing_item_buy_price_entry_list:
+				if len(existing_item_buy_price_entry_list) > 1:
+					for i in range(len(existing_item_buy_price_entry_list)):
+						frappe.db.delete("Item Price", {"name": existing_item_buy_price_entry_list[i+1].name})
+
+				frappe.db.set_value("Item Price", existing_item_buy_price_entry_list[0]['name'], "price_list_rate", item.price_list_rate)
 
 	frappe.db.commit()
 
@@ -1053,23 +1089,43 @@ def stock_recon_update_price_lists(doc, method):
 					frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
 					item.valuation_rate = item.custom_selling_price
 
-			existing_item_sell_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
-			if existing_item_sell_price_entry:
-				if item.custom_selling_price > 0:
-					frappe.db.set_value("Item Price", existing_item_sell_price_entry, "price_list_rate", item.custom_selling_price)
+			if doc.company == "Pour Tous Distribution Center" and doc.branch == "Sunship":
+				existing_item_sell_price_entry = frappe.get_value("Item Price", {"price_list": "Sunship Selling", "item_code": item.item_code}, "name")
+				if existing_item_sell_price_entry:
+					if item.custom_selling_price > 0:
+						frappe.db.set_value("Item Price", existing_item_sell_price_entry, "price_list_rate", item.custom_selling_price)
+
+				else:
+					if item.custom_selling_price > 0:
+						item_price = frappe.get_doc({
+							"doctype": "Item Price",
+							"item_code": item.item_code,
+							"uom": frappe.db.get_value('Item', item.item_code, 'stock_uom'),
+							"price_list": "Sunship Selling",
+							"price_list_rate": item.custom_selling_price,
+							#"batch_no": item.batch_no
+						})
+
+						item_price.insert()
 
 			else:
-				if item.custom_selling_price > 0:
-					item_price = frappe.get_doc({
-						"doctype": "Item Price",
-						"item_code": item.item_code,
-						"uom": frappe.db.get_value('Item', item.item_code, 'stock_uom'),
-						"price_list": "Standard Selling",
-						"price_list_rate": item.custom_selling_price,
-						#"batch_no": item.batch_no
-					})
+				existing_item_sell_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
+				if existing_item_sell_price_entry:
+					if item.custom_selling_price > 0:
+						frappe.db.set_value("Item Price", existing_item_sell_price_entry, "price_list_rate", item.custom_selling_price)
 
-					item_price.insert()
+				else:
+					if item.custom_selling_price > 0:
+						item_price = frappe.get_doc({
+							"doctype": "Item Price",
+							"item_code": item.item_code,
+							"uom": frappe.db.get_value('Item', item.item_code, 'stock_uom'),
+							"price_list": "Standard Selling",
+							"price_list_rate": item.custom_selling_price,
+							#"batch_no": item.batch_no
+						})
+
+						item_price.insert()
 
 	frappe.db.commit()
 
@@ -1093,35 +1149,67 @@ def stock_entry_update_price_lists(doc, method):
 
 				frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.basic_rate)
 
-			existing_item_sell_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
-			if existing_item_sell_price_entry:
-				if item.custom_selling_price > 0:
-					frappe.db.set_value("Item Price", existing_item_sell_price_entry, "price_list_rate", item.custom_selling_price)
-				# else:
-				# 	frappe.db.set_value("Item Price", existing_item_sell_price_entry, "price_list_rate", item.basic_rate)
-
-			else:
-				if item.custom_selling_price > 0:
-					item_price = frappe.get_doc({
-						"doctype": "Item Price",
-						"item_code": item.item_code,
-						"uom": item.uom,
-						"price_list": "Standard Selling",
-						"price_list_rate": item.custom_selling_price,
-						#"batch_no": item.batch_no
-					})
+			if doc.company == "Pour Tous Distribution Center" and doc.branch == "Sunship":
+				existing_item_sell_price_entry = frappe.get_value("Item Price", {"price_list": "Sunship Selling", "item_code": item.item_code}, "name")
+				if existing_item_sell_price_entry:
+					if item.custom_selling_price > 0:
+						frappe.db.set_value("Item Price", existing_item_sell_price_entry, "price_list_rate", item.custom_selling_price)
+					# else:
+					# 	frappe.db.set_value("Item Price", existing_item_sell_price_entry, "price_list_rate", item.basic_rate)
 
 				else:
-					item_price = frappe.get_doc({
-						"doctype": "Item Price",
-						"item_code": item.item_code,
-						"uom": item.uom,
-						"price_list": "Standard Selling",
-						"price_list_rate": item.basic_rate,
-						#"batch_no": item.batch_no
-					})
+					if item.custom_selling_price > 0:
+						item_price = frappe.get_doc({
+							"doctype": "Item Price",
+							"item_code": item.item_code,
+							"uom": item.uom,
+							"price_list": "Sunship Selling",
+							"price_list_rate": item.custom_selling_price,
+							#"batch_no": item.batch_no
+						})
 
-				item_price.insert()
+					else:
+						item_price = frappe.get_doc({
+							"doctype": "Item Price",
+							"item_code": item.item_code,
+							"uom": item.uom,
+							"price_list": "Sunship Selling",
+							"price_list_rate": item.basic_rate,
+							#"batch_no": item.batch_no
+						})
+
+					item_price.insert()
+
+			else:
+				existing_item_sell_price_entry = frappe.get_value("Item Price", {"price_list": "Standard Selling", "item_code": item.item_code}, "name")
+				if existing_item_sell_price_entry:
+					if item.custom_selling_price > 0:
+						frappe.db.set_value("Item Price", existing_item_sell_price_entry, "price_list_rate", item.custom_selling_price)
+					# else:
+					# 	frappe.db.set_value("Item Price", existing_item_sell_price_entry, "price_list_rate", item.basic_rate)
+
+				else:
+					if item.custom_selling_price > 0:
+						item_price = frappe.get_doc({
+							"doctype": "Item Price",
+							"item_code": item.item_code,
+							"uom": item.uom,
+							"price_list": "Standard Selling",
+							"price_list_rate": item.custom_selling_price,
+							#"batch_no": item.batch_no
+						})
+
+					else:
+						item_price = frappe.get_doc({
+							"doctype": "Item Price",
+							"item_code": item.item_code,
+							"uom": item.uom,
+							"price_list": "Standard Selling",
+							"price_list_rate": item.basic_rate,
+							#"batch_no": item.batch_no
+						})
+
+					item_price.insert()
 
 	frappe.db.commit()
 
