@@ -4,17 +4,19 @@ frappe.ui.form.on('Payment Entry', {
 	//},
 
 	custom_fs_account_number(frm) {
-		frappe.call({
-			method: 'pourtous.api.set_customer_from_fs_account',
-			args: { 'custom_fs_account_number': frm.doc.custom_fs_account_number },
-			callback: (r) => {
-				frm.set_value('party', r.message);
-			}
-		});
+		if (!frm.doc.party) {
+			frappe.call({
+				method: 'pourtous.api.set_customer_from_fs_account',
+				args: { 'custom_fs_account_number': frm.doc.custom_fs_account_number },
+				callback: (r) => {
+					frm.set_value('party', r.message);
+				}
+			});
+		}
 	},
 
 	before_save(frm) {
-		if (frm.doc.custom_receive_from_fs_api && frm.doc.mode_of_payment == "FS") {
+		if (frm.is_new && frm.doc.custom_receive_from_fs_api && frm.doc.mode_of_payment == "FS") {
 			frm.set_value("reference_no", "Temp ref no: pre-fs-transaction");
 			frm.set_value("reference_date", frappe.datetime.get_today());
 		}
