@@ -12,7 +12,8 @@
   "initial_stock",
   "initial_stock_rate",
   "location_name",
-  "gst_number"
+  "gst_number",
+  "erpnext_branch"
  ],
  "fields": [
   {
@@ -40,11 +41,17 @@
    "fieldname": "initial_stock_rate",
    "fieldtype": "Data",
    "label": "Initial Stock Rate"
+  },
+  {
+   "fieldname": "erpnext_branch",
+   "fieldtype": "Link",
+   "label": "ERPNext Branch",
+   "options": "Branch"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-11-06 16:06:16.088228",
+ "modified": "2026-03-07 07:23:36.551115",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Zoho Location",
