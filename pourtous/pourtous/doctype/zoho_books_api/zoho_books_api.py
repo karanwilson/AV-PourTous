@@ -124,6 +124,7 @@ class ZohoBooksAPI(Document):
 	def update_accounts(self):
 		income_accounts = self.get_accounts('AccountType.Income')
 		expense_accounts = self.get_accounts('AccountType.Expense')
+		liability_accounts = self.get_accounts('AccountType.Liability')
 		frappe.db.delete("Zoho Accounts") # delete the old Accounts data
 		for data in income_accounts:
 			income_account = frappe.get_doc({
@@ -148,6 +149,18 @@ class ZohoBooksAPI(Document):
 					"parent_account_name": data.get('parent_account_name')
 				})
 			expense_account.insert()
+
+		for data in liability_accounts:
+			liability_account = frappe.get_doc({
+					"doctype": 'Zoho Accounts',
+					"account_id": data.get('account_id'),
+					"account_name": data.get('account_name'),
+					"account_type": data.get('account_type'),
+					"filter_by": 'Liability',
+					"parent_account_id": data.get('parent_account_id'),
+					"parent_account_name": data.get('parent_account_name')
+				})
+			liability_account.insert()
 
 
 	def update_walk_in_customer(self):
@@ -1686,6 +1699,7 @@ def update_supplier_contact_in_zoho(doc, method):
 		"contact_name": doc.supplier_name,
 		"contact_type": "vendor",
 		"customer_sub_type": "business",
+		"account_id": doc.custom_zoho_accounts_payable,
 		"gst_no": doc.gstin,
 		"gst_treatment": gst_treatment[doc.gst_category]
 	}

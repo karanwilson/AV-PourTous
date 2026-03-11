@@ -1007,7 +1007,7 @@ def update_price_lists(doc, method):
 			# Delete duplicate Item Price records
 			if existing_item_sell_price_entry_list:
 				if len(existing_item_sell_price_entry_list) > 1:
-					for i in range(len(existing_item_sell_price_entry_list)):
+					for i in range(len(existing_item_sell_price_entry_list)-1):
 						frappe.db.delete("Item Price", {"name": existing_item_sell_price_entry_list[i+1].name})
 
 				if item.custom_selling_price > 0:
@@ -1041,7 +1041,7 @@ def update_price_lists(doc, method):
 			# Delete duplicate Item Price records
 			if existing_item_sell_price_entry_list:
 				if len(existing_item_sell_price_entry_list) > 1:
-					for i in range(len(existing_item_sell_price_entry_list)):
+					for i in range(len(existing_item_sell_price_entry_list)-1):
 						frappe.db.delete("Item Price", {"name": existing_item_sell_price_entry_list[i+1].name})
 
 				if item.custom_selling_price > 0:
@@ -1075,7 +1075,7 @@ def update_price_lists(doc, method):
 
 			if existing_item_buy_price_entry_list:
 				if len(existing_item_buy_price_entry_list) > 1:
-					for i in range(len(existing_item_buy_price_entry_list)):
+					for i in range(len(existing_item_buy_price_entry_list)-1):
 						frappe.db.delete("Item Price", {"name": existing_item_buy_price_entry_list[i+1].name})
 
 				frappe.db.set_value("Item Price", existing_item_buy_price_entry_list[0]['name'], "price_list_rate", item.price_list_rate)

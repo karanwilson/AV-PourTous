@@ -374,6 +374,7 @@ fixtures = [
                     "Contact-custom_tos", # for PTDC Monthly Balance
 
                     "Supplier-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
+                    "Supplier-custom_zoho_accounts_payable", # for mapping to Zoho account payable
                     "Supplier-custom_group_supplier", # for mapping suppliers to one Group in Zoho
 
                     "Purchase Order-custom_items", # Creates a Tab Break for custom_items_data and custom_add_items
