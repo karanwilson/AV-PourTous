@@ -2649,7 +2649,7 @@ def fetch_erp_debitnotes_list():
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-			AND posting_date between "2025-06-01" and "2026-01-31"
+			AND posting_date between "2025-06-01" and "2026-02-28"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
