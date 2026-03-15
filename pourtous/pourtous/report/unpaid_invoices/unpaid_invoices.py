@@ -89,6 +89,6 @@ def get_data(filters):
 
 	# custom_fs_account_number filter is optional.
 	if filters.get("custom_fs_account_number"):
-		query += " AND custom_fs_account_number = %(custom_fs_account_number)s"
+		query += " AND si.custom_fs_account_number = %(custom_fs_account_number)s"
 
 	return frappe.db.sql(query, filters, as_dict=1)
