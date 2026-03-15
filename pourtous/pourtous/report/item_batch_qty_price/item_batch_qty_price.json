@@ -7,9 +7,9 @@
  "docstatus": 0,
  "doctype": "Report",
  "filters": [],
- "idx": 12,
+ "idx": 26,
  "is_standard": "Yes",
- "modified": "2025-09-16 15:36:34.787392",
+ "modified": "2026-03-11 14:51:40.494165",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Item Batch Qty Price",
@@ -21,6 +21,9 @@
  "roles": [
   {
    "role": "Item Manager"
+  },
+  {
+   "role": "Accounts Manager"
   }
  ]
 }

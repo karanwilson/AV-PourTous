@@ -68,7 +68,15 @@ def set_customer_from_fs_account(custom_fs_account_number):
 @frappe.whitelist()
 def set_item_default_warehouse(item_code, warehouse):
 	item_doc = frappe.get_doc("Item", item_code)
-	item_doc.item_defaults[0].default_warehouse = warehouse
+	if len(item_doc.item_defaults) == 0:
+		item_doc.append("item_defaults",
+					{
+						"company": frappe.defaults.get_user_default("company"),
+						"default_warehouse": warehouse
+					}
+		)
+	else:
+		item_doc.item_defaults[0].default_warehouse = warehouse
 	item_doc.custom_skip_zoho_trigger = 1
 	item_doc.save()
 

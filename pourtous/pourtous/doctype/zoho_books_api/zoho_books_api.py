@@ -3520,7 +3520,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
-			if void_invoice_id:
+			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
 				#frappe.throw(str(res))
 				if res.get('code') != 0:
@@ -3551,7 +3551,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			frappe.throw(str(res))
 
 		#if "invoice_id" in res:
-		if zb_invoice_id is not None:
+		if zb_invoice_id and zb_invoice_id is not None:
 			#zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
@@ -3681,7 +3681,7 @@ def sync_entity_inv_with_zoho_books(invoice, customer):
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
-			if void_invoice_id:
+			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
 				#frappe.throw(str(res))
 				if res.get('code') != 0:
@@ -3712,7 +3712,7 @@ def sync_entity_inv_with_zoho_books(invoice, customer):
 			frappe.throw(str(res))
 
 		#if "invoice_id" in res:
-		if zb_invoice_id is not None:
+		if zb_invoice_id and zb_invoice_id is not None:
 			#zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
@@ -3923,7 +3923,7 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
-			if void_invoice_id:
+			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
 				#frappe.throw(str(res))
 				if res.get('code') != 0:
@@ -3952,7 +3952,7 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 			frappe.throw(res.get("message"))
 
 		#if "invoice_id" in res:
-		if zb_invoice_id:
+		if zb_invoice_id and zb_invoice_id is not None:
 			#zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
@@ -4115,10 +4115,11 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
-			res = api_controller.delete_invoice(void_invoice_id)
-			#frappe.throw(str(res))
-			if res.get('code') != 0:
-				frappe.msgprint(res.get("message"))
+			if void_invoice_id and void_invoice_id is not None:
+				res = api_controller.delete_invoice(void_invoice_id)
+				#frappe.throw(str(res))
+				if res.get('code') != 0:
+					frappe.msgprint(res.get("message"))
 
 		res = api_controller.post_invoice(invoice_data)
 
@@ -4143,7 +4144,7 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 			frappe.throw(res.get("message"))
 
 		#if "invoice_id" in res:
-		if zb_invoice_id:
+		if zb_invoice_id and zb_invoice_id is not None:
 			zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
@@ -4315,10 +4316,11 @@ def sync_upi_inv_with_zoho_books(invoice):
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
-			res = api_controller.delete_invoice(void_invoice_id)
-			#frappe.throw(str(res))
-			if res.get('code') != 0:
-				frappe.msgprint(res.get("message"))
+			if void_invoice_id and void_invoice_id is not None:
+				res = api_controller.delete_invoice(void_invoice_id)
+				#frappe.throw(str(res))
+				if res.get('code') != 0:
+					frappe.msgprint(res.get("message"))
 
 		res = api_controller.post_invoice(invoice_data)
 
@@ -4340,7 +4342,7 @@ def sync_upi_inv_with_zoho_books(invoice):
 					zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
-		if zb_invoice_id:
+		if zb_invoice_id and zb_invoice_id is not None:
 			zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
@@ -4498,10 +4500,11 @@ def sync_neft_inv_with_zoho_books(invoice, customer):
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
-			res = api_controller.delete_invoice(void_invoice_id)
-			#frappe.throw(str(res))
-			if res.get('code') != 0:
-				frappe.msgprint(res.get("message"))
+			if void_invoice_id and void_invoice_id is not None:
+				res = api_controller.delete_invoice(void_invoice_id)
+				#frappe.throw(str(res))
+				if res.get('code') != 0:
+					frappe.msgprint(res.get("message"))
 
 		res = api_controller.post_invoice(invoice_data)
 
@@ -4523,7 +4526,7 @@ def sync_neft_inv_with_zoho_books(invoice, customer):
 					zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
-		if zb_invoice_id:
+		if zb_invoice_id and zb_invoice_id is not None:
 			zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
@@ -4686,10 +4689,11 @@ def sync_card_inv_with_zoho_books(invoice):
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
-			res = api_controller.delete_invoice(void_invoice_id)
-			#frappe.throw(str(res))
-			if res.get('code') != 0:
-				frappe.msgprint(res.get("message"))
+			if void_invoice_id and void_invoice_id is not None:
+				res = api_controller.delete_invoice(void_invoice_id)
+				#frappe.throw(str(res))
+				if res.get('code') != 0:
+					frappe.msgprint(res.get("message"))
 
 		res = api_controller.post_invoice(invoice_data)
 
@@ -4711,7 +4715,7 @@ def sync_card_inv_with_zoho_books(invoice):
 					zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
-		if zb_invoice_id:
+		if zb_invoice_id and zb_invoice_id is not None:
 			zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
@@ -4867,10 +4871,11 @@ def sync_cash_inv_with_zoho_books(invoice):
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
-			res = api_controller.delete_invoice(void_invoice_id)
-			#frappe.throw(str(res))
-			if res.get('code') != 0:
-				frappe.msgprint(res.get("message"))
+			if void_invoice_id and void_invoice_id is not None:
+				res = api_controller.delete_invoice(void_invoice_id)
+				#frappe.throw(str(res))
+				if res.get('code') != 0:
+					frappe.msgprint(res.get("message"))
 
 		res = api_controller.post_invoice(invoice_data)
 
@@ -4892,7 +4897,7 @@ def sync_cash_inv_with_zoho_books(invoice):
 					zb_invoice_id = res2[0].get("invoice_id")
 
 		#if "invoice_id" in res:
-		if zb_invoice_id:
+		if zb_invoice_id and zb_invoice_id is not None:
 			zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			invoice_doc.save()
