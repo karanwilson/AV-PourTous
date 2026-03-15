@@ -2081,10 +2081,19 @@ def update_item_in_zoho(doc, method=None):
 
 	api_controller = frappe.get_doc("Zoho Books API")
 
-	if doc.is_stock_item == 1:
-		product_type = "goods"
-	else:
+	if frappe.defaults.get_user_default("company") in (
+		"AV Bakery Cafe", "AV Bakery Cafe Townhall"
+	):
 		product_type = "service"
+		hsn_or_sac = "996331"
+
+	else:
+		if doc.is_stock_item == 1:
+			product_type = "goods"
+		else:
+			product_type = "service"
+
+		hsn_or_sac = doc.gst_hsn_code
 
 	if frappe.defaults.get_user_default("company") in (
 		"Pour Tous Distribution Center", "Pour Tous Purchasing Service",
@@ -2147,7 +2156,7 @@ def update_item_in_zoho(doc, method=None):
 			'purchase_account_name': api_controller.expense_account,
 			'account_id': api_controller.income_account_id,
 			'account_name': api_controller.income_account,
-			"hsn_or_sac": doc.gst_hsn_code,
+			"hsn_or_sac": hsn_or_sac,
 			"rate": 0
 		}
 
@@ -2173,7 +2182,7 @@ def update_item_in_zoho(doc, method=None):
 			'purchase_account_name': api_controller.expense_account,
 			'account_id': api_controller.income_account_id,
 			'account_name': api_controller.income_account,
-			"hsn_or_sac": doc.gst_hsn_code,
+			"hsn_or_sac": hsn_or_sac,
 			"rate": 0
 		}
 
@@ -2404,13 +2413,30 @@ def custom_update_erp_item_in_zb(erp_item, custom_zoho_item_id):
 	# 		],
 	# 	}
 
-	put_data = {
-		'item_type': 'sales_and_purchases',
-		'purchase_account_id': api_controller.expense_account_id,
-		'purchase_account_name': api_controller.expense_account,
-		'account_id': api_controller.income_account_id,
-		'account_name': api_controller.income_account,
-	}
+	# put_data = {
+	# 	'item_type': 'sales_and_purchases',
+	# 	'purchase_account_id': api_controller.expense_account_id,
+	# 	'purchase_account_name': api_controller.expense_account,
+	# 	'account_id': api_controller.income_account_id,
+	# 	'account_name': api_controller.income_account,
+	# }
+
+	if frappe.defaults.get_user_default("company") in (
+		"AV Bakery Cafe", "AV Bakery Cafe Townhall"
+	):
+		put_data = {
+			"product_type": "service",
+			"hsn_or_sac": "996331",
+		}
+
+	else:
+		put_data = {
+			'item_type': 'sales_and_purchases',
+			'purchase_account_id': api_controller.expense_account_id,
+			'purchase_account_name': api_controller.expense_account,
+			'account_id': api_controller.income_account_id,
+			'account_name': api_controller.income_account,
+		}
 
 	api_controller = frappe.get_doc("Zoho Books API")
 	res = api_controller.put_item(custom_zoho_item_id, put_data)
@@ -2990,10 +3016,13 @@ def fetch_unsynced_erp_return_invoice_list():
 	if frappe.defaults.get_user_default("company") == "Auroville Bakery":
 		return frappe.db.sql(
 			"""
-			SELECT name, customer, docstatus, status FROM `tabSales Invoice`
-			WHERE docstatus = 1 AND status = "Return"
-			AND posting_date >= "2025-11-01"
-			AND custom_zb_creditnote_id IS NULL
+			SELECT si.name, si.customer, si.docstatus, si.status FROM `tabSales Invoice` si,
+			`tabSales Invoice Payment` sip, tabCustomer c
+			WHERE si.docstatus = 1 AND si.status = "Return"
+			AND si.customer = c.name AND c.customer_type = "Company"
+			AND si.posting_date >= "2025-12-23"
+			AND ((si.custom_fs_account_number IS NOT NULL AND sip.parent = si.name) OR (si.custom_fs_account_number IS NULL AND sip.mode_of_payment = "NEFT" AND sip.parent = si.name))
+			AND si.custom_zb_creditnote_id IS NULL
 			""",
 			as_dict=True
 		)
@@ -3034,11 +3063,17 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 	if invoice_doc.taxes:
 		is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
-	if frappe.get_value("Customer", customer, "customer_type") == "Company":
-		fs_customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
+	customer_doc = frappe.get_doc("Customer", customer)
+
+	if customer_doc.customer_type == "Company":
+		fs_customer_id = customer_doc.custom_zoho_contact_id
 	else:
 		fs_customer_id = api_controller.walk_in_fs_contact_id
 
+	if customer_doc.gst_category == "Registered Regular":
+		reference_invoice_type = "registered" # used when not referring to a return doc
+	else:
+		reference_invoice_type = "b2c_others" # used when not referring to a return doc
 
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
@@ -3052,7 +3087,10 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 			item_doc = frappe.get_doc("Item", item.item_code)
 
 			try:
-				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				if invoice_doc.company_gstin[:2] == invoice_doc.place_of_supply[:2]: # first 2 chars of gstin are location codes
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				else:
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 			except Exception as err:
 				frappe.msgprint(str(err))
 				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
@@ -3184,9 +3222,9 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 		zb_inv_id = frappe.get_value("Sales Invoice", invoice_doc.return_against, "custom_zoho_invoice_id")
 		if not zb_inv_id:
 			frappe.msgprint("Return Invoice '{0}' does not have a ZB Invoice ID".format(invoice_doc.name))
-			creditnote_data["reference_invoice_type"] = "b2c_others"
+			creditnote_data["reference_invoice_type"] = reference_invoice_type
 			creditnote_data["reference_number"] = invoice_doc.return_against
-		
+
 		else:
 			creditnote_data['invoice_id'] = zb_inv_id
 
@@ -3217,10 +3255,16 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 	api_controller = frappe.get_doc("Zoho Books API")
 	#invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 
-	customer = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "name")
-	customer_doc = frappe.get_doc("Customer", customer)
+	if consol_inv_pt_account:
+		customer = frappe.get_value("Customer", {"custom_fs_account_number": consol_inv_pt_account}, "name")
+		customer_doc = frappe.get_doc("Customer", customer)
+	
+	else:
+		frappe.msgprint("No PT Account for this Customer")
+		return
 
 	company = frappe.defaults.get_user_default("company")
+	company_doc = frappe.get_doc("Company", company)
 
 	#if customer_doc.customer_group == "Special Case" and customer_doc.customer_type != "Company":
 	if customer_doc.customer_group == "Internal":
@@ -3239,8 +3283,8 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 	#date = nowdate()
 
 	taxable = True
-	if frappe.db.get_value("Company", company, "gstin"):
-		if customer_doc.gstin == frappe.db.get_value("Company", company, "gstin"):
+	if company_doc.gstin:
+		if company_doc.gstin == customer_doc.gstin:
 			taxable = False
 
 	if taxable:
@@ -3254,7 +3298,10 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 
 		if taxable:
 			try:
-				tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				if company_doc.gstin[:2] == customer_doc.gstin[:2]: # first 2 chars of gstin are location codes
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				else:
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 			except Exception as err:
 				frappe.msgprint(str(err))
 				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
@@ -3381,11 +3428,13 @@ def fetch_unsynced_erp_fs_invoice_list():
 	if frappe.defaults.get_user_default("company") == "Auroville Bakery":
 		return frappe.db.sql(
 			"""
-			SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
-			WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
-			AND posting_date >= "2025-11-01"
-			AND custom_fs_account_number IS NOT NULL
-			AND custom_zoho_invoice_id IS NULL
+			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status
+			FROM `tabSales Invoice` si, tabCustomer c
+			WHERE si.docstatus = 1 AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
+			AND si.customer = c.name AND c.customer_type = "Company"
+			AND si.posting_date >= "2025-12-23"
+			AND si.custom_fs_account_number IS NOT NULL
+			AND si.custom_zoho_invoice_id IS NULL
 			""",
 			as_dict=True
 		)
@@ -3395,11 +3444,12 @@ def fetch_unsynced_erp_fs_invoice_list():
 	):
 		return frappe.db.sql(
 			"""
-			SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
-			WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
-			AND posting_date >= "2025-10-01"
-			AND custom_fs_account_number IS NOT NULL
-			AND custom_zoho_invoice_id IS NULL
+			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status FROM `tabSales Invoice` si, tabCustomer c
+			WHERE si.docstatus = 1 AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
+			AND si.customer = c.name AND c.customer_type = "Company"
+			AND si.posting_date >= "2025-10-01"
+			AND si.custom_fs_account_number IS NOT NULL
+			AND si.custom_zoho_invoice_id IS NULL
 			""",
 			as_dict=True
 		)
@@ -3441,7 +3491,10 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					if invoice_doc.company_gstin[:2] == invoice_doc.place_of_supply[:2]: # first 2 chars of gstin are location codes
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					else:
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
 					frappe.msgprint(str(err))
 					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
@@ -3611,7 +3664,10 @@ def sync_entity_inv_with_zoho_books(invoice, customer):
 				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					if invoice_doc.company_gstin[:2] == invoice_doc.place_of_supply[:2]: # first 2 chars of gstin are location codes
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					else:
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
 					frappe.msgprint(str(err))
 					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
@@ -3812,7 +3868,10 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					if invoice_doc.company_gstin[:2] == invoice_doc.place_of_supply[:2]: # first 2 chars of gstin are location codes
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					else:
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
 					frappe.msgprint(str(err))
 					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
@@ -4038,7 +4097,10 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					if invoice_doc.company_gstin[:2] == invoice_doc.place_of_supply[:2]: # first 2 chars of gstin are location codes
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					else:
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
 					frappe.msgprint(str(err))
 					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
@@ -4238,7 +4300,10 @@ def sync_upi_inv_with_zoho_books(invoice):
 				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					if invoice_doc.company_gstin[:2] == invoice_doc.place_of_supply[:2]: # first 2 chars of gstin are location codes
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					else:
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
 					frappe.msgprint(str(err))
 					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
@@ -4359,7 +4424,7 @@ def fetch_unsynced_erp_neft_invoice_list():
 			SELECT si.name, si.customer, si.docstatus, si.status, si.custom_zoho_invoice_id, si.custom_zoho_payment_id
 			FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
 			WHERE si.docstatus = 1
-			AND posting_date >= "2025-11-01"
+			AND posting_date >= "2025-12-23"
 			AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 			AND si.custom_fs_account_number IS NULL AND sip.mode_of_payment = "NEFT" AND sip.parent = si.name
 			AND custom_zoho_invoice_id IS NULL
@@ -4429,7 +4494,10 @@ def sync_neft_inv_with_zoho_books(invoice, customer):
 				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					if invoice_doc.company_gstin[:2] == invoice_doc.place_of_supply[:2]: # first 2 chars of gstin are location codes
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					else:
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
 					frappe.msgprint(str(err))
 					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
@@ -4610,7 +4678,10 @@ def sync_card_inv_with_zoho_books(invoice):
 				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					if invoice_doc.company_gstin[:2] == invoice_doc.place_of_supply[:2]: # first 2 chars of gstin are location codes
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					else:
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
 					frappe.msgprint(str(err))
 					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
@@ -4798,7 +4869,10 @@ def sync_cash_inv_with_zoho_books(invoice):
 				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 				try:
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					if invoice_doc.company_gstin[:2] == invoice_doc.place_of_supply[:2]: # first 2 chars of gstin are location codes
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					else:
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
 					frappe.msgprint(str(err))
 					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
