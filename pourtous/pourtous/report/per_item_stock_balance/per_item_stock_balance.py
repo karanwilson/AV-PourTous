@@ -191,7 +191,7 @@ def get_data(filters):
 				WHERE tabItem.item_code = `tabItem Supplier`.parent
 				AND tabItem.item_code = '{2}'
 				) table1
-				""".format("Stores%", "Stall%", filters.name),
+				""".format("Stores%", "Sunship%", filters.name),
 				as_dict=True
 			)
 
