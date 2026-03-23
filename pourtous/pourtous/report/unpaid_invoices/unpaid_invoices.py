@@ -75,10 +75,9 @@ def get_columns():
 def get_data(filters):
 	query = """
 			SELECT si.name, si.customer_name, si.custom_fs_account_number, posting_date, status, custom_fs_transfer_status, grand_total
-			FROM `tabSales Invoice` si, tabCustomer c
+			FROM `tabSales Invoice` si
 			WHERE si.docstatus = 1 AND si.outstanding_amount > 0
 			AND si.custom_fs_account_number IS NOT NULL
-			AND si.customer = c.name AND c.customer_group != "Credit Customers"
 			AND status IN
 			("Unpaid", "Unpaid and Discounted", "Partly Paid", "Partly Paid and Discounted", "Overdue", "Overdue and Discounted")
 			"""

@@ -79,10 +79,12 @@ def get_data(filters):
 			FROM tabItem
 			LEFT JOIN `tabItem Price` ip
 			ON ip.item_code = tabItem.item_code
-			AND tabItem.item_group = '{1}'
+			AND ip.price_list = "Standard Selling"
+
 			) table1
 
-			WHERE table1.qty > 0
+			WHERE table1.item_group = '{1}'
+			AND table1.qty > 0
 			""".format(filters.warehouse, filters.item_group),
 			#.format(filters.warehouse, "Sales Order Reserve - "+abbr, filters.item_group),
 			as_dict=True
@@ -114,6 +116,8 @@ def get_data(filters):
 			FROM tabItem
 			LEFT JOIN `tabItem Price` ip
 			ON ip.item_code = tabItem.item_code
+			AND ip.price_list = "Standard Selling"
+
 			) table1
 
 			WHERE table1.qty > 0
