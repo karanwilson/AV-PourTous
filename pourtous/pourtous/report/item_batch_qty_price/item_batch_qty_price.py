@@ -519,7 +519,7 @@ def get_data(filters):
 				(
 					SELECT barcode FROM `tabItem Barcode`
 					WHERE `tabItem Barcode`.parent = tabItem.item_code
-					AND tabItem.item_code = '{5}'
+					AND tabItem.item_code = '{2}'
 					limit 1
 				) AS barcode
 				FROM `tabStock Ledger Entry`, `tabItem Supplier`, tabBatch, tabItem
@@ -539,7 +539,7 @@ def get_data(filters):
 					AND batch_no = tabBatch.name
 				) != 0
 				)
-				AND `tabStock Ledger Entry`.item_code = tabItem.item_code,
+				AND `tabStock Ledger Entry`.item_code = tabItem.item_code
 				AND `tabStock Ledger Entry`.item_code = '{2}'
 				GROUP BY `tabStock Ledger Entry`.batch_no
 				""".format("Stores%", "Sunship%", filters.name),

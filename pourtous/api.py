@@ -23,6 +23,15 @@ from stdnum import ean
 # 	else:
 # 		frappe.throw("else")
 
+@frappe.whitelist()
+def fetch_purchase_invoices():
+	return frappe.db.get_list('Purchase Invoice', filters = {"docstatus": 1})
+
+@frappe.whitelist()
+def set_vendor_bills_unique():
+	pass
+
+
 def pe_fapi_transfer(doc, method):
 	if doc.custom_receive_from_fs_api and doc.mode_of_payment == "FS":
 		if len(doc.references) == 1:
