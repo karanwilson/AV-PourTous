@@ -17,6 +17,12 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 			"width": "60px",
 		},
 		{
+			"fieldname": "custom_fs_account_number",
+			"label": __("PT/FS Account No."),
+			"fieldtype": "Data",
+			"width": "60px",
+		},
+		{
 			"fieldname": "is_return",
 			"label": __("Returns"),
 			"fieldtype": "Check",
@@ -30,8 +36,9 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 			__("Push to Zoho"),
 			function () {
 				//frappe.msgprint("Test Message");
-				const to_date = frappe.query_report.get_filter_value('to_date')
-				const is_return = frappe.query_report.get_filter_value('is_return')
+				const to_date = frappe.query_report.get_filter_value('to_date');
+				const is_return = frappe.query_report.get_filter_value('is_return');
+				const custom_fs_account_number = frappe.query_report.get_filter_value('custom_fs_account_number');
 				console.log("frappe.query_report.get_filter_value('from_date'): ", frappe.query_report.get_filter_value("from_date"));
 				console.log("frappe.query_report.get_filter_value('to_date'): ", to_date);
 				console.log("frappe.query_report.get_filter_value('is_return'): ", is_return);
@@ -40,6 +47,7 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 					args: {
 						from_date: frappe.query_report.get_filter_value("from_date"),
 						to_date: to_date,
+						custom_fs_account_number: custom_fs_account_number,
 						is_return: is_return
 					},
 					//async: false,
