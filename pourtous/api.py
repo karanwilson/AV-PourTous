@@ -40,6 +40,7 @@ def pe_fapi_transfer(doc, method):
 				if res['custom_fs_transfer_status'] == "OK" or res['custom_fs_transfer_status'] == "OK - Paid":
 					doc.custom_fs_transfer_status = res['custom_fs_transfer_status']
 					doc.reference_no = res['reference_no']
+					doc.custom_remarks = 1
 					doc.remarks = res['remarks']
 				else:
 					frappe.throw(res['remarks'])
