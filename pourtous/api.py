@@ -1237,8 +1237,13 @@ def stock_entry_update_price_lists(doc, method):
 # creates credit vouchers for returns at PTDC (for pre-paid member accounts)
 # called from hooks.py when "Sales Invoice" documents are submitted
 def payment_entry_for_return(doc, method):
-	if doc.status == "Return" and (doc.company == "Pour Tous Distribution Center" or 
-								(doc.company == "Pour Tous Purchasing Service" and doc.payments[0].mode_of_payment != 'FS')):
+	if doc.status == "Return":
+		custom_fs_account_number = frappe.db.get_value("Sales Invoice", doc.return_against, "custom_fs_account_number")
+		if doc.company != "Pour Tous Distribution Center" and custom_fs_account_number:
+			return
+			#frappe.throw("Returning an Unpaid FS Invoice: please 'cancel-amend(edit)-save-submit' using the 'Sales Invoice' form")
+	# if doc.status == "Return" and (doc.company == "Pour Tous Distribution Center" or 
+	# 							(doc.company == "Pour Tous Purchasing Service" and doc.payments[0].mode_of_payment != 'FS')):
 	#if doc.status == "Return" and frappe.get_value("Sales Invoice", doc.return_against, "custom_fs_transfer_status") != "Insufficient Funds":
 		# Check below whether all the MOP have amount == 0
 		mop_cash_list = [
