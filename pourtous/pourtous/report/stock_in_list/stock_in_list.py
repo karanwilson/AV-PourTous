@@ -99,6 +99,13 @@ def get_columns(filters):
 				},
 
 				{
+					"fieldname": "price_list_rate",
+					"label": "B Price",
+					"fieldtype": "Currency",
+					"width": "100"
+				},
+
+				{
 					"fieldname": "custom_selling_price",
 					"label": "S Price",
 					"fieldtype": "Currency",
@@ -178,6 +185,13 @@ def get_columns(filters):
 					"label": "Qty",
 					"fieldtype": "Float",
 					"width": "90"
+				},
+
+				{
+					"fieldname": "price_list_rate",
+					"label": "B Price",
+					"fieldtype": "Currency",
+					"width": "100"
 				},
 
 				{
@@ -338,6 +352,13 @@ def get_columns(filters):
 				},
 
 				{
+					"fieldname": "price_list_rate",
+					"label": "B Price",
+					"fieldtype": "Currency",
+					"width": "100"
+				},
+
+				{
 					"fieldname": "custom_selling_price",
 					"label": "S Price",
 					"fieldtype": "Currency",
@@ -388,6 +409,13 @@ def get_columns(filters):
 					"label": "Qty",
 					"fieldtype": "Float",
 					"width": "90"
+				},
+
+				{
+					"fieldname": "price_list_rate",
+					"label": "B Price",
+					"fieldtype": "Currency",
+					"width": "100"
 				},
 
 				{
@@ -463,63 +491,73 @@ def get_data1(filters):
 	# with Time based filter
 
 	if filters.voucher_type == "Purchase Receipt":
-		query = frappe.db.sql(
-			"""
-			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
-			`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
-			tabBatch.custom_barcode,
-			(
-				SELECT barcode from `tabItem Barcode`
-				WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
-				LIMIT 1
-			) AS barcode,
-			`tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
-			IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
-			FROM `tabPurchase Receipt Item`
-			INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
-			AND `tabPurchase Receipt`.docstatus = 1
-			AND `tabPurchase Receipt`.posting_date BETWEEN '{0}' AND '{1}'
-			AND `tabPurchase Receipt`.posting_time BETWEEN '{2}' AND '{3}'
-			LEFT JOIN tabBatch
-			ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
-			""".format(filters.posting_date, filters.to_date, filters.from_time, filters.to_time),
-			as_dict=True
-			# IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
-			# 	SELECT barcode from `tabItem Barcode`
-			# 	WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
-			# 	LIMIT 1
-			# ), 0) AS barcode,
-		)
+		query = """
+					SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
+					`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
+					tabBatch.custom_barcode,
+					(
+						SELECT barcode from `tabItem Barcode`
+						WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
+						LIMIT 1
+					) AS barcode,
+					`tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty,
+					`tabPurchase Receipt Item`.price_list_rate, `tabPurchase Receipt Item`.custom_selling_price,
+					IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
+					FROM `tabPurchase Receipt Item`
+					INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
+					AND `tabPurchase Receipt`.docstatus = 1
+					AND `tabPurchase Receipt`.posting_date BETWEEN '{0}' AND '{1}'
+					AND `tabPurchase Receipt`.posting_time BETWEEN '{2}' AND '{3}'
+					LEFT JOIN tabBatch
+					ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
+				"""
+				# IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
+				# 	SELECT barcode from `tabItem Barcode`
+				# 	WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
+				# 	LIMIT 1
+				# ), 0) AS barcode,
+
+		# 'Item Code' filter is optional.
+		if filters.item_code:
+			query += "WHERE `tabPurchase Receipt Item`.item_code = '{4}'"
+
+		#return query
+		return frappe.db.sql(query.format(filters.posting_date, filters.to_date, filters.from_time, filters.to_time, filters.item_code), as_dict=1)
 
 	elif filters.voucher_type == "Purchase Invoice":
-		query = frappe.db.sql(
-			"""
-			SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
-			`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
-			tabBatch.custom_barcode,
-			(
-				SELECT barcode from `tabItem Barcode`
-				WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
-				LIMIT 1
-			) AS barcode,
-			`tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty, `tabPurchase Invoice Item`.custom_selling_price,
-			IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
-			FROM `tabPurchase Invoice Item`
-			INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
-			AND `tabPurchase Invoice`.docstatus = 1
-			AND `tabPurchase Invoice`.posting_date BETWEEN '{0}' AND '{1}'
-			AND `tabPurchase Invoice`.posting_time BETWEEN '{2}' AND '{3}'
-			LEFT JOIN tabBatch
-			ON `tabPurchase Invoice Item`.batch_no = tabBatch.name
-			WHERE update_stock = 1
-			""".format(filters.posting_date, filters.to_date, filters.from_time, filters.to_time),
-			as_dict=True
-			# IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
-			# 	SELECT barcode from `tabItem Barcode`
-			# 	WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
-			# 	LIMIT 1
-			# ), 0) AS barcode,
-		)
+		query = """
+					SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
+					`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
+					tabBatch.custom_barcode,
+					(
+						SELECT barcode from `tabItem Barcode`
+						WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
+						LIMIT 1
+					) AS barcode,
+					`tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty,
+					`tabPurchase Invoice Item`.price_list_rate, `tabPurchase Invoice Item`.custom_selling_price,
+					IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
+					FROM `tabPurchase Invoice Item`
+					INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
+					AND `tabPurchase Invoice`.docstatus = 1
+					AND `tabPurchase Invoice`.posting_date BETWEEN '{0}' AND '{1}'
+					AND `tabPurchase Invoice`.posting_time BETWEEN '{2}' AND '{3}'
+					LEFT JOIN tabBatch
+					ON `tabPurchase Invoice Item`.batch_no = tabBatch.name
+					WHERE update_stock = 1
+				"""
+				# IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
+				# 	SELECT barcode from `tabItem Barcode`
+				# 	WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
+				# 	LIMIT 1
+				# ), 0) AS barcode,
+
+		# 'Item Code' filter is optional.
+		if filters.item_code:
+			query += "AND `tabPurchase Invoice Item`.item_code = '{4}'"
+
+		#return query
+		return frappe.db.sql(query.format(filters.posting_date, filters.to_date, filters.from_time, filters.to_time, filters.item_code), as_dict=1)
 
 	elif filters.voucher_type == "Repack Stock Entry":
 		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
@@ -625,61 +663,72 @@ def get_data2(filters):
 	# without Time based filter
 
 	if filters.voucher_type == "Purchase Receipt":
-		query = frappe.db.sql(
-			"""
-			SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
-			`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
-			tabBatch.custom_barcode,
-			(
-				SELECT barcode from `tabItem Barcode`
-				WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
-				LIMIT 1
-			) AS barcode,
-			`tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty, `tabPurchase Receipt Item`.custom_selling_price,
-			IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
-			FROM `tabPurchase Receipt Item`
-			INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
-			AND `tabPurchase Receipt`.docstatus = 1
-			AND `tabPurchase Receipt`.posting_date BETWEEN '{0}' AND '{1}'
-			LEFT JOIN tabBatch
-			ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
-			""".format(filters.posting_date, filters.to_date),
-			as_dict=True
-			# IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
-			# 	SELECT barcode from `tabItem Barcode`
-			# 	WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
-			# 	LIMIT 1
-			# ), 0) AS barcode,
-		)
+		query = """
+					SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
+					`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
+					tabBatch.custom_barcode,
+					(
+						SELECT barcode from `tabItem Barcode`
+						WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
+						LIMIT 1
+					) AS barcode,
+					`tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty,
+					`tabPurchase Receipt Item`.price_list_rate, `tabPurchase Receipt Item`.custom_selling_price,
+					IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
+					FROM `tabPurchase Receipt Item`
+					INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
+					AND `tabPurchase Receipt`.docstatus = 1
+					AND `tabPurchase Receipt`.posting_date BETWEEN '{0}' AND '{1}'
+					LEFT JOIN tabBatch
+					ON `tabPurchase Receipt Item`.batch_no = tabBatch.name
+				"""
+				# IF ((`tabPurchase Receipt Item`.batch_no IS NULL), (
+				# 	SELECT barcode from `tabItem Barcode`
+				# 	WHERE `tabItem Barcode`.parent = `tabPurchase Receipt Item`.item_code
+				# 	LIMIT 1
+				# ), 0) AS barcode,
+
+		# 'Item Code' filter is optional.
+		if filters.item_code:
+			query += "WHERE `tabPurchase Receipt Item`.item_code = '{2}'"
+
+		#return query
+		return frappe.db.sql(query.format(filters.posting_date, filters.to_date, filters.item_code), as_dict=1)
+
 
 	elif filters.voucher_type == "Purchase Invoice":
-		query = frappe.db.sql(
-			"""
-			SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
-			`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
-			tabBatch.custom_barcode,
-			(
-				SELECT barcode from `tabItem Barcode`
-				WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
-				LIMIT 1
-			) AS barcode,
-			`tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty, `tabPurchase Invoice Item`.custom_selling_price,
-			IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
-			FROM `tabPurchase Invoice Item`
-			INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
-			AND `tabPurchase Invoice`.docstatus = 1
-			AND `tabPurchase Invoice`.posting_date BETWEEN '{0}' AND '{1}'
-			LEFT JOIN tabBatch
-			ON `tabPurchase Invoice Item`.batch_no = tabBatch.name
-			WHERE update_stock = 1
-			""".format(filters.posting_date, filters.to_date),
-			as_dict=True
-			# IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
-			# 	SELECT barcode from `tabItem Barcode`
-			# 	WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
-			# 	LIMIT 1
-			# ), 0) AS barcode,
-		)
+		query = """
+					SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
+					`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
+					tabBatch.custom_barcode,
+					(
+						SELECT barcode from `tabItem Barcode`
+						WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
+						LIMIT 1
+					) AS barcode,
+					`tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty,
+					`tabPurchase Invoice Item`.price_list_rate, `tabPurchase Invoice Item`.custom_selling_price,
+					IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
+					FROM `tabPurchase Invoice Item`
+					INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
+					AND `tabPurchase Invoice`.docstatus = 1
+					AND `tabPurchase Invoice`.posting_date BETWEEN '{0}' AND '{1}'
+					LEFT JOIN tabBatch
+					ON `tabPurchase Invoice Item`.batch_no = tabBatch.name
+					WHERE update_stock = 1
+				"""
+				# IF ((`tabPurchase Invoice Item`.batch_no IS NULL), (
+				# 	SELECT barcode from `tabItem Barcode`
+				# 	WHERE `tabItem Barcode`.parent = `tabPurchase Invoice Item`.item_code
+				# 	LIMIT 1
+				# ), 0) AS barcode,
+
+		# 'Item Code' filter is optional.
+		if filters.item_code:
+			query += "AND `tabPurchase Invoice Item`.item_code = '{2}'"
+
+		#return query
+		return frappe.db.sql(query.format(filters.posting_date, filters.to_date, filters.item_code), as_dict=1)
 
 	elif filters.voucher_type == "Repack Stock Entry":
 		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
