@@ -42,6 +42,13 @@ def get_columns(filters):
 				},
 
 				{
+					"fieldname": "posting_date",
+					"label": "Date",
+					"fieldtype": "Date",
+					"width": "100",
+				},
+
+				{
 					"fieldname": "posting_time",
 					"label": "Time",
 					"fieldtype": "Time",
@@ -128,6 +135,13 @@ def get_columns(filters):
 					"fieldtype": "Link",
 					"options": "Purchase Invoice",
 					"width": "135"
+				},
+
+				{
+					"fieldname": "posting_date",
+					"label": "Date",
+					"fieldtype": "Date",
+					"width": "100",
 				},
 
 				{
@@ -224,6 +238,13 @@ def get_columns(filters):
 					"fieldtype": "Link",
 					"options": "Stock Entry",
 					"width": "200"
+				},
+
+				{
+					"fieldname": "posting_date",
+					"label": "Date",
+					"fieldtype": "Date",
+					"width": "100",
 				},
 
 				{
@@ -317,6 +338,13 @@ def get_columns(filters):
 				},
 
 				{
+					"fieldname": "posting_date",
+					"label": "Date",
+					"fieldtype": "Date",
+					"width": "100",
+				},
+
+				{
 					"fieldname": "posting_time",
 					"label": "Time",
 					"fieldtype": "Time",
@@ -374,6 +402,13 @@ def get_columns(filters):
 					"fieldtype": "Link",
 					"options": "Purchase Invoice",
 					"width": "135"
+				},
+
+				{
+					"fieldname": "posting_date",
+					"label": "Date",
+					"fieldtype": "Date",
+					"width": "100",
 				},
 
 				{
@@ -444,6 +479,13 @@ def get_columns(filters):
 				},
 
 				{
+					"fieldname": "posting_date",
+					"label": "Date",
+					"fieldtype": "Date",
+					"width": "100",
+				},
+
+				{
 					"fieldname": "posting_time",
 					"label": "Time",
 					"fieldtype": "Time",
@@ -492,8 +534,8 @@ def get_data1(filters):
 
 	if filters.voucher_type == "Purchase Receipt":
 		query = """
-					SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
-					`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
+					SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_date, `tabPurchase Receipt`.posting_time,
+					`tabPurchase Receipt`.title AS supplier, `tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
 					tabBatch.custom_barcode,
 					(
 						SELECT barcode from `tabItem Barcode`
@@ -526,8 +568,8 @@ def get_data1(filters):
 
 	elif filters.voucher_type == "Purchase Invoice":
 		query = """
-					SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
-					`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
+					SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Receipt`.posting_date, `tabPurchase Invoice`.posting_time,
+					`tabPurchase Invoice`.title AS supplier, `tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
 					tabBatch.custom_barcode,
 					(
 						SELECT barcode from `tabItem Barcode`
@@ -565,8 +607,8 @@ def get_data1(filters):
 		warehouse = "Sales Order Reserve - " + abbr
 		query = frappe.db.sql(
 			"""
-			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode,
+			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_date,
+			`tabStock Entry`.posting_time, item_code, batch_no, tabBatch.custom_barcode,
 			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
@@ -592,47 +634,14 @@ def get_data1(filters):
 			# ), 0) AS barcode,
 		)
 
-	# elif filters.voucher_type == "Repack Stock Label":
-	# 	abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
-	# 	# get company abbreviation
-	# 	warehouse = "Sales Order Reserve - " + abbr
-	# 	query = frappe.db.sql(
-	# 		"""
-	# 		SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-	# 		item_code, batch_no, tabBatch.custom_barcode,
-	# 		(
-	# 			SELECT barcode from `tabItem Barcode`
-	# 			WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
-	# 			LIMIT 1
-	# 		) AS barcode,
-	# 		`tabStock Entry Detail`.item_name, qty,
-	# 		tabBatch.stock_uom, tabBatch.expiry_date, tabBatch.posa_batch_price
-	# 		FROM `tabStock Entry Detail`
-	# 		INNER JOIN `tabStock Entry` ON `tabStock Entry Detail`.parent = `tabStock Entry`.name
-	# 		AND `tabStock Entry Detail`.t_warehouse != '{2}'
-	# 		AND `tabStock Entry`.stock_entry_type = "Repack"
-	# 		AND `tabStock Entry`.docstatus = 1
-	# 		AND `tabStock Entry`.posting_date BETWEEN '{0}' AND '{1}'
-	# 		AND `tabStock Entry`.posting_time BETWEEN '{3}' AND '{4}'
-	# 		LEFT JOIN tabBatch
-	# 		ON `tabStock Entry Detail`.batch_no = tabBatch.name
-	# 		""".format(filters.posting_date, filters.to_date, warehouse, filters.from_time, filters.to_time),
-	# 		as_dict=True
-	# 		# IF ((`tabStock Entry Detail`.batch_no IS NULL), (
-	# 		# 	SELECT barcode from `tabItem Barcode`
-	# 		# 	WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
-	# 		# 	LIMIT 1
-	# 		# ), 0) AS barcode,
-	# 	)
-
 	else:
 		abbr = frappe.get_value("Company", frappe.defaults.get_user_default("company"), 'abbr')
 		# get company abbreviation
 		warehouse = "Sales Order Reserve - " + abbr
 		query = frappe.db.sql(
 			"""
-			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode, 
+			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_date,
+			`tabStock Entry`.posting_time, item_code, batch_no, tabBatch.custom_barcode,
 			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
@@ -664,8 +673,8 @@ def get_data2(filters):
 
 	if filters.voucher_type == "Purchase Receipt":
 		query = """
-					SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.title AS supplier,
-					`tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
+					SELECT `tabPurchase Receipt`.name AS voucher_name, `tabPurchase Receipt`.posting_time, `tabPurchase Receipt`.posting_date,
+					`tabPurchase Receipt`.title AS supplier, `tabPurchase Receipt Item`.item_code, `tabPurchase Receipt Item`.batch_no,
 					tabBatch.custom_barcode,
 					(
 						SELECT barcode from `tabItem Barcode`
@@ -698,8 +707,8 @@ def get_data2(filters):
 
 	elif filters.voucher_type == "Purchase Invoice":
 		query = """
-					SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_time, `tabPurchase Invoice`.title AS supplier,
-					`tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
+					SELECT `tabPurchase Invoice`.name AS voucher_name, `tabPurchase Invoice`.posting_date, `tabPurchase Invoice`.posting_time,
+					`tabPurchase Invoice`.title AS supplier, `tabPurchase Invoice Item`.item_code, `tabPurchase Invoice Item`.batch_no,
 					tabBatch.custom_barcode,
 					(
 						SELECT barcode from `tabItem Barcode`
@@ -736,8 +745,8 @@ def get_data2(filters):
 		warehouse = "Sales Order Reserve - " + abbr
 		query = frappe.db.sql(
 			"""
-			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode,
+			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_date,
+			`tabStock Entry`.posting_time, item_code, batch_no, tabBatch.custom_barcode,
 			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code
@@ -768,8 +777,8 @@ def get_data2(filters):
 		warehouse = "Sales Order Reserve - " + abbr
 		query = frappe.db.sql(
 			"""
-			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_time,
-			item_code, batch_no, tabBatch.custom_barcode,
+			SELECT stock_entry_type AS voucher_type, `tabStock Entry`.name AS voucher_name, `tabStock Entry`.posting_date,
+			`tabStock Entry`.posting_time, item_code, batch_no, tabBatch.custom_barcode,
 			(
 				SELECT barcode from `tabItem Barcode`
 				WHERE `tabItem Barcode`.parent = `tabStock Entry Detail`.item_code

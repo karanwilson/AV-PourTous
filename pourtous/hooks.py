@@ -358,6 +358,7 @@ fixtures = [
                     #"Customer-custom_fs_cash_account_4", # for FS Transactions
                     #"Customer-custom_receive_from_fs_api",
                     "Customer-custom_zoho_contact_id", # required in case we create Invoices/Purchases on Zoho Books, via API
+                    "Customer-custom_zoho_accounts_receivable", # for mapping to Zoho account receivable
                     "Customer-custom_update_zoho_contact", # to prevent trigger of Zoho Contact update, during the FS account update script.
 
                     "Contact-custom_av_section_break"

@@ -125,6 +125,7 @@ class ZohoBooksAPI(Document):
 		income_accounts = self.get_accounts('AccountType.Income')
 		expense_accounts = self.get_accounts('AccountType.Expense')
 		liability_accounts = self.get_accounts('AccountType.Liability')
+		asset_accounts = self.get_accounts('AccountType.Asset')
 		frappe.db.delete("Zoho Accounts") # delete the old Accounts data
 		for data in income_accounts:
 			income_account = frappe.get_doc({
@@ -161,6 +162,18 @@ class ZohoBooksAPI(Document):
 					"parent_account_name": data.get('parent_account_name')
 				})
 			liability_account.insert()
+
+		for data in asset_accounts:
+			asset_account = frappe.get_doc({
+					"doctype": 'Zoho Accounts',
+					"account_id": data.get('account_id'),
+					"account_name": data.get('account_name'),
+					"account_type": data.get('account_type'),
+					"filter_by": 'Asset',
+					"parent_account_id": data.get('parent_account_id'),
+					"parent_account_name": data.get('parent_account_name')
+				})
+			asset_account.insert()
 
 
 	def update_walk_in_customer(self):
@@ -1622,6 +1635,7 @@ def update_contact_in_zoho(doc, method):
 		"company_name": doc.customer_name,
 		"contact_type": "customer",
 		"customer_sub_type": customer_sub_type,
+		"account_id": doc.custom_zoho_accounts_receivable,
 		"gst_no": doc.gstin,
 		"gst_treatment": gst_treatment[doc.gst_category],
 	}
@@ -3298,15 +3312,18 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 
 		if taxable:
 			try:
-				if company_doc.gstin[:2] == customer_doc.gstin[:2]: # first 2 chars of gstin are location codes
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+				if customer_doc.gstin:
+					if company_doc.gstin[:2] == customer_doc.gstin[:2]: # first 2 chars of gstin are location codes
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					else:
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				else:
-					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
 			except Exception as err:
-				frappe.msgprint(str(err))
-				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
-				frappe.msgprint(msg)
-				return
+				frappe.throw(str(err))
+				#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+				#frappe.msgprint(msg)
+				#return
 
 			else:
 				line_item = {
