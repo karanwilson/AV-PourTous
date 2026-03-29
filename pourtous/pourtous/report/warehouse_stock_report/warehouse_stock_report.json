@@ -1,5 +1,5 @@
 {
- "add_total_row": 0,
+ "add_total_row": 1,
  "columns": [],
  "creation": "2026-01-01 12:16:55.107989",
  "disable_prepared_report": 0,
@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2026-01-01 12:16:55.107989",
+ "modified": "2026-03-28 22:56:12.049976",
  "modified_by": "Administrator",
  "module": "pourtous",
  "name": "Warehouse Stock report",

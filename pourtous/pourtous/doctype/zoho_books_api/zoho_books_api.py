@@ -3106,10 +3106,10 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				else:
 					tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 			except Exception as err:
-				frappe.msgprint(str(err))
-				msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-				frappe.msgprint(msg)
-				return
+				frappe.throw(str(err))
+				#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+				#frappe.msgprint(msg)
+				#return
 
 			else:
 				line_item = {
@@ -3513,10 +3513,10 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 					else:
 						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
-					frappe.msgprint(str(err))
-					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-					frappe.msgprint(msg)
-					return
+					frappe.throw(str(err))
+					#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+					#frappe.msgprint(msg)
+					#return
 
 				else:
 					line_item = {
@@ -3686,10 +3686,10 @@ def sync_entity_inv_with_zoho_books(invoice, customer):
 					else:
 						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
-					frappe.msgprint(str(err))
-					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-					frappe.msgprint(msg)
-					return
+					frappe.throw(str(err))
+					#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+					#frappe.msgprint(msg)
+					#return
 
 				else:
 					line_item = {
@@ -3890,10 +3890,10 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 					else:
 						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
-					frappe.msgprint(str(err))
-					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-					frappe.msgprint(msg)
-					return
+					frappe.throw(str(err))
+					#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+					#frappe.msgprint(msg)
+					#return
 
 				else:
 					line_item = {
@@ -4119,10 +4119,10 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 					else:
 						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
-					frappe.msgprint(str(err))
-					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-					frappe.msgprint(msg)
-					return
+					frappe.throw(str(err))
+					#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+					#frappe.msgprint(msg)
+					#return
 
 				else:
 					line_item = {
@@ -4323,10 +4323,10 @@ def sync_upi_inv_with_zoho_books(invoice):
 					else:
 						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
-					frappe.msgprint(str(err))
-					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-					frappe.msgprint(msg)
-					return
+					frappe.throw(str(err))
+					#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+					#frappe.msgprint(msg)
+					#return
 
 				else:
 					line_item = {
@@ -4518,10 +4518,10 @@ def sync_neft_inv_with_zoho_books(invoice, customer):
 					else:
 						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
-					frappe.msgprint(str(err))
-					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-					frappe.msgprint(msg)
-					return
+					frappe.throw(str(err))
+					#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+					#frappe.msgprint(msg)
+					#return
 
 				else:
 					line_item = {
@@ -4703,10 +4703,10 @@ def sync_card_inv_with_zoho_books(invoice):
 					else:
 						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
-					frappe.msgprint(str(err))
-					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-					frappe.msgprint(msg)
-					return
+					frappe.throw(str(err))
+					#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+					#frappe.msgprint(msg)
+					#return
 
 				else:
 					line_item = {
@@ -4895,10 +4895,10 @@ def sync_cash_inv_with_zoho_books(invoice):
 					else:
 						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
 				except Exception as err:
-					frappe.msgprint(str(err))
-					msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.item_code
-					frappe.msgprint(msg)
-					return
+					frappe.throw(str(err))
+					#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+					#frappe.msgprint(msg)
+					#return
 
 				else:
 					line_item = {
