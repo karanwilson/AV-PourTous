@@ -403,6 +403,8 @@ fixtures = [
                     "Stock Entry Detail-custom_buying_price",
                     "Stock Entry Detail-custom_selling_price",
 
+                    "Stock Reconciliation-custom_stock_recon_no_change_item", # for keeping track of no-change-in-stock Items during stock taking
+
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
                     "Stock Reconciliation Item-custom_selling_price",
 
