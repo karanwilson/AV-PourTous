@@ -36,7 +36,7 @@ def get_columns(filters):
 				"fieldname": "item_name",
 				"label": "Item Name",
 				"fieldtype": "Data",
-				"width": "500"
+				"width": "350"
 			},
 			{
 				"fieldname": "item_group",
@@ -48,13 +48,13 @@ def get_columns(filters):
 				"fieldname": "qty",
 				"label": filters.warehouse,
 				"fieldtype": "Float",
-				"width": "150"
+				"width": "120"
 			},
 			{
 				"fieldname": "item_price",
-				"label": "Price (noBatch)",
+				"label": "Buying Price",
 				"fieldtype": "Currency",
-				"width": "150"
+				"width": "120"
 			},
 		]
 
@@ -79,7 +79,7 @@ def get_data(filters):
 			FROM tabItem
 			LEFT JOIN `tabItem Price` ip
 			ON ip.item_code = tabItem.item_code
-			AND ip.price_list = "Standard Selling"
+			AND ip.price_list = "Standard Buying"
 
 			) table1
 
@@ -116,7 +116,7 @@ def get_data(filters):
 			FROM tabItem
 			LEFT JOIN `tabItem Price` ip
 			ON ip.item_code = tabItem.item_code
-			AND ip.price_list = "Standard Selling"
+			AND ip.price_list = "Standard Buying"
 
 			) table1
 
