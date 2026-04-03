@@ -2660,8 +2660,8 @@ def fetch_erp_bills_list():
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 0 AND custom_zoho_bill_id IS NULL
-			AND posting_date between "2025-06-01" and "2026-02-28"
-			AND bill_date <= "2026-02-28"
+			AND posting_date between "2025-06-01" and "2026-03-31"
+			AND bill_date <= "2026-03-31"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
@@ -2689,7 +2689,7 @@ def fetch_erp_debitnotes_list():
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-			AND posting_date between "2025-06-01" and "2026-02-28"
+			AND posting_date between "2025-06-01" and "2026-03-31"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
@@ -3030,14 +3030,15 @@ def fetch_unsynced_erp_return_invoice_list():
 	if frappe.defaults.get_user_default("company") == "Auroville Bakery":
 		return frappe.db.sql(
 			"""
-			SELECT si.name, si.customer, si.docstatus, si.status FROM `tabSales Invoice` si,
-			`tabSales Invoice Payment` sip, tabCustomer c
+			SELECT si.name, si.customer, si.docstatus, si.status FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
 			WHERE si.docstatus = 1 AND si.status = "Return"
-			AND si.customer = c.name AND c.customer_type = "Company"
-			AND si.posting_date >= "2025-12-23"
+			AND si.posting_date BETWEEN "2026-04-01" AND "2026-04-02"
 			AND ((si.custom_fs_account_number IS NOT NULL AND sip.parent = si.name) OR (si.custom_fs_account_number IS NULL AND sip.mode_of_payment = "NEFT" AND sip.parent = si.name))
 			AND si.custom_zb_creditnote_id IS NULL
 			""",
+			# AND si.posting_date >= "2025-12-23"
+			# ,tabCustomer c
+			# AND si.customer = c.name AND c.customer_type = "Company"
 			as_dict=True
 		)
 
@@ -3048,9 +3049,10 @@ def fetch_unsynced_erp_return_invoice_list():
 			"""
 			SELECT name, customer, docstatus, status FROM `tabSales Invoice`
 			WHERE docstatus = 1 AND status = "Return"
-			AND posting_date >= "2025-10-01"
+			AND posting_date BETWEEN "2026-04-01" AND "2026-04-02"
 			AND custom_zb_creditnote_id IS NULL
 			""",
+			# AND posting_date >= "2025-10-01"
 			as_dict=True
 		)
 
@@ -3448,11 +3450,12 @@ def fetch_unsynced_erp_fs_invoice_list():
 			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status
 			FROM `tabSales Invoice` si, tabCustomer c
 			WHERE si.docstatus = 1 AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
-			AND si.customer = c.name AND c.customer_type = "Company"
-			AND si.posting_date >= "2025-12-23"
+			AND si.posting_date BETWEEN "2026-04-01" AND "2026-04-02"
 			AND si.custom_fs_account_number IS NOT NULL
 			AND si.custom_zoho_invoice_id IS NULL
 			""",
+			# AND si.customer = c.name AND c.customer_type = "Company"
+			# AND si.posting_date >= "2025-12-23"
 			as_dict=True
 		)
 
@@ -3463,11 +3466,11 @@ def fetch_unsynced_erp_fs_invoice_list():
 			"""
 			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status FROM `tabSales Invoice` si, tabCustomer c
 			WHERE si.docstatus = 1 AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
-			AND si.customer = c.name AND c.customer_type = "Company"
-			AND si.posting_date >= "2025-10-01"
 			AND si.custom_fs_account_number IS NOT NULL
 			AND si.custom_zoho_invoice_id IS NULL
 			""",
+			# AND si.customer = c.name AND c.customer_type = "Company"
+			# AND si.posting_date >= "2025-10-01"
 			as_dict=True
 		)
 
