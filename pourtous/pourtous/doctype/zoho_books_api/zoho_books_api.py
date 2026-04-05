@@ -3222,20 +3222,20 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				creditnote_data['reference_number'] = invoice[-16:]
 				creditnote_data['creditnote_number'] = invoice.replace("SINV", "THIN")[-16:]
 
-		if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
-			#suffix = None
-			if invoice[-2:-1] == '-':
-				invoice_name_extract = invoice[-7:-2]
-				#suffix = invoice[-2:]
-			else:
-				invoice_name_extract = invoice[-5:]
+		# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
+		# 	#suffix = None
+		# 	if invoice[-2:-1] == '-':
+		# 		invoice_name_extract = invoice[-7:-2]
+		# 		#suffix = invoice[-2:]
+		# 	else:
+		# 		invoice_name_extract = invoice[-5:]
 
-			if invoice_name_extract > '1000':
-				creditnote_data['reference_number'] = invoice[-16:]
-				counter = fetch_new_invoice_number()
-				creditnote_data['creditnote_number'] = invoice[:9] + str(counter).zfill(5)
-				# if suffix:
-				# 	creditnote_data['creditnote_number'] += suffix
+		# 	if invoice_name_extract > '1000':
+		# 		creditnote_data['reference_number'] = invoice[-16:]
+		# 		counter = fetch_new_invoice_number()
+		# 		creditnote_data['creditnote_number'] = invoice[:9] + str(counter).zfill(5)
+		# 		# if suffix:
+		# 		# 	creditnote_data['creditnote_number'] += suffix
 
 		if invoice_doc.taxes:
 			creditnote_data['is_inclusive_tax'] = is_inclusive_tax
@@ -3596,16 +3596,16 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				invoice_data['reference_number'] = invoice[-16:]
 				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
-		if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
-			if invoice[-2:-1] == '-':
-				invoice_name_extract = invoice[-7:-2]
-			else:
-				invoice_name_extract = invoice[-5:]
+		# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
+		# 	if invoice[-2:-1] == '-':
+		# 		invoice_name_extract = invoice[-7:-2]
+		# 	else:
+		# 		invoice_name_extract = invoice[-5:]
 
-			if invoice_name_extract > '1000':
-				invoice_data['reference_number'] = invoice[-16:]
-				counter = fetch_new_invoice_number()
-				invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
+		# 	if invoice_name_extract > '1000':
+		# 		invoice_data['reference_number'] = invoice[-16:]
+		# 		counter = fetch_new_invoice_number()
+		# 		invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -3771,16 +3771,16 @@ def sync_entity_inv_with_zoho_books(invoice, customer):
 				invoice_data['reference_number'] = invoice[-16:]
 				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
-		if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
-			if invoice[-2:-1] == '-':
-				invoice_name_extract = invoice[-7:-2]
-			else:
-				invoice_name_extract = invoice[-5:]
+		# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
+		# 	if invoice[-2:-1] == '-':
+		# 		invoice_name_extract = invoice[-7:-2]
+		# 	else:
+		# 		invoice_name_extract = invoice[-5:]
 
-			if invoice_name_extract > '1000':
-				invoice_data['reference_number'] = invoice[-16:]
-				counter = fetch_new_invoice_number()
-				invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
+		# 	if invoice_name_extract > '1000':
+		# 		invoice_data['reference_number'] = invoice[-16:]
+		# 		counter = fetch_new_invoice_number()
+		# 		invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -3986,16 +3986,16 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 				invoice_data['reference_number'] = invoice[-16:]
 				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
-		if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
-			if invoice[-2:-1] == '-':
-				invoice_name_extract = invoice[-7:-2]
-			else:
-				invoice_name_extract = invoice[-5:]
+		# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
+		# 	if invoice[-2:-1] == '-':
+		# 		invoice_name_extract = invoice[-7:-2]
+		# 	else:
+		# 		invoice_name_extract = invoice[-5:]
 
-			if invoice_name_extract > '1000':
-				invoice_data['reference_number'] = invoice[-16:]
-				counter = fetch_new_invoice_number()
-				invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
+		# 	if invoice_name_extract > '1000':
+		# 		invoice_data['reference_number'] = invoice[-16:]
+		# 		counter = fetch_new_invoice_number()
+		# 		invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
 
 		if fs_account_number:
 			invoice_data["custom_fields"] = [
@@ -4233,16 +4233,16 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 				invoice_data['reference_number'] = invoice[-16:]
 				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
-		if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
-			if invoice[-2:-1] == '-':
-				invoice_name_extract = invoice[-7:-2]
-			else:
-				invoice_name_extract = invoice[-5:]
+		# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
+		# 	if invoice[-2:-1] == '-':
+		# 		invoice_name_extract = invoice[-7:-2]
+		# 	else:
+		# 		invoice_name_extract = invoice[-5:]
 
-			if invoice_name_extract > '1000':
-				invoice_data['reference_number'] = invoice[-16:]
-				counter = fetch_new_invoice_number()
-				invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
+		# 	if invoice_name_extract > '1000':
+		# 		invoice_data['reference_number'] = invoice[-16:]
+		# 		counter = fetch_new_invoice_number()
+		# 		invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -4448,16 +4448,16 @@ def sync_upi_inv_with_zoho_books(invoice):
 				invoice_data['reference_number'] = invoice[-16:]
 				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
-		if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
-			if invoice[-2:-1] == '-':
-				invoice_name_extract = invoice[-7:-2]
-			else:
-				invoice_name_extract = invoice[-5:]
+		# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
+		# 	if invoice[-2:-1] == '-':
+		# 		invoice_name_extract = invoice[-7:-2]
+		# 	else:
+		# 		invoice_name_extract = invoice[-5:]
 
-			if invoice_name_extract > '1000':
-				invoice_data['reference_number'] = invoice[-16:]
-				counter = fetch_new_invoice_number()
-				invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
+		# 	if invoice_name_extract > '1000':
+		# 		invoice_data['reference_number'] = invoice[-16:]
+		# 		counter = fetch_new_invoice_number()
+		# 		invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -4646,16 +4646,16 @@ def sync_neft_inv_with_zoho_books(invoice, customer):
 				invoice_data['reference_number'] = invoice[-16:]
 				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
-		if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
-			if invoice[-2:-1] == '-':
-				invoice_name_extract = invoice[-7:-2]
-			else:
-				invoice_name_extract = invoice[-5:]
+		# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
+		# 	if invoice[-2:-1] == '-':
+		# 		invoice_name_extract = invoice[-7:-2]
+		# 	else:
+		# 		invoice_name_extract = invoice[-5:]
 
-			if invoice_name_extract > '1000':
-				invoice_data['reference_number'] = invoice[-16:]
-				counter = fetch_new_invoice_number()
-				invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
+		# 	if invoice_name_extract > '1000':
+		# 		invoice_data['reference_number'] = invoice[-16:]
+		# 		counter = fetch_new_invoice_number()
+		# 		invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -4849,16 +4849,16 @@ def sync_card_inv_with_zoho_books(invoice):
 				invoice_data['reference_number'] = invoice[-16:]
 				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
-		if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
-			if invoice[-2:-1] == '-':
-				invoice_name_extract = invoice[-7:-2]
-			else:
-				invoice_name_extract = invoice[-5:]
+		# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
+		# 	if invoice[-2:-1] == '-':
+		# 		invoice_name_extract = invoice[-7:-2]
+		# 	else:
+		# 		invoice_name_extract = invoice[-5:]
 
-			if invoice_name_extract > '1000':
-				invoice_data['reference_number'] = invoice[-16:]
-				counter = fetch_new_invoice_number()
-				invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
+		# 	if invoice_name_extract > '1000':
+		# 		invoice_data['reference_number'] = invoice[-16:]
+		# 		counter = fetch_new_invoice_number()
+		# 		invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
@@ -5045,16 +5045,16 @@ def sync_cash_inv_with_zoho_books(invoice):
 				invoice_data['reference_number'] = invoice[-16:]
 				invoice_data['invoice_number'] = invoice.replace("SINV", "THIN")[-16:]
 
-		if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
-			if invoice[-2:-1] == '-':
-				invoice_name_extract = invoice[-7:-2]
-			else:
-				invoice_name_extract = invoice[-5:]
+		# if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service" and date >= '2026-04-01' and date <= '2026-04-02':
+		# 	if invoice[-2:-1] == '-':
+		# 		invoice_name_extract = invoice[-7:-2]
+		# 	else:
+		# 		invoice_name_extract = invoice[-5:]
 
-			if invoice_name_extract > '1000':
-				invoice_data['reference_number'] = invoice[-16:]
-				counter = fetch_new_invoice_number()
-				invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
+		# 	if invoice_name_extract > '1000':
+		# 		invoice_data['reference_number'] = invoice[-16:]
+		# 		counter = fetch_new_invoice_number()
+		# 		invoice_data['invoice_number'] = invoice[:9] + str(counter).zfill(5)
 
 		# adding delivery charge if any
 		if invoice_doc.posa_delivery_charges:
