@@ -60,12 +60,16 @@ class ZohoBooksAPI(Document):
 				'soid': soid
 				}
 
-			r = s.post(token_url)
+			try:
+				r = s.post(token_url)
+			except Exception as err:
+				raise err
 
-			if r.json().get('access_token'):
-				return r
 			else:
-				r.raise_for_status()
+				if r.json().get('access_token'):
+					return r
+				else:
+					r.raise_for_status()
 
 
 	def update_token_doc(self, token_doc, token, token_validity):
@@ -1611,8 +1615,8 @@ def update_contact_in_zoho(doc, method):
 	if doc.customer_type != "Company":
 		return
 
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
-		return
+	# if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
+	# 	return
 
 	#if doc.custom_update_zoho_contact == 0:
 	#	return
@@ -1681,8 +1685,6 @@ def delete_contact_in_zoho(doc, method):
 			return
 
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
-		return
 
 	if doc.custom_zoho_contact_id:
 		api_controller = frappe.get_doc("Zoho Books API")
@@ -1697,8 +1699,6 @@ def update_supplier_contact_in_zoho(doc, method):
 	# else:
 	# 	doc.is_reverse_charge_applicable = 0
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
-		return
 
 	api_controller = frappe.get_doc("Zoho Books API")
 
@@ -1736,23 +1736,25 @@ def update_supplier_contact_in_zoho(doc, method):
 
 	if doc.custom_zoho_contact_id == None:
 		res = api_controller.post_contact(data)
-		if res.get("custom_zoho_contact_id"):
-			doc.custom_zoho_contact_id = res.get("custom_zoho_contact_id")
-			return doc.custom_zoho_contact_id
-			# returning this value for the add_supplier_to_zb function below (for bulk Supplier additions to Zoho)
+		if res:
+			if res.get("custom_zoho_contact_id"):
+				doc.custom_zoho_contact_id = res.get("custom_zoho_contact_id")
+				return doc.custom_zoho_contact_id
+				# returning this value for the add_supplier_to_zb function below (for bulk Supplier additions to Zoho)
 
 	else:
 		# put/update existing Contact
 		res = api_controller.put_contact(doc.custom_zoho_contact_id, data)
-		if res.get("custom_zoho_contact_id"):
-			# checks if the API controller handled a non-existing contact,
-			# in case of wrong/old Zoho Contact IDs stored in the ERP supplier record, by calling post instead
-			doc.custom_zoho_contact_id = res.get("custom_zoho_contact_id")
-			#return { "ADDED" }
+		if res:
+			if res.get("custom_zoho_contact_id"):
+				# checks if the API controller handled a non-existing contact,
+				# in case of wrong/old Zoho Contact IDs stored in the ERP supplier record, by calling post instead
+				doc.custom_zoho_contact_id = res.get("custom_zoho_contact_id")
+				#return { "ADDED" }
 
-		else: # put/update response
-			frappe.msgprint("Zoho Books Response: " + res.get("message"))
-			#return { "UPDATED" }
+			else: # put/update response
+				frappe.msgprint("Zoho Books Response: " + res.get("message"))
+				#return { "UPDATED" }
 
 
 @frappe.whitelist()
@@ -2110,7 +2112,7 @@ def update_item_in_zoho(doc, method=None):
 		hsn_or_sac = doc.gst_hsn_code
 
 	if frappe.defaults.get_user_default("company") in (
-		"Pour Tous Distribution Center", "Pour Tous Purchasing Service",
+		"Pour Tous Distribution Center", "Pour Tous Purchasing Service", "Pour Tous Canteen",
 		"Auroville Bakery", "AV Bakery Cafe", "AV Bakery Cafe Townhall"
 	):
 		uom = {
@@ -5113,7 +5115,7 @@ def fetch_new_invoice_number():
 
 
 def void_invoice_in_zoho(doc, method):
-	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center"):
 	#if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):
 		return
 

@@ -39,7 +39,7 @@ frappe.listview_settings['Item'] = {
         }, __("Sales Invoice")); */
 
 
-        listview.page.add_inner_button("Delete ERP Items in ZB", () => {
+        /* listview.page.add_inner_button("Delete ERP Items in ZB", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.custom_fetch_erp_items_list_from_file',
                 async: false,
@@ -79,12 +79,12 @@ frappe.listview_settings['Item'] = {
                     }
                 }
             });
-        }, __("Sync with ZB"));
+        }, __("Sync with ZB")); */
 
 
         listview.page.add_inner_button("Update ERP Items in ZB", () => {
             frappe.call({
-                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.custom_fetch_erp_items_list',
+                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_erp_items_list',
                 async: false,
                 callback: (r) => {
                     if (r.message) {
@@ -96,10 +96,10 @@ frappe.listview_settings['Item'] = {
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.custom_update_erp_item_in_zb',
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.add_erp_item_in_zb',
                                     args: {
                                         erp_item: r.message[i]["name"],
-                                        custom_zoho_item_id: r.message[i]["custom_zoho_item_id"],
+                                        //custom_zoho_item_id: r.message[i]["custom_zoho_item_id"],
                                         //custom_zoho_item_id: r.message[i],
                                         //gst_hsn_code: r.message[i]["gst_hsn_code"],
                                     },

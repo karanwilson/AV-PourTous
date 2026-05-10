@@ -191,11 +191,11 @@ doc_events = {
         "after_insert": "pourtous.api.create_batch_barcode", # Adds a Batch Barcode
         #"before_save": "pourtous.api.verify_batch_qty_for_barcode",
     },
-    "Sales Order": {
+    #"Sales Order": {
         #"before_insert": "pourtous.api.get_sales_tax_template",
         #"before_cancel": "pourtous.api.cancel_stock_reservation", # removes the associated Sales Order Stock Reservation
         #"before_submit": "pourtous.api.make_stock_reservation" # adds stock reservation for the Sales Order
-    },
+    #},
 # 	"*": {
 # 		"on_update": "method",
 # 		"on_cancel": "method",
@@ -350,7 +350,7 @@ fixtures = [
                     "Sales Order Item-custom_batch_no", # for SO Stock reservations
 
                     "Mode of Payment-custom_transaction_fee_percentage", # Card charges
-                    #"Mode of Payment-custom_transaction_fee_account", # ledger account
+                    "Mode of Payment-custom_customer_group", # For MOP-customer_group Linking
 
                     "Customer-custom_fs_account_number", # for FS Transactions
                     "Customer-custom_credit_limit_exception", # for Exception Credit Limit
