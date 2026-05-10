@@ -1207,6 +1207,7 @@ class ZohoBooksAPI(Document):
 				#return r.json().get('invoice').get('invoice_id')
 			else :
 				frappe.msgprint(r.json().get('message'))
+				return r.json()
 				#r.raise_for_status()
 
 
@@ -2662,8 +2663,8 @@ def fetch_erp_bills_list():
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 0 AND custom_zoho_bill_id IS NULL
-			AND posting_date between "2025-06-01" and "2026-03-31"
-			AND bill_date <= "2026-03-31"
+			AND posting_date between "2025-06-01" and "2026-04-30"
+			AND bill_date <= "2026-04-30"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
@@ -3391,7 +3392,7 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 	#frappe.throw(str(data))
 
 	if is_return == '1': # the value comes as a string
-		data["creditnote_number"] = consol_inv_pt_account+"-RT-"+date[5:]
+		data["creditnote_number"] = consol_inv_pt_account+"R-"+date[2:]
 
 		if customer_doc.gst_category == "Registered Regular":
 			data["reference_invoice_type"] = "registered" # used when not referring to a return doc
@@ -3400,12 +3401,14 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 
 		res = api_controller.post_creditnote(data)
 
-		if res.get("message") == "Credit note "+data["creditnote_number"]+" already exists":
-			res2 = api_controller.query_credit_note(data["creditnote_number"])
-			if res2:
-				custom_zb_consol_creditnote_id = res2[0].get("creditnote_id")
-		elif res.get('creditnote_id'):
-			custom_zb_consol_creditnote_id = res.get('creditnote_id')
+		custom_zb_consol_creditnote_id = None
+		if res:
+			if res.get("message") == "Credit note "+data["creditnote_number"]+" already exists":
+				res2 = api_controller.query_credit_note(data["creditnote_number"])
+				if res2:
+					custom_zb_consol_creditnote_id = res2[0].get("creditnote_id")
+			elif res.get('creditnote_id'):
+				custom_zb_consol_creditnote_id = res.get('creditnote_id')
 
 		if custom_zb_consol_creditnote_id:
 			last_invoice = ""
