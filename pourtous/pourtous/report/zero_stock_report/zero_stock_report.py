@@ -52,16 +52,34 @@ def get_columns():
  			"width": "100"
  		},
 		{
-			"fieldname": "store_qty",
-			"label": "Store Qty",
+			"fieldname": "stores_qty",
+			"label": "Stores",
 			"fieldtype": "Float",
-			"width": "100"
+			"width": "90"
 		},
 		{
 			"fieldname": "stall_qty",
-			"label": "Stall Qty",
+			"label": "Stall",
 			"fieldtype": "Float",
-			"width": "100"
+			"width": "80"
+		},
+		{
+			"fieldname": "store_1_qty",
+			"label": "Store1",
+			"fieldtype": "Float",
+			"width": "80"
+		},
+		{
+			"fieldname": "store_2_qty",
+			"label": "Store2",
+			"fieldtype": "Float",
+			"width": "80"
+		},
+		{
+			"fieldname": "store_3_qty",
+			"label": "Store3",
+			"fieldtype": "Float",
+			"width": "80"
 		},
 	]
 
@@ -76,14 +94,35 @@ def get_data():
 			and warehouse like '{0}'
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
-		) AS store_qty,
+		) AS stores_qty,
 		(
 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
 			and warehouse like '{1}'
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
-		) AS stall_qty
+		) AS stall_qty,
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{2}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) AS store_1_qty,
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{3}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) AS store_2_qty,
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{4}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) AS store_3_qty
 		FROM tabItem, `tabItem Supplier`
 		WHERE tabItem.item_code = `tabItem Supplier`.parent
 		AND
@@ -103,8 +142,32 @@ def get_data():
 			order by posting_date desc, posting_time desc, creation desc
 			limit 1
 		) > 0
+		OR
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{2}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) > 0
+		OR
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{3}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) > 0
+		OR
+		(
+			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
+			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
+			and warehouse like '{4}'
+			order by posting_date desc, posting_time desc, creation desc
+			limit 1
+		) > 0
 		)
-		""".format("Stores%", "Stall%"),
+		""".format("Stores%", "Stall%", "Store 1%", "Store 2%", "Store 3%"),
 		as_dict=True
 	)
 
