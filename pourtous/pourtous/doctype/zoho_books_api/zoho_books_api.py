@@ -911,6 +911,8 @@ class ZohoBooksAPI(Document):
 
 
 	def add_attachment_to_bill(self, bill_id, file_name, file_url):
+		from pathlib import Path
+
 		master = "bills"
 		scope = "ZohoBooks.bills.CREATE"
 
@@ -920,29 +922,25 @@ class ZohoBooksAPI(Document):
 
 		authorization = 'Zoho-oauthtoken ' + token_to_use
 
-		attachment = frappe.local.site + file_url
-		#attachment = frappe.local.site + "/public" + file_url
+		#file_url = "/home/ptps/frappe-bench/sites/pourtous-av.in/private/files/"
+		file_to_attach = str(Path.cwd()) + "/" + frappe.local.site + file_url # calculate the absolute path to file
+		content_type = 'application/' + file_name[-3:] # extract the file extension
 
-		with open(attachment, 'rb') as attachment_binary:
-			files=[ ('attachment',(file_name, attachment_binary,'application/pdf')) ]
+		files=[
+			('attachment', (file_name, open(file_to_attach,'rb'), content_type))
+		]
 
-			with requests.Session() as s:
-				s.params = {
-					'organization_id': self.organization_id
-					#'can_send_in_mail': 'false'
-				}
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+			}
 
-				s.headers = {
-					'Authorization': authorization,
-					'content-type': 'multipart/form-data'
-				}
+			s.headers = {
+				'Authorization': authorization,
+			}
 
-				#payload = {}
-
-				r = s.post(api_url, files=files)
-				#frappe.throw(str(r.json()))
-
-				return r.json()
+			r = s.post(api_url, files=files)
+			return r.json()
 
 
 	def delete_attachment_in_bill(self, bill_id):
@@ -966,8 +964,6 @@ class ZohoBooksAPI(Document):
 			}
 
 			r = s.delete(api_url)
-			#frappe.throw(str(r.json()))
-
 			return r.json()
 
 
@@ -2992,12 +2988,6 @@ def fetch_file_attachments_in_bills():
 
 @frappe.whitelist()
 def attach_file_to_bill(file_docname, bill_id, file_name, file_url):
-	#attachment = frappe.local.site + file_url
-	#frappe.throw(attachment)
-	#with open(attachment, 'rb') as attachment_binary:
-		#attachment_binary_string = f.read().decode()
-		#files = {'attachment': attachment_binary}
-
 	api_controller = frappe.get_doc("Zoho Books API")
 	res = api_controller.add_attachment_to_bill(bill_id, file_name, file_url)
 	if res.get("code") == 0:
@@ -3019,7 +3009,7 @@ def delete_attached_file_in_bill(bill_id):
 	api_controller = frappe.get_doc("Zoho Books API")
 	res = api_controller.delete_attachment_in_bill(bill_id)
 	if res.get("code") == 0:
-		return { "ADDED" }
+		return { "DELETED" }
 
 
 @frappe.whitelist()
