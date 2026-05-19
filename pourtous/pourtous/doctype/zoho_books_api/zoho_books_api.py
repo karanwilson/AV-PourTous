@@ -3453,6 +3453,272 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 
 
 @frappe.whitelist()
+def fetch_unsynced_erp_invoice_list():
+	if frappe.defaults.get_user_default("company") == "Auroville Bakery":
+		invoices = frappe.db.sql(
+			"""
+			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status
+			FROM `tabSales Invoice` si
+			WHERE si.docstatus = 1 AND AND status != "Return"
+			AND si.posting_date BETWEEN "2026-04-01" AND "2026-04-02"
+			AND si.custom_zoho_invoice_id IS NULL
+			""",
+			# AND si.posting_date >= "2025-12-23"
+			as_dict=True
+		)
+
+	elif frappe.defaults.get_user_default("company") in (
+		"AV Bakery Cafe", "AV Bakery Cafe Townhall"
+	):
+		invoices = frappe.db.sql(
+			"""
+			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status FROM `tabSales Invoice` si
+			WHERE si.docstatus = 1 AND status != "Return"
+			AND si.custom_zoho_invoice_id IS NULL
+			""",
+			# AND si.posting_date >= "2025-10-01"
+			as_dict=True
+		)
+
+	elif frappe.defaults.get_user_default("company") == "Pour Tous Canteen":
+		invoices = frappe.db.sql(
+			"""
+			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status FROM `tabSales Invoice` si
+			WHERE si.docstatus = 1 AND status != "Return"
+			AND si.custom_zoho_invoice_id IS NULL
+			AND si.posting_date >= "2026-05-01"
+			""",
+			as_dict=True
+		)
+
+	else:
+		invoices = frappe.db.sql(
+			"""
+			SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
+			WHERE docstatus = 1 AND status != "Return"
+			AND custom_zoho_invoice_id IS NULL
+			""",
+			as_dict=True
+		)
+
+	frappe.enqueue(bulk_processing, invoices=invoices, queue="long", is_asyn=False, now=True, at_front=True)
+
+def bulk_processing(invoices):
+	total_count = len(invoices)
+	#frappe.throw(str(invoices))
+	#total_count = 1
+	sent = 0
+	for i in range(total_count):
+		res = sync_inv_with_zoho_books(invoices[i]["name"], invoices[i]["customer"])
+
+		frappe.publish_progress(
+			int((i/total_count)*100),
+			title = "Pushing FS Invoices to Zoho Books",
+			description = f"Pushing {i} of {total_count} bills"
+		)
+		if res == "ADDED":
+			sent += 1
+
+	frappe.publish_progress(100, title="Task Complete", description=f"Pushed {sent} of {total_count}")
+
+
+@frappe.whitelist()
+def sync_inv_with_zoho_books(invoice, customer):
+	api_controller = frappe.get_doc("Zoho Books API")
+	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
+	customer_doc = frappe.get_doc("Customer", customer)
+
+	#AND si.custom_fs_account_number IS NOT NULL # done
+	#AND si.grand_total = si.total_advance
+
+	if customer_doc.customer_type == "Company":
+		customer_id = customer_doc.custom_zoho_contact_id
+
+	elif invoice_doc.custom_fs_account_number:
+		customer_id = api_controller.walk_in_fs_contact_id
+
+	elif invoice_doc.payments[0].mode_of_payment == "Aurocard" or customer_doc.customer_group == "Aurocard Payments":
+		customer_id = api_controller.walk_in_aurocard_contact_id # AVB "Aurocard Customers" in ZB
+
+	elif invoice_doc.payments[0].mode_of_payment in ("UPI", "ICICI UPI") or customer_doc.customer_group == "UPI Payments":
+		customer_id = api_controller.walk_in_upi_contact_id # AVB "UPI Customers" in ZB
+
+	elif invoice_doc.payments[0].mode_of_payment == "Cash" or customer_doc.customer_group == "Cash Payments":
+		customer_id = api_controller.walk_in_cash_contact_id # AVB "Cash Customers" in ZB
+
+	elif invoice_doc.payments[0].mode_of_payment == "Cards" or customer_doc.customer_group == "Card Payments":
+		customer_id = api_controller.walk_in_card_contact_id # AVB "Card Customers" in ZB
+
+	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+
+	if invoice_doc.custom_zoho_invoice_id == None:
+		line_items = []
+
+		for item in invoice_doc.items:
+			item_doc = frappe.get_doc("Item", item.item_code)
+
+			if invoice_doc.taxes:
+				is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
+
+				try:
+					if invoice_doc.company_gstin[:2] == invoice_doc.place_of_supply[:2]: # first 2 chars of gstin are location codes
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_group_id")
+					else:
+						tax_id = frappe.get_value("Item Tax Template", item_doc.taxes[0].item_tax_template, "custom_zoho_tax_igst_id")
+				except Exception as err:
+					frappe.throw(str(err))
+					#msg = "Please verify the Tax-template/ZB-tax_id for Item Code " + item.get("item_code")
+					#frappe.msgprint(msg)
+					#return
+
+				else:
+					line_item = {
+						"item_id": item_doc.custom_zoho_item_id,
+						"name": item.item_name,
+						#"description": item.item_name,
+						"rate": float(item.rate),
+						"quantity": float(item.qty),
+						"discount_amount": float(item.discount_amount),
+						"tax_id": tax_id
+					}
+					line_items.append(line_item)
+
+			else:
+				line_item = {
+					"item_id": item_doc.custom_zoho_item_id,
+					"name": item.item_name,
+					#"description": item.item_name,
+					"rate": float(item.rate),
+					"quantity": float(item.qty),
+					"discount_amount": float(item.discount_amount),
+					"gst_treatment_code": "out_of_scope"
+				}
+				line_items.append(line_item)
+
+		#if not invoice_doc.is_return:
+		invoice_data = {
+			"customer_id": customer_id,
+			"invoice_number": invoice[-16:],
+			"date": date,
+			"discount": float(invoice_doc.discount_amount),
+			"is_discount_before_tax": True,
+			"discount_type": "entity_level",
+			"line_items": line_items,
+		}
+
+		if invoice_doc.custom_fs_account_number:
+			invoice_data["custom_fields"] = [
+				{
+					"index": 1,
+					"label": "cf_fs_account_number",
+					"value": invoice_doc.custom_fs_account_number,
+					"data_type": "text"
+				}
+			]
+
+		elif invoice_doc.payments[0].mode_of_payment == "Aurocard" or customer_doc.customer_group == "Aurocard Payments":
+			invoice_data["custom_fields"] = [
+					{
+						"index": 2,
+						"label": "cf_aurocard_number",
+						"value": invoice_doc.customer_name,
+						"data_type": "text"
+					}
+				]
+
+		elif invoice_doc.payments[0].mode_of_payment in ("UPI", "ICICI UPI") or customer_doc.customer_group == "UPI Payments":
+			invoice_data["custom_fields"] = [
+					{
+						"index": 3,
+						"label": "cf_upi_transaction_id",
+						"value": invoice_doc.custom_upi_transaction_id,
+						"data_type": "text"
+					}
+				]
+
+		elif invoice_doc.payments[0].mode_of_payment in ("Cards", "RuPay") or customer_doc.customer_group == "Card Payments":
+			invoice_data["custom_fields"] = [
+					{
+						"index": 4,
+						"label": "cf_card_transaction_id",
+						"value": invoice_doc.custom_card_transaction_id,
+						"data_type": "text"
+					}
+				]
+
+		if invoice_doc.discount_amount:
+			invoice_data["discount"] = invoice_doc.discount_amount
+			invoice_data["discount_account_id"] = api_controller.sales_discount_account_id
+			if invoice_doc.apply_discount_on == "Grand Total":
+				invoice_data["is_discount_before_tax"] = False
+			else:
+				invoice_data["is_discount_before_tax"] = True
+
+		if invoice_doc.total_advance:
+			invoice_data["adjustment"] = invoice_doc.total_advance
+			invoice_data["adjustment_description"] = "Advance"
+
+		if invoice_doc.taxes:
+			invoice_data["is_inclusive_tax"] = is_inclusive_tax
+
+		if api_controller.location_id:
+			invoice_data["location_id"] = api_controller.location_id
+			if api_controller.organization_id == "60040904218" and api_controller.location_id == "2567347000000219005" and date < "2025-11-05":
+				invoice_data["reference_number"] = invoice[-16:]
+				invoice_data["invoice_number"] = invoice.replace("SINV", "THIN")[-16:]
+
+		# adding delivery charge if any
+		if invoice_doc.posa_delivery_charges:
+			for row in invoice_doc.taxes: # searching in the "Taxes and Charges" table
+				if row.gst_tax_type == None:
+					invoice_data["shipping_charge"] = row.tax_amount
+
+		#frappe.throw(str(invoice_data))
+		if invoice_doc.amended_from:
+			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
+			if void_invoice_id and void_invoice_id is not None:
+				res = api_controller.delete_invoice(void_invoice_id)
+				#frappe.throw(str(res))
+				if res.get("code") != 0:
+					frappe.msgprint(res.get("message"))
+
+		res = api_controller.post_invoice(invoice_data)
+
+		zb_invoice_id = None
+
+		if "invoice_id" in res:
+			zb_invoice_id = res.get("invoice_id")
+
+		elif res.get("message") == ("Invoice "+invoice_data["invoice_number"]+" already exists"):
+			res2 = api_controller.query_invoice(invoice_data["invoice_number"])
+			#frappe.throw(str(res2))
+			if res2:
+				#frappe.throw(res2[0].get("invoice_id"))
+				if api_controller.location_id:
+					if res2[0].get("location_id") == api_controller.location_id:
+						zb_invoice_id = res2[0].get("invoice_id")
+					else:
+						msg = res.get("message") + " for location: " + api_controller.location_name
+						frappe.throw(msg)
+				else:
+					zb_invoice_id = res2[0].get("invoice_id")
+
+		else:
+			frappe.throw(str(res))
+
+		#if "invoice_id" in res:
+		if zb_invoice_id and zb_invoice_id is not None:
+			#zb_invoice_id = res.get('invoice_id')
+			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
+			invoice_doc.save()
+			frappe.db.commit()
+
+			res2 = api_controller.mark_invoice_as_sent(zb_invoice_id)
+			if res2 == "Invoice status has been changed to Sent.":
+				return "ADDED"
+
+
+@frappe.whitelist()
 def fetch_unsynced_erp_fs_invoice_list():
 	if frappe.defaults.get_user_default("company") == "Auroville Bakery":
 		return frappe.db.sql(
