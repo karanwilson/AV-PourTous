@@ -2,15 +2,18 @@ frappe.listview_settings['Sales Invoice'] = {
     refresh(listview) {
 
         listview.page.add_inner_button("Sales Inv to ZB", () => {
-            frappe.call({
-                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_invoice_list',
-                async: false,
-                callback: (r) => {
-                    if (!r.exc) {
-                        frappe.show_alert({message: __('Initiated Background Push of Invoices to Zoho Books'), indicator: 'green'});
-                    }
-                }
-            });
+            frappe.call('pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_invoice_list');
+            frappe.show_alert({message: __('Initiated Background Push of Invoices to Zoho Books'), indicator: 'green'});
+
+            // frappe.call({
+            //     method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_invoice_list',
+            //     async: true,
+            //     callback: (r) => {
+            //         if (!r.exc) {
+            //             frappe.show_alert({message: __('Initiated Background Push of Invoices to Zoho Books'), indicator: 'green'});
+            //         }
+            //     }
+            // });
         }, __("Sync with ZB"));
 
 
@@ -91,15 +94,18 @@ frappe.listview_settings['Sales Invoice'] = {
 
 
         listview.page.add_inner_button("Process FS Credits in background", () => {
-            frappe.call({
-                method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.process_fs_credit_bills',
-                async: false,
-                callback: (r) => {
-                    if (!r.exc) {
-                        frappe.show_alert({message: __('Initiated Background Process of FS Credit Bills'), indicator: 'green'});
-                    }
-                }
-            });
+            frappe.call('payments.payment_gateways.doctype.fs_settings.fs_settings.process_fs_credit_bills');
+            frappe.show_alert({message: __('Initiated Background Process of FS Credit Bills'), indicator: 'green'});
+
+            // frappe.call({
+            //     method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.process_fs_credit_bills',
+            //     async: true,
+            //     callback: (r) => {
+            //         if (!r.exc) {
+            //             frappe.show_alert({message: __('Initiated Background Process of FS Credit Bills'), indicator: 'green'});
+            //         }
+            //     }
+            // });
         }, __("FS Credit Bills"));
 
     }

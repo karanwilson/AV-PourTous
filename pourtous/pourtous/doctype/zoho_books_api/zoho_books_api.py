@@ -3049,6 +3049,17 @@ def fetch_unsynced_erp_return_invoice_list():
 			as_dict=True
 		)
 
+	elif frappe.defaults.get_user_default("company") == "Pour Tous Canteen":
+		invoices = frappe.db.sql(
+			"""
+			SELECT name, customer, docstatus, status FROM `tabSales Invoice`
+			WHERE docstatus = 1 AND status = "Return"
+			AND posting_date >= "2026-05-01"
+			AND custom_zb_creditnote_id IS NULL
+			""",
+			as_dict=True
+		)
+
 	else:
 		return frappe.db.sql(
 			"""
@@ -3501,7 +3512,8 @@ def fetch_unsynced_erp_invoice_list():
 			as_dict=True
 		)
 
-	frappe.enqueue(bulk_processing, invoices=invoices, queue="long", is_asyn=False, now=True, at_front=True)
+	#frappe.enqueue(bulk_processing, invoices=invoices, queue="long", is_async=False, now=True, at_front=True)
+	frappe.enqueue(bulk_processing, invoices=invoices, queue="long", is_async=False, at_front=True)
 
 def bulk_processing(invoices):
 	total_count = len(invoices)
@@ -3511,15 +3523,16 @@ def bulk_processing(invoices):
 	for i in range(total_count):
 		res = sync_inv_with_zoho_books(invoices[i]["name"], invoices[i]["customer"])
 
-		frappe.publish_progress(
-			int((i/total_count)*100),
-			title = "Pushing FS Invoices to Zoho Books",
-			description = f"Pushing {i} of {total_count} bills"
-		)
+		# frappe.publish_progress(
+		# 	int((i/total_count)*100),
+		# 	title = "Pushing FS Invoices to Zoho Books",
+		# 	description = f"Pushing {i} of {total_count} bills"
+		# )
 		if res == "ADDED":
 			sent += 1
 
-	frappe.publish_progress(100, title="Task Complete", description=f"Pushed {sent} of {total_count}")
+	#frappe.publish_progress(100, title="Task Complete", description=f"Pushed {sent} of {total_count}")
+	frappe.msgprint(f"Pushed {sent} of {total_count}")
 
 
 @frappe.whitelist()
