@@ -124,7 +124,11 @@ app_include_js = [
 doc_events = {
     "Sales Invoice": {
         "before_save": "pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.amend_sales_invoice",
-        "on_submit": "pourtous.api.payment_entry_for_return", # creates 'Payment Entry' for item returns
+        # "before_submit": "pourtous.api.make_fs_payment", # for the new FS payments flow
+        "on_submit": [
+            "pourtous.api.make_fs_payment", # for the new FS payments flow
+            "pourtous.api.payment_entry_for_return", # creates 'Payment Entry' for item returns
+        ],
         "before_cancel": [
             #"pourtous.api.verify_cancel_permission", # Shifted to Client (form) script
             "pourtous.api.cancel_payment_entry",
@@ -321,23 +325,23 @@ fixtures = [
                     #"Payment Entry-custom_monthly_contribution", # for PTDC Monthly Balance
                     #"Payment Entry-custom_ptdc_maintenance", # PTDC
 
-                    "Sales Invoice-custom_customer_group", # for categorisation for the 'Mode of Payment'
                     "Sales Invoice-custom_fs_transfer_status", # for POS-Billing FS Transactions
                     "Sales Invoice-custom_fs_account_number", # to Identify Invoice based on FS Account number
-                    "Sales Invoice-custom_transaction_date", # in case transaction date is earlier than the posting date
-                    "Sales Invoice-custom_staff_customer_detail", # in case of FS-accounts shared by a group
+                    "Sales Invoice-custom_fs_transaction_id", # FS payments Integration
 
                     "Sales Invoice-custom_pos_transfer_status", # ICICI POS-UPI Integration
                     "Sales Invoice-custom_upi_transaction_id", # ICICI POS-UPI Integration
                     "Sales Invoice-custom_card_transaction_id", # ICICI POS-UPI Integration
 
+                    "Sales Invoice-custom_transaction_date", # in case transaction date is earlier than the posting date
+                    "Sales Invoice-custom_staff_customer_detail", # in case of FS-accounts shared by a group
+
                     "Sales Invoice-custom_zb_consol_inv_id", # PTDC
                     "Sales Invoice-custom_zoho_invoice_id", # for syncing with Zoho Books
-                    #"Sales Invoice-custom_zoho_payment_id",
                     "Sales Invoice-custom_zb_creditnote_id",
                     "Sales Invoice-custom_zb_consol_creditnote_id",
-                    #"Sales Invoice-custom_zb_creditnote_refund_id",
                     "Sales Invoice-custom_zoho_void_invoice_id",
+
                     "Sales Invoice-custom_token_number", # for AV Bakery
                     "Sales Invoice-custom_is_donation", # for AV Bakery
 
@@ -351,6 +355,8 @@ fixtures = [
 
                     "Mode of Payment-custom_transaction_fee_percentage", # Card charges
                     "Mode of Payment-custom_customer_group", # For MOP-customer_group Linking
+
+                    "Customer Group-custom_mop", # For MOP-customer_group Linking
 
                     "Customer-custom_fs_account_number", # for FS Transactions
                     "Customer-custom_credit_limit_exception", # for Exception Credit Limit
@@ -390,6 +396,9 @@ fixtures = [
                     "Purchase Invoice-custom_zoho_void_bill_id",
 
                     "File-custom_zoho_bill_id", # for Vendor Bill attachments
+
+                    "Purchase Invoice-custom_batch_price_updated", # for updating the price
+                    "Purchase Receipt-custom_batch_price_updated", # for updating the price
 
                     "Purchase Receipt-custom_zoho_bill_id",
                     "Purchase Receipt-custom_zb_vendor_credit_id",

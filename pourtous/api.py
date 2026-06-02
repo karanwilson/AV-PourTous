@@ -4,8 +4,9 @@ from frappe.utils import nowdate, get_first_day #, flt
 
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
-from payments.payment_gateways.doctype.fs_settings.fs_settings import add_transfer_fs_credit_bill
+from payments.payment_gateways.doctype.fs_settings.fs_settings import add_transfer_fs_credit_bill, add_transfer_billing
 
 from stdnum import ean
 
@@ -32,6 +33,44 @@ def set_vendor_bills_unique():
 	pass
 
 
+@frappe.whitelist()
+def fetch_pur_inv_list():
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		return frappe.db.sql(
+			"""
+			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
+			AND is_return = 0 AND posting_date >= "2026-05-25"
+			AND update_stock = 1 AND custom_batch_price_updated = 0
+			""",
+			as_dict=True
+		)
+
+
+@frappe.whitelist()
+def fetch_pur_rec_list():
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		return frappe.db.sql(
+			"""
+			SELECT name FROM `tabPurchase Receipt` WHERE docstatus = 1
+			AND is_return = 0 AND posting_date >= "2026-05-25"
+			AND custom_batch_price_updated = 0
+			""",
+			as_dict=True
+		)
+
+@frappe.whitelist()
+def update_batch_price_pur_inv_rec(doctype, doc_name):
+	doc = frappe.get_doc(doctype, doc_name)
+	for item in doc.items:
+		if item.batch_no:
+			if item.custom_selling_price > 0:
+				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
+			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
+
+	frappe.set_value(doctype, doc_name, 'custom_batch_price_updated', 1)
+	return { "UPDATED" }
+
+
 def pe_fapi_transfer(doc, method):
 	if doc.custom_receive_from_fs_api and doc.mode_of_payment == "FS":
 		if len(doc.references) == 1:
@@ -48,6 +87,69 @@ def pe_fapi_transfer(doc, method):
 				frappe.throw("No Response")
 		else:
 			frappe.throw("Receiving Payment via FS API is configured for a single Invoice/Order only")
+
+
+def make_fs_payment(doc, method):
+	if doc.is_pos == 1 and doc.custom_fs_account_number and doc.outstanding_amount != 0:
+		if doc.is_return:
+			fAmount = doc.grand_total or doc.rounded_total
+		else:
+			fAmount = doc.outstanding_amount
+
+		res = add_transfer_billing(doc.as_json(), fAmount)
+
+		if res:
+			if res['custom_fs_transfer_status'] == "OK":
+				try:
+					#if not invoice_doc.is_return:
+					bank_account = get_bank_cash_account("FS", doc.company)
+
+					pe = get_payment_entry(
+						dt = doc.doctype,
+						dn = doc.name,
+						bank_account = bank_account['account'],
+					)
+					pe.mode_of_payment = "FS"
+					pe.reference_no = res['strDescription']
+					pe.reference_date = nowdate()
+
+					if doc.is_return:
+						pe.paid_amount = pe.received_amount = fAmount
+						pe.payment_type = "Pay"
+
+					pe.custom_fs_transfer_status = "OK - POS"
+					pe.custom_remarks = 1
+					pe.remarks = res['remarks']
+
+					pe.insert(ignore_permissions=True)
+					pe.submit()
+
+				except Exception as err:
+					raise err
+
+				else:
+					frappe.db.set_value('Sales Invoice', doc.name, 'custom_fs_transfer_status', 'OK - POS')
+					frappe.db.set_value('Sales Invoice', doc.name, 'custom_fs_transaction_id', res['strDescription'])
+					existing_remarks = frappe.db.get_value('Sales Invoice', doc.name, 'remarks')
+					if existing_remarks:
+						new_remarks = existing_remarks + "\n-------------\n" + res['remarks']
+						frappe.db.set_value('Sales Invoice', doc.name, 'remarks', new_remarks)
+					else:
+						frappe.db.set_value('Sales Invoice', doc.name, 'remarks', res['remarks'])
+
+			else:
+				frappe.db.set_value('Sales Invoice', doc.name, 'custom_fs_transfer_status', res['custom_fs_transfer_status'])
+				existing_remarks = frappe.db.get_value('Sales Invoice', doc.name, 'remarks')
+				if existing_remarks:
+					new_remarks = existing_remarks + "\n-------------\n" + res['remarks']
+					frappe.db.set_value('Sales Invoice', doc.name, 'remarks', new_remarks)
+				else:
+					frappe.db.set_value('Sales Invoice', doc.name, 'remarks', res['remarks'])
+
+			frappe.db.commit()
+
+		else:
+			frappe.db.set_value('Sales Invoice', doc.name, 'custom_fs_transfer_status', 'Pending')
 
 
 def cancel_payment_entry(doc, method):
@@ -820,30 +922,30 @@ def add_item_barcode(doc, method):
 # 		frappe.throw("Please enter a 'Valuation Rate': it can be the same as Buying or Selling Price")
 
 
-@frappe.whitelist()
-def fetch_batch_list():
-	return frappe.db.sql(
-    	"""
-		select `tabStock Ledger Entry`.item_code,
-		`tabStock Ledger Entry`.batch_no, `tabStock Ledger Entry`.warehouse,
-		SUM(`tabStock Ledger Entry`.actual_qty) as qty, tabBatch.posa_batch_price AS price
-		from `tabStock Ledger Entry`, tabBatch
-		where `tabStock Ledger Entry`.is_cancelled = 0
-		and `tabStock Ledger Entry`.batch_no = tabBatch.name
-		AND tabBatch.batch_qty != 0
-		AND tabBatch.posa_batch_price = 0
-		AND `tabStock Ledger Entry`.batch_no LIKE "PT-BATCH%"
-		group by `tabStock Ledger Entry`.batch_no
-	    """,
-        #as_dict=1,
-    )
+# @frappe.whitelist()
+# def fetch_batch_list():
+# 	return frappe.db.sql(
+#     	"""
+# 		select `tabStock Ledger Entry`.item_code,
+# 		`tabStock Ledger Entry`.batch_no, `tabStock Ledger Entry`.warehouse,
+# 		SUM(`tabStock Ledger Entry`.actual_qty) as qty, tabBatch.posa_batch_price AS price
+# 		from `tabStock Ledger Entry`, tabBatch
+# 		where `tabStock Ledger Entry`.is_cancelled = 0
+# 		and `tabStock Ledger Entry`.batch_no = tabBatch.name
+# 		AND tabBatch.batch_qty != 0
+# 		AND tabBatch.posa_batch_price = 0
+# 		AND `tabStock Ledger Entry`.batch_no LIKE "PT-BATCH%"
+# 		group by `tabStock Ledger Entry`.batch_no
+# 	    """,
+#         #as_dict=1,
+#     )
 
-@frappe.whitelist()
-def sync_batch_prices(batch):
-	batch_price = frappe.db.get_value("Item Price", {"batch_no": batch}, "price_list_rate")
-	if batch_price:
-		frappe.db.set_value("Batch", batch, "posa_batch_price", batch_price)
-		return {"OK"}
+# @frappe.whitelist()
+# def sync_batch_prices(batch):
+# 	batch_price = frappe.db.get_value("Item Price", {"batch_no": batch}, "price_list_rate")
+# 	if batch_price:
+# 		frappe.db.set_value("Batch", batch, "posa_batch_price", batch_price)
+# 		return {"OK"}
 
 
 # called from the Purchase-Order Client-Script 'PO Supplier Item fetch'
@@ -921,49 +1023,6 @@ def supplier_items(supplier):
 	)
 
 	return query
-
-
-# def supplier_batch_items(supplier):
-# 	query = frappe.db.sql(
-# 		"""
-# 		SELECT tabItem.item_code, tabItem.item_name, tabItem.last_purchase_rate AS buying_price,
-# 		`tabPurchase Receipt Item`.qty AS ordered_qty, MAX(`tabPurchase Receipt Item`.creation),
-# 		(
-# 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
-# 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
-# 			and warehouse like '{0}'
-# 			order by posting_date desc, posting_time desc, creation desc
-# 			limit 1
-# 		) AS store_qty,
-# 		(
-# 			select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
-# 			where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
-# 			and warehouse like '{1}'
-# 			order by posting_date desc, posting_time desc, creation desc
-# 			limit 1
-# 		) AS stall_qty,
-# 		(
-# 			select SUM(actual_qty) from `tabStock Ledger Entry`
-# 			where item_code = `tabItem Supplier`.parent
-# 			AND voucher_type = "Sales Invoice"
-# 			AND (month(date(`tabStock Ledger Entry`.posting_date))) = IF(month(curdate())-1, month(curdate())-1, 12)
-# 		) AS sold_last_month, 
-# 		(
-# 			select SUM(actual_qty) from `tabStock Ledger Entry`
-# 			where item_code = `tabItem Supplier`.parent
-# 			AND voucher_type = "Sales Invoice"
-# 			AND (month(date(`tabStock Ledger Entry`.posting_date)) = month(curdate()))
-# 		) AS sold_this_month
-# 		FROM tabItem, `tabPurchase Receipt Item`, `tabItem Supplier`
-# 		WHERE tabItem.has_batch_no = 1
-# 		AND `tabItem Supplier`.supplier = '{2}'
-# 		AND tabItem.item_code = `tabItem Supplier`.parent
-# 		AND `tabPurchase Receipt Item`.item_code = tabItem.item_code
-# 		GROUP BY tabItem.item_code
-# 		""".format("Stores%", "Stall%", supplier),
-# 		as_dict=True
-# 	)
-# 	return query
 
 
 @frappe.whitelist()
@@ -1242,9 +1301,9 @@ def payment_entry_for_return(doc, method):
 		if doc.company != "Pour Tous Distribution Center" and custom_fs_account_number:
 			return
 			#frappe.throw("Returning an Unpaid FS Invoice: please 'cancel-amend(edit)-save-submit' using the 'Sales Invoice' form")
-	# if doc.status == "Return" and (doc.company == "Pour Tous Distribution Center" or 
-	# 							(doc.company == "Pour Tous Purchasing Service" and doc.payments[0].mode_of_payment != 'FS')):
-	#if doc.status == "Return" and frappe.get_value("Sales Invoice", doc.return_against, "custom_fs_transfer_status") != "Insufficient Funds":
+		# if doc.status == "Return" and (doc.company == "Pour Tous Distribution Center" or 
+		# 							(doc.company == "Pour Tous Purchasing Service" and doc.payments[0].mode_of_payment != 'FS')):
+		#if doc.status == "Return" and frappe.get_value("Sales Invoice", doc.return_against, "custom_fs_transfer_status") != "Insufficient Funds":
 		# Check below whether all the MOP have amount == 0
 		mop_cash_list = [
         	i.mode_of_payment
@@ -1282,60 +1341,3 @@ def payment_entry_for_return(doc, method):
 		frappe.flags.ignore_account_permission = True
 		advance_payment_entry.insert()
 		advance_payment_entry.submit()
-
-
-""" def delete_item_batch(doc, method):
-	for item in doc.items:
-		if item.batch_no:
-			frappe.delete_doc('Batch', item.batch_no) """
-
-""" def delete_item_price(doc, method):
-	for item in doc.items:
-		if item.batch_no:
-			item_price_name = frappe.get_list('Item Price', filters = {"batch_no": item.batch_no})	# returns a list of dicts (key value pairs)
-			frappe.delete_doc('Item Price', item_price_name[0].name)	# item_price_name[0].name extracts the value of key 'name' """
-
-# was called from Customer Client-Script 'Sync FS Accounts'
-""" @frappe.whitelist()
-def sync_fs_accounts():
-	#with open('customer_import.txt', 'w') as file:
-	#	file.write(str("inside validate_customer_imports"))
-	#frappe.throw("inside validate_customer_imports")
-
-	fs_account_records = frappe.get_all("FS Account Details", pluck='name')
-
-	for record in fs_account_records:
-		fs_account_doc = frappe.get_doc("FS Account Details", record)
-		existing_customer_id = frappe.get_value("Customer", {"custom_fs_account_number": fs_account_doc.account_number}, "name")
-
-		if existing_customer_id:
-			if fs_account_doc.account_type == 3:
-				frappe.db.set_value("Customer", existing_customer_id, "custom_fs_kind_account_3", 1)
-			elif fs_account_doc.account_type == 4:
-				frappe.db.set_value("Customer", existing_customer_id, "custom_fs_cash_account_4", 1)
-
-		elif fs_account_doc.account_type == 3:
-			new_customer_doc = frappe.get_doc({
-				"doctype": "Customer",
-				"customer_name": fs_account_doc.account_name,
-				"custom_fs_account_number": fs_account_doc.account_number,
-				"custom_fs_kind_account_3": 1,
-				"disabled": fs_account_doc.disabled,
-				"territory": "India",
-				"customer_type": "Individual",
-				"customer_group": "Individual"
-			})
-			new_customer_doc.save()
-
-		elif fs_account_doc.account_type == 4:
-			new_customer_doc = frappe.get_doc({
-				"doctype": "Customer",
-				"customer_name": fs_account_doc.account_name,
-				"custom_fs_account_number": fs_account_doc.account_number,
-				"custom_fs_cash_account_4": 1,
-				"disabled": fs_account_doc.disabled,
-				"territory": "India",
-				"customer_type": "Individual",
-				"customer_group": "Individual"
-			})
-			new_customer_doc.save() """

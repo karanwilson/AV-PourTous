@@ -8,6 +8,26 @@ frappe.ui.form.on('Sales Invoice', {
     //         frappe.throw(__("Please submit Sales Invoices from the POS"));
 	// },
 
+	custom_fs_account_number(frm) {
+		if (!frm.doc.customer) {
+			frappe.call({
+				method: 'pourtous.api.set_customer_from_fs_account',
+				args: { 'custom_fs_account_number': frm.doc.custom_fs_account_number },
+				callback: (r) => {
+					frm.set_value('customer', r.message);
+				}
+			});
+		}
+	},
+
+	customer(frm) {
+		frm.set_value('update_stock', 1);
+		frm.set_value('set_warehouse', 'Stall - PTPS');
+		frm.refresh_field("update_stock");
+		frm.refresh_field("set_warehouse");
+	},
+
+
 	before_submit(frm) {
 		if (!frm.doc.amended_from) {
 			if (frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service") {
