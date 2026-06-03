@@ -90,7 +90,11 @@ def pe_fapi_transfer(doc, method):
 
 
 def make_fs_payment(doc, method):
-	if doc.is_pos == 1 and doc.custom_fs_account_number and doc.outstanding_amount != 0:
+	# bypass hook for: non-POS, non FS-customer, non-Credit-customer and paid Invoices and offline billing
+	if (
+		doc.is_pos == 1 and doc.custom_fs_account_number and doc.customer_group != "Credit Customers"
+		and doc.outstanding_amount != 0 and doc.custom_fs_transfer_status != "Billed Offline"
+	):
 		if doc.is_return:
 			fAmount = doc.grand_total or doc.rounded_total
 		else:
