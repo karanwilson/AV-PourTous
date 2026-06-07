@@ -1302,7 +1302,7 @@ def stock_entry_update_price_lists(doc, method):
 def payment_entry_for_return(doc, method):
 	if doc.status == "Return":
 		custom_fs_account_number = frappe.db.get_value("Sales Invoice", doc.return_against, "custom_fs_account_number")
-		if doc.company != "Pour Tous Distribution Center" and custom_fs_account_number:
+		if doc.company != "Pour Tous Distribution Center" and custom_fs_account_number is not None:
 			return
 			#frappe.throw("Returning an Unpaid FS Invoice: please 'cancel-amend(edit)-save-submit' using the 'Sales Invoice' form")
 		# if doc.status == "Return" and (doc.company == "Pour Tous Distribution Center" or 

@@ -1410,6 +1410,36 @@ class ZohoBooksAPI(Document):
 			# r.raise_for_status()
 
 
+	def query_credit_note(self, creditnote_number=None):
+		master = "creditnotes"
+		scope='ZohoBooks.creditnotes.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/creditnotes?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'creditnote_number': creditnote_number
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get("code") == 0:
+				return r.json().get('creditnotes')
+			else:
+				frappe.msgprint(r.json().get('message'))
+			# r.raise_for_status()
+
+
 	def get_an_invoice(self, invoice_id):
 		master = "invoices"
 		scope='ZohoBooks.invoices.READ'
@@ -2831,7 +2861,9 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 	if bill_doc.taxes:
 		data['is_inclusive_tax'] = is_inclusive_tax
 
-	if bill_doc.discount_amount:
+	discount_adjustment = 0
+
+	if bill_doc.discount_amount > 0:
 		data['discount'] = bill_doc.discount_amount
 		data['discount_account_id'] = api_controller.purchase_discount_account_id
 		if bill_doc.apply_discount_on == "Grand Total":
@@ -2839,9 +2871,17 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		else:
 			data['is_discount_before_tax'] = True
 
+	elif bill_doc.discount_amount < 0:
+		discount_adjustment = bill_doc.discount_amount
+
 	if bill_doc.rounding_adjustment:
-		data['adjustment'] = bill_doc.rounding_adjustment
-		data['adjustment_description'] = 'Rounding'
+		if discount_adjustment < 0:
+			data['adjustment'] = discount_adjustment + bill_doc.rounding_adjustment
+			data['adjustment_description'] = 'Discount-Rounding'
+
+		else :
+			data['adjustment'] = bill_doc.rounding_adjustment
+			data['adjustment_description'] = 'Rounding'
 
 	if bill_doc.is_return and bill_doc.custom_zb_vendor_credit_id == None:
 		if bill_doc.bill_no:
@@ -3084,11 +3124,55 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 		is_inclusive_tax = True if invoice_doc.taxes[0].included_in_print_rate else False
 
 	customer_doc = frappe.get_doc("Customer", customer)
+	pos_mop_type = None
 
 	if customer_doc.customer_type == "Company":
-		fs_customer_id = customer_doc.custom_zoho_contact_id
+		customer_id = customer_doc.custom_zoho_contact_id
+
+	elif invoice_doc.custom_fs_account_number:
+		customer_id = api_controller.walk_in_fs_contact_id
+
+	elif invoice_doc.payments:
+		# frappe.throw("elif invoice_doc.payments:")
+		if invoice_doc.payments[0].mode_of_payment == "Aurocard" or customer_doc.customer_group == "Aurocard Payments":
+			customer_id = api_controller.walk_in_aurocard_contact_id # PT/AVB "Aurocard Customers" in ZB
+			pos_mop_type = "Aurocard"
+
+		elif invoice_doc.payments[0].mode_of_payment in ("UPI", "ICICI UPI") or customer_doc.customer_group == "UPI Payments":
+			customer_id = api_controller.walk_in_upi_contact_id # PT/AVB "UPI Customers" in ZB
+			pos_mop_type = "UPI"
+
+		elif invoice_doc.payments[0].mode_of_payment == "Cash" or customer_doc.customer_group == "Cash Payments":
+			customer_id = api_controller.walk_in_cash_contact_id # AVB "Cash Customers" in ZB
+
+		elif invoice_doc.payments[0].mode_of_payment == "Cards" or customer_doc.customer_group == "Card Payments":
+			customer_id = api_controller.walk_in_card_contact_id # PT/AVB "Card Customers" in ZB
+			pos_mop_type = "Card"
+
+		elif invoice_doc.payments[0].mode_of_payment in ("Debit Card", "RuPay") or customer_doc.customer_group in ("Debit Card Payments", "RuPay Card Payments"):
+			customer_id = api_controller.walk_in_debit_card_contact_id # PT "Debit Card Customers" in ZB
+			pos_mop_type = "Card"
+
 	else:
-		fs_customer_id = api_controller.walk_in_fs_contact_id
+		# frappe.throw("else:")
+		if customer_doc.customer_group == "Aurocard Payments":
+			customer_id = api_controller.walk_in_aurocard_contact_id # PT/AVB "Aurocard Customers" in ZB
+			pos_mop_type = "Aurocard"
+
+		elif customer_doc.customer_group == "UPI Payments":
+			customer_id = api_controller.walk_in_upi_contact_id # PT/AVB "UPI Customers" in ZB
+			pos_mop_type = "UPI"
+
+		elif customer_doc.customer_group == "Cash Payments":
+			customer_id = api_controller.walk_in_cash_contact_id # AVB "Cash Customers" in ZB
+
+		elif customer_doc.customer_group == "Card Payments":
+			customer_id = api_controller.walk_in_card_contact_id # PT/AVB "Card Customers" in ZB
+			pos_mop_type = "Card"
+
+		elif customer_doc.customer_group in ("Debit Card Payments", "RuPay Card Payments"):
+			customer_id = api_controller.walk_in_debit_card_contact_id # PT "Debit Card Customers" in ZB
+			pos_mop_type = "Card"
 
 	if customer_doc.gst_category == "Registered Regular":
 		reference_invoice_type = "registered" # used when not referring to a return doc
@@ -3131,96 +3215,55 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 		creditnote_data = {}
 		zb_inv_id = None
 
-		if invoice_doc.custom_fs_account_number:
-			creditnote_data = {
-				'customer_id': fs_customer_id, # "FS Account Customers" in ZB
-				'creditnote_number': invoice,
-				'date': date,
-				#'location_id': api_controller.location_id,
-				#"is_inclusive_tax": is_inclusive_tax,
-				"custom_fields": [
-					{
-						"index": 1,
-						"label": "cf_fs_account_number",
-						"value": invoice_doc.custom_fs_account_number,
-						"data_type": "text"
-					}
-				],
-				"line_items": line_items,
-				#"invoice_id": zb_inv_id
-			}
+		creditnote_data = {
+			"customer_id": customer_id,
+			"creditnote_number": invoice[-16:],
+			"date": date,
+			"discount": float(invoice_doc.discount_amount),
+			"is_discount_before_tax": True,
+			"discount_type": "entity_level",
+			"line_items": line_items,
+		}
 
-		#elif customer_group == "Aurocard Payments":
-		elif invoice_doc.payments[0].mode_of_payment == "Aurocard":
-			creditnote_data = {
-				'customer_id': api_controller.walk_in_aurocard_contact_id, # "Aurocard Customers" in ZB
-				'creditnote_number': invoice,
-				'date': date,
-				#'location_id': api_controller.location_id,
-				#"is_inclusive_tax": is_inclusive_tax,
-				"custom_fields": [
+		if invoice_doc.custom_fs_account_number:
+			creditnote_data["custom_fields"] = [
+				{
+					"index": 1,
+					"label": "cf_fs_account_number",
+					"value": invoice_doc.custom_fs_account_number,
+					"data_type": "text"
+				}
+			]
+
+		elif pos_mop_type == "Aurocard":
+			creditnote_data["custom_fields"] = [
 					{
 						"index": 2,
 						"label": "cf_aurocard_number",
 						"value": invoice_doc.customer_name,
 						"data_type": "text"
 					}
-				],
-				"line_items": line_items,
-				#"invoice_id": zb_inv_id
-			}
+				]
 
-		#elif customer_group == "UPI Payments":
-		elif invoice_doc.payments[0].mode_of_payment in ("UPI", "ICICI UPI"):
-			creditnote_data = {
-				'customer_id': api_controller.walk_in_upi_contact_id, # "UPI Customers" in ZB
-				'creditnote_number': invoice,
-				'date': date,
-				#'location_id': api_controller.location_id,
-				#"is_inclusive_tax": is_inclusive_tax,
-				"custom_fields": [
+		elif pos_mop_type == "UPI":
+			creditnote_data["custom_fields"] = [
 					{
 						"index": 3,
 						"label": "cf_upi_transaction_id",
 						"value": invoice_doc.custom_upi_transaction_id,
 						"data_type": "text"
 					}
-				],
-				"line_items": line_items,
-				#"invoice_id": zb_inv_id
-			}
+				]
 
-		#elif customer_group == "Card Payments":
-		elif invoice_doc.payments[0].mode_of_payment in ("Cards", "RuPay"):
-			creditnote_data = {
-				'customer_id': api_controller.walk_in_card_contact_id, # "UPI Customers" in ZB
-				'creditnote_number': invoice,
-				'date': date,
-				#'location_id': api_controller.location_id,
-				#"is_inclusive_tax": is_inclusive_tax,
-				"custom_fields": [
+		elif pos_mop_type == "Card":
+			creditnote_data["custom_fields"] = [
 					{
 						"index": 4,
 						"label": "cf_card_transaction_id",
 						"value": invoice_doc.custom_card_transaction_id,
 						"data_type": "text"
 					}
-				],
-				"line_items": line_items,
-				#"invoice_id": zb_inv_id
-			}
-
-		#elif customer_group == "Cash Payments":
-		elif invoice_doc.payments[0].mode_of_payment == "Cash":
-			creditnote_data = {
-				'customer_id': api_controller.walk_in_cash_contact_id, # "Cash Customers" in ZB
-				'creditnote_number': invoice,
-				'date': date,
-				#'location_id': api_controller.location_id,
-				#"is_inclusive_tax": is_inclusive_tax,
-				"line_items": line_items,
-				#"invoice_id": zb_inv_id
-			}
+				]
 
 		if api_controller.location_id:
 			creditnote_data['location_id'] = api_controller.location_id
@@ -3254,11 +3297,18 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 				creditnote_data['is_discount_before_tax'] = True
 
 		# for Returns
+
 		zb_inv_id = frappe.get_value("Sales Invoice", invoice_doc.return_against, "custom_zoho_invoice_id")
-		if not zb_inv_id:
+		if invoice_doc.return_against and not zb_inv_id:
 			frappe.msgprint("Return Invoice '{0}' does not have a ZB Invoice ID".format(invoice_doc.name))
 			creditnote_data["reference_invoice_type"] = reference_invoice_type
 			creditnote_data["reference_number"] = invoice_doc.return_against
+			creditnote_data["reason_for_creditnote"] = "sales_return"
+
+		if not invoice_doc.return_against: # returns without an Invoice
+			frappe.msgprint("Return Invoice '{0}' was returned without a reference Invoice".format(invoice_doc.name))
+			creditnote_data["reference_invoice_type"] = reference_invoice_type
+			creditnote_data["reason_for_creditnote"] = "sales_return"
 
 		else:
 			creditnote_data['invoice_id'] = zb_inv_id
@@ -3506,7 +3556,7 @@ def fetch_unsynced_erp_invoice_list():
 		invoices = frappe.db.sql(
 			"""
 			SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
-			WHERE docstatus = 1 AND status != "Return"
+			WHERE docstatus = 1 AND status != "Return" AND name != "IN-09-25-36821"
 			AND custom_zoho_invoice_id IS NULL
 			""",
 			as_dict=True
@@ -3540,9 +3590,9 @@ def sync_inv_with_zoho_books(invoice, customer):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	customer_doc = frappe.get_doc("Customer", customer)
+	# frappe.throw(invoice)
 
-	#AND si.custom_fs_account_number IS NOT NULL # done
-	#AND si.grand_total = si.total_advance
+	pos_mop_type = None
 
 	if customer_doc.customer_type == "Company":
 		customer_id = customer_doc.custom_zoho_contact_id
@@ -3550,17 +3600,49 @@ def sync_inv_with_zoho_books(invoice, customer):
 	elif invoice_doc.custom_fs_account_number:
 		customer_id = api_controller.walk_in_fs_contact_id
 
-	elif invoice_doc.payments[0].mode_of_payment == "Aurocard" or customer_doc.customer_group == "Aurocard Payments":
-		customer_id = api_controller.walk_in_aurocard_contact_id # AVB "Aurocard Customers" in ZB
+	elif invoice_doc.payments:
+		# frappe.throw("elif invoice_doc.payments:")
+		if invoice_doc.payments[0].mode_of_payment == "Aurocard" or customer_doc.customer_group == "Aurocard Payments":
+			customer_id = api_controller.walk_in_aurocard_contact_id # PT/AVB "Aurocard Customers" in ZB
+			pos_mop_type = "Aurocard"
 
-	elif invoice_doc.payments[0].mode_of_payment in ("UPI", "ICICI UPI") or customer_doc.customer_group == "UPI Payments":
-		customer_id = api_controller.walk_in_upi_contact_id # AVB "UPI Customers" in ZB
+		elif invoice_doc.payments[0].mode_of_payment in ("UPI", "ICICI UPI") or customer_doc.customer_group == "UPI Payments":
+			customer_id = api_controller.walk_in_upi_contact_id # PT/AVB "UPI Customers" in ZB
+			pos_mop_type = "UPI"
 
-	elif invoice_doc.payments[0].mode_of_payment == "Cash" or customer_doc.customer_group == "Cash Payments":
-		customer_id = api_controller.walk_in_cash_contact_id # AVB "Cash Customers" in ZB
+		elif invoice_doc.payments[0].mode_of_payment == "Cash" or customer_doc.customer_group == "Cash Payments":
+			customer_id = api_controller.walk_in_cash_contact_id # AVB "Cash Customers" in ZB
 
-	elif invoice_doc.payments[0].mode_of_payment == "Cards" or customer_doc.customer_group == "Card Payments":
-		customer_id = api_controller.walk_in_card_contact_id # AVB "Card Customers" in ZB
+		elif invoice_doc.payments[0].mode_of_payment == "Cards" or customer_doc.customer_group == "Card Payments":
+			customer_id = api_controller.walk_in_card_contact_id # PT/AVB "Card Customers" in ZB
+			pos_mop_type = "Card"
+
+		elif invoice_doc.payments[0].mode_of_payment in ("Debit Card", "RuPay") or customer_doc.customer_group in ("Debit Card Payments", "RuPay Card Payments"):
+			customer_id = api_controller.walk_in_debit_card_contact_id # PT "Debit Card Customers" in ZB
+			pos_mop_type = "Card"
+
+	else:
+		# frappe.throw("else:")
+		if customer_doc.customer_group == "Aurocard Payments":
+			customer_id = api_controller.walk_in_aurocard_contact_id # PT/AVB "Aurocard Customers" in ZB
+			pos_mop_type = "Aurocard"
+
+		elif customer_doc.customer_group == "UPI Payments":
+			customer_id = api_controller.walk_in_upi_contact_id # PT/AVB "UPI Customers" in ZB
+			pos_mop_type = "UPI"
+
+		elif customer_doc.customer_group == "Cash Payments":
+			customer_id = api_controller.walk_in_cash_contact_id # AVB "Cash Customers" in ZB
+
+		elif customer_doc.customer_group == "Card Payments":
+			customer_id = api_controller.walk_in_card_contact_id # PT/AVB "Card Customers" in ZB
+			pos_mop_type = "Card"
+
+		elif customer_doc.customer_group in ("Debit Card Payments", "RuPay Card Payments"):
+			customer_id = api_controller.walk_in_debit_card_contact_id # PT "Debit Card Customers" in ZB
+			pos_mop_type = "Card"
+
+	# frappe.throw(customer_id)
 
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
@@ -3629,7 +3711,7 @@ def sync_inv_with_zoho_books(invoice, customer):
 				}
 			]
 
-		elif invoice_doc.payments[0].mode_of_payment == "Aurocard" or customer_doc.customer_group == "Aurocard Payments":
+		elif pos_mop_type == "Aurocard":
 			invoice_data["custom_fields"] = [
 					{
 						"index": 2,
@@ -3639,7 +3721,7 @@ def sync_inv_with_zoho_books(invoice, customer):
 					}
 				]
 
-		elif invoice_doc.payments[0].mode_of_payment in ("UPI", "ICICI UPI") or customer_doc.customer_group == "UPI Payments":
+		elif pos_mop_type == "UPI":
 			invoice_data["custom_fields"] = [
 					{
 						"index": 3,
@@ -3649,7 +3731,7 @@ def sync_inv_with_zoho_books(invoice, customer):
 					}
 				]
 
-		elif invoice_doc.payments[0].mode_of_payment in ("Cards", "RuPay") or customer_doc.customer_group == "Card Payments":
+		elif pos_mop_type == "Card":
 			invoice_data["custom_fields"] = [
 					{
 						"index": 4,
