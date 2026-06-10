@@ -90,7 +90,10 @@ def pe_fapi_transfer(doc, method):
 
 
 def make_fs_payment(doc, method):
-	# bypass hook for: non-POS, non FS-customer, non-Credit-customer and paid Invoices and offline billing
+	# bypass hook for: non-POS, non FS-customer, non-Credit-customer, paid Invoices, offline billing and PTDC
+	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
+		return
+
 	if (
 		doc.is_pos == 1 and doc.custom_fs_account_number and doc.customer_group != "Credit Customers"
 		and doc.outstanding_amount != 0 and doc.custom_fs_transfer_status != "Billed Offline"
