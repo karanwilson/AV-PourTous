@@ -137,7 +137,7 @@ doc_events = {
 	},
     "Integration Request": {
         "before_insert": "payments.payment_gateways.doctype.fs_settings.fs_settings.verify_existing_integration_request",
-        #"before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.verify_existing_integration_request",
+        "before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.verify_existing_integration_request",
     },
     "Payment Entry": {
         #"before_validate": "pourtous.api.pe_before_validate",

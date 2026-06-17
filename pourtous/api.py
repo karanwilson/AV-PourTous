@@ -71,6 +71,89 @@ def update_batch_price_pur_inv_rec(doctype, doc_name):
 	return { "UPDATED" }
 
 
+@frappe.whitelist()
+def fetch_si_with_missing_tax():
+	query = frappe.get_all('Sales Invoice', filters={
+		"taxes_and_charges": "",
+		"posting_date": ("between", ["2026-05-14", "2026-05-31"]),
+		"docstatus": 1,
+		"status": ("NOT IN", ["Credit Note Issued"]),
+		"billing_address_gstin": None,
+		"title": ("NOT LIKE", "PTPS%")
+		},
+		fields = ["name", "posting_date", "docstatus", "status", "taxes_and_charges"]
+	)
+
+	return query
+
+
+@frappe.whitelist()
+def cancel_amend_taxes_si(invoice):
+	try:
+		invoice_doc = frappe.get_doc("Sales Invoice", invoice)
+		if invoice_doc.grand_total == 2200:
+			return # skipping the lunch scheme collection, as clarity is needed for it
+
+		if not invoice_doc.payments and invoice_doc.status == "Paid": # Invoices paid via Payment Entry
+			pe = frappe.get_value("Payment Entry Reference", {"reference_name": invoice}, "parent")
+			if pe:
+				pe_doc = frappe.get_doc("Payment Entry", pe)
+
+				if pe_doc.paid_amount == 2200 or len(pe_doc.references) > 1: # don't cancel the lunch schemes - these amended Invoices can be relinked to them
+					return
+				pe_ref = pe_doc.references
+
+				invoice_doc.cancel()
+				invoice_doc_new = frappe.copy_doc(invoice_doc)
+				invoice_doc_new.amended_from = invoice_doc.name
+				# invoice_doc_new.customer_address = frappe.get_value("Customer", invoice_doc.customer, "customer_primary_address")
+				invoice_doc_new.run_method("set_missing_values")
+
+				invoice_doc_new.is_pos = 0
+				invoice_doc_new.run_method("calculate_taxes_and_totals")
+				invoice_doc_new.posa_client_request_id = None
+				invoice_doc_new.save()
+				invoice_doc_new.submit()
+
+				pe_doc.reload()
+				pe_doc.cancel()
+				pe_doc_new = frappe.copy_doc(pe_doc)
+				pe_doc_new.amended_from = pe_doc.name
+				pe_doc_new.references = pe_ref
+				pe_doc_new.references[0].reference_name = invoice_doc_new.name
+				pe_doc_new.save()
+				pe_doc_new.submit()
+
+		elif not invoice_doc.payments or not invoice_doc.status == "Paid": # insufficient funds and offline mode invoices
+			invoice_doc.cancel()
+			invoice_doc_new = frappe.copy_doc(invoice_doc)
+			invoice_doc_new.amended_from = invoice_doc.name
+			# invoice_doc_new.customer_address = frappe.get_value("Customer", invoice_doc.customer, "customer_primary_address")
+			invoice_doc_new.run_method("set_missing_values")
+			invoice_doc_new.is_pos = 0
+			invoice_doc_new.run_method("calculate_taxes_and_totals")
+			invoice_doc_new.posa_client_request_id = None
+			invoice_doc_new.save()
+			invoice_doc_new.submit()
+
+		else:
+			invoice_doc.cancel()
+			invoice_doc_new = frappe.copy_doc(invoice_doc)
+			invoice_doc_new.amended_from = invoice_doc.name
+			# invoice_doc_new.customer_address = frappe.get_value("Customer", invoice_doc.customer, "customer_primary_address")
+			invoice_doc_new.run_method("set_missing_values")
+			invoice_doc_new.payments = invoice_doc.payments
+			invoice_doc_new.run_method("calculate_taxes_and_totals")
+			invoice_doc_new.posa_client_request_id = None
+			invoice_doc_new.save()
+			invoice_doc_new.submit()
+
+	except Exception as err:
+		raise err
+	else:
+		return "ADDED"
+
+
 def pe_fapi_transfer(doc, method):
 	if doc.custom_receive_from_fs_api and doc.mode_of_payment == "FS":
 		if len(doc.references) == 1:
@@ -91,7 +174,7 @@ def pe_fapi_transfer(doc, method):
 
 def make_fs_payment(doc, method):
 	# bypass hook for: non-POS, non FS-customer, non-Credit-customer, paid Invoices, offline billing and PTDC
-	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
+	if frappe.defaults.get_user_default("company") in ("Pour Tous Distribution Center", "Pour Tous Canteen"):
 		return
 
 	if (
