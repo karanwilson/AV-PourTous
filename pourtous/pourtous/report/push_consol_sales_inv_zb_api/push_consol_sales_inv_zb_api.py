@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _, msgprint
-
+from pourtous.pourtous.doctype.zoho_books_api.zoho_books_api import sync_pt_consol_inv_with_zb
 
 def execute(filters=None):
 	if not (filters.from_date and filters.to_date): # don't execute until filters are set
@@ -134,4 +134,23 @@ def get_participant_monthly_distribution(from_date, to_date, custom_fs_account_n
 			else:
 				cust_consol_inv_dict[consol_inv_id] = [consol_list_dict_erp[i]]
 
-		return cust_consol_inv_dict
+		frappe.enqueue(
+			bulk_processing, cust_consol_inv_dict=cust_consol_inv_dict, to_date=to_date, is_return=is_return,
+			queue="long", timeout=6000, is_async=False, at_front=True
+		)
+
+def bulk_processing(cust_consol_inv_dict, to_date, is_return):
+		length = len(cust_consol_inv_dict)
+		count = 1
+
+		for key in cust_consol_inv_dict:
+			# frappe.throw(key)
+			# frappe.throw(str(cust_consol_inv_dict[key]))
+			message = "Adding "+str(count)+" of "+str(length)
+			frappe.publish_progress((count / length) * 100,	title="Pushing Consolidated Invoices to Zoho Books", description=message)
+
+			res = sync_pt_consol_inv_with_zb(key, cust_consol_inv_dict[key], to_date, is_return)
+			if res == "ADDED":
+				count += 1
+
+		return "Completed"

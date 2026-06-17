@@ -1079,7 +1079,7 @@ class ZohoBooksAPI(Document):
 			# r.raise_for_status()
 
 
-	def post_vendor_credit(self, data):
+	def post_vendor_credit(self, data, return_against_bill_id=None):
 		master = "vendorcredit"
 		scope='ZohoBooks.debitnotes.CREATE'
 
@@ -1091,7 +1091,8 @@ class ZohoBooksAPI(Document):
 
 		with requests.Session() as s:
 			s.params = {
-				'organization_id': self.organization_id
+				'organization_id': self.organization_id,
+				'bill_id': return_against_bill_id
 			}
 
 			s.headers = {
@@ -2684,20 +2685,20 @@ def fetch_erp_bills_list():
 	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
 
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
-		return frappe.db.sql(
+		bills = frappe.db.sql(
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 0 AND custom_zoho_bill_id IS NULL
-			AND posting_date between "2025-06-01" and "2026-04-30"
-			AND bill_date <= "2026-04-30"
+			AND posting_date between "2025-06-01" and "2026-05-31"
+			AND bill_date <= "2026-05-31"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
 		)
 
 	elif frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
-		return frappe.db.sql(
+		bills = frappe.db.sql(
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
@@ -2708,12 +2709,16 @@ def fetch_erp_bills_list():
 			as_dict=True
 		)
 
+	# add_erp_bills_debitnotes_in_zb(bills)
+	frappe.enqueue(add_erp_bills_debitnotes_in_zb, bills=bills, queue="long", timeout=6000, is_async=False, at_front=True)
+
+
 @frappe.whitelist()
 def fetch_erp_debitnotes_list():
 	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
 
 	if frappe.defaults.get_user_default("company") == "Pour Tous Distribution Center":
-		return frappe.db.sql(
+		bills = frappe.db.sql(
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
@@ -2725,7 +2730,7 @@ def fetch_erp_debitnotes_list():
 		)
 
 	elif frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
-		return frappe.db.sql(
+		bills = frappe.db.sql(
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
@@ -2736,8 +2741,34 @@ def fetch_erp_debitnotes_list():
 			as_dict=True
 		)
 
+	# add_erp_bills_debitnotes_in_zb(bills)
+	frappe.enqueue(add_erp_bills_debitnotes_in_zb, bills=bills, queue="long", timeout=6000, is_async=False, at_front=True)
+
+
+def add_erp_bills_debitnotes_in_zb(bills):
+	total_count = len(bills)
+	# total_count = 2
+	# frappe.throw(str(bills))
+	added = 1
+
+	for i in range(total_count):
+		res = add_erp_bill_debitnote_in_zoho(bills[i]["name"])
+		if res == "ADDED":
+			added += 1
+		# message = "Adding "+str(added)+" of "+str(total_count)
+
+		frappe.publish_progress(
+			int((added/total_count)*100),
+			title = "Pushing Bills to Zoho Books",
+			description = f"Pushing {added} of {total_count} bills"
+		)
+
+	frappe.msgprint(f"Pushed {added} of {total_count}")
+	# return "Completed"
+
+
 @frappe.whitelist()
-def add_erp_bills_debitnotes_in_zoho(bill):
+def add_erp_bill_debitnote_in_zoho(bill):
 	#bill_doc = frappe.get_doc("Purchase Receipt", bill)
 	bill_doc = frappe.get_doc("Purchase Invoice", bill)
 
@@ -2886,8 +2917,11 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 	if bill_doc.is_return and bill_doc.custom_zb_vendor_credit_id == None:
 		if bill_doc.bill_no is not None:
 			data["vendor_credit_number"] = bill_doc.bill_no[:16] # Old optional/non-unique Supplier/Vendor Bill Number
+		# elif bill_doc.custom_bill_id:
+		# 	data["vendor_credit_number"] = bill_doc.custom_bill_id[:16] # New Mandatory unique Supplier Bill Id
 		else:
-			data["vendor_credit_number"] = bill_doc.custom_bill_id[:16] # New Mandatory unique Supplier Bill Id
+			bill_doc.custom_bill_id = bill_doc.name # custom_bill_id is Mandatory & unique
+			data["vendor_credit_number"] = bill_doc.name
 
 		data["reference_invoice_type"] = reference_invoice_type
 
@@ -2899,7 +2933,8 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 		if bill_doc.return_against:
 			return_against_bill_id = frappe.get_value("Purchase Invoice", bill_doc.return_against, "custom_zoho_bill_id")
 			if not return_against_bill_id:
-				frappe.throw("Please push the linked Purchase Invoice, before pushing this Purchase-Return Invoice")
+				frappe.msgprint("Please push the linked Purchase Invoice, before pushing this Purchase-Return Invoice")
+				return
 			else:
 				res = api_controller.post_vendor_credit(data, return_against_bill_id)
 		else:
@@ -2923,45 +2958,66 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 
 		if zb_vendor_credit_id is not None:
 			bill_doc.custom_zb_vendor_credit_id = zb_vendor_credit_id
+			if not bill_doc.custom_bill_id:
+				bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)) # custom_bill_id is Mandatory & unique
 			bill_doc.save()
 			frappe.db.commit()
-			return { "ADDED" }
+			# return { "ADDED" }
+			return "ADDED"
+
+			# try:
+			# except Exception as err:
+			# 	# frappe.throw(str(err))
+			# 	bill_doc.reload()
+			# 	# if str(err) == "Supplier Bill Id must be unique":
+			# 	if "Duplicate entry" and "custom_bill_id" in str(err):
+			# 		# frappe.throw(bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)))
+			# 		bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999))
+			# 		bill_doc.custom_zb_vendor_credit_id = zb_vendor_credit_id
+			# 		bill_doc.save()
 
 		else :
-			error_log = frappe.new_doc("Zoho Sync Err Logs")
-			error_log.document_name = data["vendor_credit_number"]
-			error_log.error = str(res2.json())
-			error_log.insert()
+			# error_log = frappe.new_doc("Zoho Sync Err Logs")
+			# error_log.document_name = data["vendor_credit_number"]
+			# error_log.error = str(res2.json())
+			# error_log.insert()
+			# frappe.msgprint(res2.json().get('message'))
 
-			frappe.msgprint(res2.json().get('message'))
+			data["vendor_credit_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
 
-			# data["vendor_credit_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
+			if bill_doc.return_against:
+				if not return_against_bill_id:
+					return_against_bill_id = frappe.get_value("Purchase Invoice", bill_doc.return_against, "custom_zoho_bill_id")
+					if not return_against_bill_id:
+						frappe.throw("Please push the linked Purchase Invoice, before pushing this Purchase-Return Invoice")
+				else:
+					res3 = api_controller.post_vendor_credit(data, return_against_bill_id)
 
-			# if bill_doc.return_against:
-			# 	if not return_against_bill_id:
-			# 		return_against_bill_id = frappe.get_value("Purchase Invoice", bill_doc.return_against, "custom_zoho_bill_id")
-			# 		if not return_against_bill_id:
-			# 			frappe.throw("Please push the linked Purchase Invoice, before pushing this Purchase-Return Invoice")
-			# 	else:
-			# 		res3 = api_controller.post_vendor_credit(data, return_against_bill_id)
+			else:
+				res3 = api_controller.post_vendor_credit(data)
 
-			# else:
-			# 	res3 = api_controller.post_vendor_credit(data)
+			if "vendor_credit_id" in res3:
+				zb_vendor_credit_id = res3.get('vendor_credit_id')
+				bill_doc.custom_zb_vendor_credit_id = zb_vendor_credit_id
+				if not bill_doc.custom_bill_id:
+					bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)) # custom_bill_id is Mandatory & unique
 
-			# if "vendor_credit_id" in res3:
-			# 	zb_vendor_credit_id = res3.get('vendor_credit_id')
-			# 	bill_doc.custom_zb_vendor_credit_id = zb_vendor_credit_id
-			# 	bill_doc.save()
-			# 	frappe.db.commit()
-			# 	return { "ADDED" }
+				bill_doc.save()
+				frappe.db.commit()
+				# return { "ADDED" }
+				return "ADDED"
 
-			# else:
-			# 	error_log = frappe.new_doc("Zoho Sync Err Logs")
-			# 	error_log.document_name = data["vendor_credit_number"]
-			# 	error_log.error = str(res3.json())
-			# 	error_log.insert()
+			else:
+				error_log = frappe.new_doc("Zoho Sync Err Logs")
+				error_log.document_name = data["vendor_credit_number"]
+				error_log.error = str(res3)
+				# if res3.json().get('message'):
+				# 	error_log.error = res3.json().get('message')
+				# 	frappe.msgprint(res3.json().get('message'))
+				# else:
+				# 	error_log.error = str(res3)
 
-			# 	frappe.msgprint(res3.json().get('message'))
+				error_log.insert()
 
 
 	elif bill_doc.custom_zoho_bill_id == None:
@@ -3000,10 +3056,23 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 					zb_bill_id = res2[0].get("bill_id")
 
 		if zb_bill_id is not None:
-			bill_doc.custom_zoho_bill_id = zb_bill_id
-			bill_doc.save()
+			try:
+				bill_doc.custom_zoho_bill_id = zb_bill_id
+				if not bill_doc.custom_bill_id:
+					bill_doc.custom_bill_id = bill_doc.bill_no
+				bill_doc.save()
+			except Exception as err:
+				bill_doc.reload()
+				# frappe.throw(str(err))
+				# if str(err) == "Supplier Bill Id must be unique":
+				if "Duplicate entry" and "custom_bill_id" in str(err):
+					# frappe.throw(bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)))
+					bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999))
+					bill_doc.custom_zoho_bill_id = zb_bill_id
+					bill_doc.save()
 			frappe.db.commit()
-			return { "ADDED" }
+			# return { "ADDED" }
+			return "ADDED"
 
 		else:
 			error_log = frappe.new_doc("Zoho Sync Err Logs")
@@ -3366,7 +3435,10 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 ## WIP ## PTDC Consolidated Invoices push to ZB
 @frappe.whitelist()
 def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_return):
-	erp_line_items = json.loads(line_items_dict)
+	# frappe.throw(str(line_items_dict))
+	erp_line_items = line_items_dict
+
+	# erp_line_items = json.loads(line_items_dict)
 	#frappe.throw(str(erp_line_items))
 	#frappe.throw(str(erp_line_items[0]))
 
@@ -3595,8 +3667,8 @@ def fetch_unsynced_erp_invoice_list():
 			as_dict=True
 		)
 
-	#frappe.enqueue(bulk_processing, invoices=invoices, queue="long", is_async=False, now=True, at_front=True)
-	frappe.enqueue(bulk_processing, invoices=invoices, queue="long", is_async=False, at_front=True)
+	#frappe.enqueue(bulk_processing, invoices=invoices, queue="long", timeout=6000, is_async=False, now=True, at_front=True)
+	frappe.enqueue(bulk_processing, invoices=invoices, queue="long", timeout=6000, is_async=False, at_front=True)
 
 def bulk_processing(invoices):
 	total_count = len(invoices)
@@ -3606,11 +3678,11 @@ def bulk_processing(invoices):
 	for i in range(total_count):
 		res = sync_inv_with_zoho_books(invoices[i]["name"], invoices[i]["customer"])
 
-		# frappe.publish_progress(
-		# 	int((i/total_count)*100),
-		# 	title = "Pushing FS Invoices to Zoho Books",
-		# 	description = f"Pushing {i} of {total_count} bills"
-		# )
+		frappe.publish_progress(
+			int((i/total_count)*100),
+			title = "Pushing FS Invoices to Zoho Books",
+			description = f"Pushing {i} of {total_count} bills"
+		)
 		if res == "ADDED":
 			sent += 1
 

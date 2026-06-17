@@ -54,7 +54,7 @@ frappe.listview_settings['Purchase Invoice'] = {
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.add_erp_bills_debitnotes_in_zoho',
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.add_erp_bill_debitnote_in_zoho',
                                     args: {
                                         bill: r.message[i]["name"]
                                     },
@@ -135,7 +135,7 @@ frappe.listview_settings['Purchase Invoice'] = {
                         for (let i = 0; i < length; i++) {
                             setTimeout(() => {
                                 frappe.call({
-                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.add_erp_bills_debitnotes_in_zoho',
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.add_erp_bill_debitnote_in_zoho',
                                     args: {
                                         bill: r.message[i]["name"]
                                     },
