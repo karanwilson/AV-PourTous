@@ -18,6 +18,7 @@ frappe.ui.form.on('Purchase Invoice', {
 	before_save(frm) {
 		frm.set_value('disable_rounded_total', 0);
 		frm.set_value('title', frm.doc.supplier_name);
+		frm.set_value('bill_no', frm.doc.custom_bill_id);
 
 		if (frm.doc.items && frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service") {
 			if (frm.doc.update_stock && !frm.doc.is_return) {

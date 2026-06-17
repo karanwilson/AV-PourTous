@@ -391,6 +391,7 @@ fixtures = [
 
                     "Purchase Order Item-custom_comments", # for putting custom UOM (like bag, etc.) in Purchase Orders
 
+                    "Purchase Invoice-custom_bill_id", # 2nd Supplier Bill ID field, set as unique
                     "Purchase Invoice-custom_zoho_bill_id",
                     "Purchase Invoice-custom_zb_vendor_credit_id",
                     "Purchase Invoice-custom_zoho_void_bill_id",

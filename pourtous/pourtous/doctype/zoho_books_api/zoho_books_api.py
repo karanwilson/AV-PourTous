@@ -2718,7 +2718,7 @@ def fetch_erp_debitnotes_list():
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-			AND posting_date between "2025-06-01" and "2026-03-31"
+			AND posting_date between "2025-06-01" and "2026-05-31"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
@@ -2884,18 +2884,27 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 			data['adjustment_description'] = 'Rounding'
 
 	if bill_doc.is_return and bill_doc.custom_zb_vendor_credit_id == None:
-		if bill_doc.bill_no:
-			data["vendor_credit_number"] = bill_doc.bill_no[:16] # Supplier/Vendor Bill Number
+		if bill_doc.bill_no is not None:
+			data["vendor_credit_number"] = bill_doc.bill_no[:16] # Old optional/non-unique Supplier/Vendor Bill Number
 		else:
-			data["vendor_credit_number"] = bill_doc.name[-16:] # ERPNext Bill Number
+			data["vendor_credit_number"] = bill_doc.custom_bill_id[:16] # New Mandatory unique Supplier Bill Id
 
 		data["reference_invoice_type"] = reference_invoice_type
 
 		#frappe.throw(str(data))
 
 		zb_vendor_credit_id = None
+		return_against_bill_id = None
 
-		res = api_controller.post_vendor_credit(data)
+		if bill_doc.return_against:
+			return_against_bill_id = frappe.get_value("Purchase Invoice", bill_doc.return_against, "custom_zoho_bill_id")
+			if not return_against_bill_id:
+				frappe.throw("Please push the linked Purchase Invoice, before pushing this Purchase-Return Invoice")
+			else:
+				res = api_controller.post_vendor_credit(data, return_against_bill_id)
+		else:
+			res = api_controller.post_vendor_credit(data)
+
 		if "vendor_credit_id" in res:
 			zb_vendor_credit_id = res.get('vendor_credit_id')
 
@@ -2919,30 +2928,47 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 			return { "ADDED" }
 
 		else :
-			data["vendor_credit_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
-			res3 = api_controller.post_vendor_credit(data)
+			error_log = frappe.new_doc("Zoho Sync Err Logs")
+			error_log.document_name = data["vendor_credit_number"]
+			error_log.error = str(res2.json())
+			error_log.insert()
 
-			if "vendor_credit_id" in res3:
-				zb_vendor_credit_id = res3.get('vendor_credit_id')
-				bill_doc.custom_zb_vendor_credit_id = zb_vendor_credit_id
-				bill_doc.save()
-				frappe.db.commit()
-				return { "ADDED" }
+			frappe.msgprint(res2.json().get('message'))
 
-			else:
-				error_log = frappe.new_doc("Zoho Sync Err Logs")
-				error_log.document_name = data["vendor_credit_number"]
-				error_log.error = str(res3.json())
-				error_log.insert()
+			# data["vendor_credit_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
 
-				frappe.msgprint(res3.json().get('message'))
+			# if bill_doc.return_against:
+			# 	if not return_against_bill_id:
+			# 		return_against_bill_id = frappe.get_value("Purchase Invoice", bill_doc.return_against, "custom_zoho_bill_id")
+			# 		if not return_against_bill_id:
+			# 			frappe.throw("Please push the linked Purchase Invoice, before pushing this Purchase-Return Invoice")
+			# 	else:
+			# 		res3 = api_controller.post_vendor_credit(data, return_against_bill_id)
+
+			# else:
+			# 	res3 = api_controller.post_vendor_credit(data)
+
+			# if "vendor_credit_id" in res3:
+			# 	zb_vendor_credit_id = res3.get('vendor_credit_id')
+			# 	bill_doc.custom_zb_vendor_credit_id = zb_vendor_credit_id
+			# 	bill_doc.save()
+			# 	frappe.db.commit()
+			# 	return { "ADDED" }
+
+			# else:
+			# 	error_log = frappe.new_doc("Zoho Sync Err Logs")
+			# 	error_log.document_name = data["vendor_credit_number"]
+			# 	error_log.error = str(res3.json())
+			# 	error_log.insert()
+
+			# 	frappe.msgprint(res3.json().get('message'))
 
 
 	elif bill_doc.custom_zoho_bill_id == None:
-		if bill_doc.bill_no:
-			data["bill_number"] = bill_doc.bill_no[:16] # Supplier/Vendor Bill Number
+		if bill_doc.bill_no is not None:
+			data["bill_number"] = bill_doc.bill_no[:16] # Old optional/non-unique Supplier/Vendor Bill Number
 		else:
-			data["bill_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
+			data["bill_number"] = bill_doc.custom_bill_id[:16] # New Mandatory unique Supplier Bill Id
 
 		#frappe.throw(str(data))
 		if bill_doc.amended_from:
@@ -2980,23 +3006,30 @@ def add_erp_bills_debitnotes_in_zoho(bill):
 			return { "ADDED" }
 
 		else:
-			data["bill_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
-			res3 = api_controller.post_bill(data)
+			error_log = frappe.new_doc("Zoho Sync Err Logs")
+			error_log.document_name = data["bill_number"]
+			error_log.error = str(res2)
+			error_log.insert()
 
-			if "bill_id" in res3:
-				zb_bill_id = res3.get('bill_id')
-				bill_doc.custom_zoho_bill_id = zb_bill_id
-				bill_doc.save()
-				frappe.db.commit()
-				return { "ADDED" }
+			frappe.msgprint(str(res2))
 
-			else:
-				error_log = frappe.new_doc("Zoho Sync Err Logs")
-				error_log.document_name = data["bill_number"]
-				error_log.error = str(res3)
-				error_log.insert()
+			# data["bill_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
+			# res3 = api_controller.post_bill(data)
 
-				frappe.msgprint(str(res3))
+			# if "bill_id" in res3:
+			# 	zb_bill_id = res3.get('bill_id')
+			# 	bill_doc.custom_zoho_bill_id = zb_bill_id
+			# 	bill_doc.save()
+			# 	frappe.db.commit()
+			# 	return { "ADDED" }
+
+			# else:
+			# 	error_log = frappe.new_doc("Zoho Sync Err Logs")
+			# 	error_log.document_name = data["bill_number"]
+			# 	error_log.error = str(res3)
+			# 	error_log.insert()
+
+			# 	frappe.msgprint(str(res3))
 
 
 @frappe.whitelist()
@@ -3492,10 +3525,10 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 				if res3.get('invoice_id'):
 					custom_zb_consol_inv_id = res3.get('invoice_id')
 
-			else:
-				res2 = api_controller.query_invoice(data["invoice_number"])
-				if res2:
-					custom_zb_consol_inv_id = res2[0].get("invoice_id")
+			# else:
+			# 	res2 = api_controller.query_invoice(data["invoice_number"])
+			# 	if res2:
+			# 		custom_zb_consol_inv_id = res2[0].get("invoice_id")
 
 		elif res.get('invoice_id'):
 			custom_zb_consol_inv_id = res.get('invoice_id')
