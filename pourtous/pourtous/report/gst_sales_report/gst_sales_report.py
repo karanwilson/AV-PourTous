@@ -126,6 +126,13 @@ def get_columns():
 		},
 
 		{
+			"fieldname": "igst_amount",
+			"label": "IGST Amount",
+			"fieldtype": "Currency",
+			"width": "120"
+		},
+
+		{
 			"fieldname": "total_tax",
 			"label": "Total Tax",
 			"fieldtype": "Currency",
@@ -165,8 +172,12 @@ def get_data(filters):
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
 			table1.custom_is_donation, table1.customer_type, table1.mode_of_payment, table1.sales_exempted,
 			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40,
-			table1.cgst_amount, table1.sgst_amount,
-			(table1.cgst_amount + table1.sgst_amount) AS total_tax,
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) AS cgst_amount,
+			IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) AS sgst_amount,
+			IF((table1.igst_amount IS NULL), 0, table1.igst_amount) AS igst_amount,
+			(
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) + IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) + IF((table1.igst_amount IS NULL), 0, table1.igst_amount)
+			) AS total_tax,
 			table1.grand_total
 
 			FROM
@@ -210,6 +221,10 @@ def get_data(filters):
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
 			WHERE parent = si.name AND description = "SGST" limit 1)
 			AS sgst_amount,
+
+			(SELECT tax_amount FROM `tabSales Taxes and Charges`
+			WHERE parent = si.name AND description = "IGST" limit 1)
+			AS igst_amount,
 
 			grand_total
 
@@ -236,8 +251,12 @@ def get_data(filters):
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
 			table1.custom_is_donation, table1.customer_type, table1.mode_of_payment, table1.sales_exempted,
 			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40,
-			table1.cgst_amount, table1.sgst_amount,
-			(table1.cgst_amount + table1.sgst_amount) AS total_tax,
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) AS cgst_amount,
+			IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) AS sgst_amount,
+			IF((table1.igst_amount IS NULL), 0, table1.igst_amount) AS igst_amount,
+			(
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) + IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) + IF((table1.igst_amount IS NULL), 0, table1.igst_amount)
+			) AS total_tax,
 			table1.grand_total
 
 			FROM
@@ -281,6 +300,10 @@ def get_data(filters):
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
 			WHERE parent = si.name AND description = "SGST" limit 1)
 			AS sgst_amount,
+
+			(SELECT tax_amount FROM `tabSales Taxes and Charges`
+			WHERE parent = si.name AND description = "IGST" limit 1)
+			AS igst_amount,
 
 			grand_total
 
@@ -306,8 +329,12 @@ def get_data(filters):
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
 			table1.custom_is_donation, table1.customer_type, table1.mode_of_payment, table1.sales_exempted,
 			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40,
-			table1.cgst_amount, table1.sgst_amount,
-			(table1.cgst_amount + table1.sgst_amount) AS total_tax,
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) AS cgst_amount,
+			IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) AS sgst_amount,
+			IF((table1.igst_amount IS NULL), 0, table1.igst_amount) AS igst_amount,
+			(
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) + IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) + IF((table1.igst_amount IS NULL), 0, table1.igst_amount)
+			) AS total_tax,
 			table1.grand_total
 
 			FROM
@@ -351,6 +378,10 @@ def get_data(filters):
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
 			WHERE parent = si.name AND description = "SGST" limit 1)
 			AS sgst_amount,
+
+			(SELECT tax_amount FROM `tabSales Taxes and Charges`
+			WHERE parent = si.name AND description = "IGST" limit 1)
+			AS igst_amount,
 
 			grand_total
 
@@ -376,8 +407,12 @@ def get_data(filters):
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
 			table1.custom_is_donation, table1.customer_type, table1.mode_of_payment, table1.sales_exempted,
 			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40,
-			table1.cgst_amount, table1.sgst_amount,
-			(table1.cgst_amount + table1.sgst_amount) AS total_tax,
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) AS cgst_amount,
+			IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) AS sgst_amount,
+			IF((table1.igst_amount IS NULL), 0, table1.igst_amount) AS igst_amount,
+			(
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) + IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) + IF((table1.igst_amount IS NULL), 0, table1.igst_amount)
+			) AS total_tax,
 			table1.grand_total
 
 			FROM
@@ -421,6 +456,10 @@ def get_data(filters):
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
 			WHERE parent = si.name AND description = "SGST" limit 1)
 			AS sgst_amount,
+
+			(SELECT tax_amount FROM `tabSales Taxes and Charges`
+			WHERE parent = si.name AND description = "IGST" limit 1)
+			AS igst_amount,
 
 			grand_total
 
@@ -446,8 +485,12 @@ def get_data(filters):
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
 			table1.custom_is_donation, table1.customer_type, table1.mode_of_payment, table1.sales_exempted,
 			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40,
-			table1.cgst_amount, table1.sgst_amount,
-			(table1.cgst_amount + table1.sgst_amount) AS total_tax,
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) AS cgst_amount,
+			IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) AS sgst_amount,
+			IF((table1.igst_amount IS NULL), 0, table1.igst_amount) AS igst_amount,
+			(
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) + IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) + IF((table1.igst_amount IS NULL), 0, table1.igst_amount)
+			) AS total_tax,
 			table1.grand_total
 
 			FROM
@@ -491,6 +534,10 @@ def get_data(filters):
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
 			WHERE parent = si.name AND description = "SGST" limit 1)
 			AS sgst_amount,
+
+			(SELECT tax_amount FROM `tabSales Taxes and Charges`
+			WHERE parent = si.name AND description = "IGST" limit 1)
+			AS igst_amount,
 
 			grand_total
 
@@ -516,8 +563,12 @@ def get_data(filters):
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
 			table1.custom_is_donation, table1.customer_type, table1.mode_of_payment, table1.sales_exempted,
 			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40,
-			table1.cgst_amount, table1.sgst_amount,
-			(table1.cgst_amount + table1.sgst_amount) AS total_tax,
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) AS cgst_amount,
+			IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) AS sgst_amount,
+			IF((table1.igst_amount IS NULL), 0, table1.igst_amount) AS igst_amount,
+			(
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) + IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) + IF((table1.igst_amount IS NULL), 0, table1.igst_amount)
+			) AS total_tax,
 			table1.grand_total
 
 			FROM
@@ -562,6 +613,10 @@ def get_data(filters):
 			WHERE parent = si.name AND description = "SGST" limit 1)
 			AS sgst_amount,
 
+			(SELECT tax_amount FROM `tabSales Taxes and Charges`
+			WHERE parent = si.name AND description = "IGST" limit 1)
+			AS igst_amount,
+
 			grand_total
 
 			FROM `tabSales Invoice` AS si
@@ -586,8 +641,12 @@ def get_data(filters):
 			SELECT table1.name, table1.return_against, table1.customer_name, table1.posting_date,
 			table1.custom_is_donation, table1.customer_type, table1.mode_of_payment, table1.sales_exempted,
 			table1.sales_3, table1.sales_5, table1.sales_12, table1.sales_18, table1.sales_28, table1.sales_40,
-			table1.cgst_amount, table1.sgst_amount,
-			(table1.cgst_amount + table1.sgst_amount) AS total_tax,
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) AS cgst_amount,
+			IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) AS sgst_amount,
+			IF((table1.igst_amount IS NULL), 0, table1.igst_amount) AS igst_amount,
+			(
+			IF((table1.cgst_amount IS NULL), 0, table1.cgst_amount) + IF((table1.sgst_amount IS NULL), 0, table1.sgst_amount) + IF((table1.igst_amount IS NULL), 0, table1.igst_amount)
+			) AS total_tax,
 			table1.grand_total
 
 			FROM
@@ -631,6 +690,10 @@ def get_data(filters):
 			(SELECT tax_amount FROM `tabSales Taxes and Charges`
 			WHERE parent = si.name AND description = "SGST" limit 1)
 			AS sgst_amount,
+
+			(SELECT tax_amount FROM `tabSales Taxes and Charges`
+			WHERE parent = si.name AND description = "IGST" limit 1)
+			AS igst_amount,
 
 			grand_total
 
