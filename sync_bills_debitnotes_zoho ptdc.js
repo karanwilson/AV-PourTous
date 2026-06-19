@@ -1,6 +1,6 @@
 frappe.listview_settings['Purchase Invoice'] = {
     refresh(listview) {
-        listview.page.add_inner_button("Add ERP bills in ZB", () => {
+        listview.page.add_inner_button("Add ERP bills in ZB (in background)", () => {
             setTimeout(() => {
                 frappe.call({
                     method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_erp_bills_list',
@@ -10,7 +10,7 @@ frappe.listview_settings['Purchase Invoice'] = {
         }, __("Sync with ZB"));
 
 
-        listview.page.add_inner_button("Add ERP debitnotes in ZB", () => {
+        listview.page.add_inner_button("Add ERP debitnotes in ZB (in background)", () => {
             setTimeout(() => {
                 frappe.call({
                     method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_erp_debitnotes_list',

@@ -2747,9 +2747,9 @@ def fetch_erp_debitnotes_list():
 
 def add_erp_bills_debitnotes_in_zb(bills):
 	total_count = len(bills)
-	# total_count = 2
+	# total_count = 10
 	# frappe.throw(str(bills))
-	added = 1
+	added = 0
 
 	for i in range(total_count):
 		res = add_erp_bill_debitnote_in_zoho(bills[i]["name"])
@@ -3059,7 +3059,8 @@ def add_erp_bill_debitnote_in_zoho(bill):
 			try:
 				bill_doc.custom_zoho_bill_id = zb_bill_id
 				if not bill_doc.custom_bill_id:
-					bill_doc.custom_bill_id = bill_doc.bill_no
+					# bill_doc.custom_bill_id = bill_doc.bill_no
+					bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999))
 				bill_doc.save()
 			except Exception as err:
 				bill_doc.reload()
@@ -3192,7 +3193,7 @@ def fetch_unsynced_erp_return_invoice_list():
 		)
 
 	elif frappe.defaults.get_user_default("company") == "Pour Tous Canteen":
-		invoices = frappe.db.sql(
+		return frappe.db.sql(
 			"""
 			SELECT name, customer, docstatus, status FROM `tabSales Invoice`
 			WHERE docstatus = 1 AND status = "Return"
@@ -3673,7 +3674,7 @@ def fetch_unsynced_erp_invoice_list():
 def bulk_processing(invoices):
 	total_count = len(invoices)
 	#frappe.throw(str(invoices))
-	#total_count = 1
+	# total_count = 50
 	sent = 0
 	for i in range(total_count):
 		res = sync_inv_with_zoho_books(invoices[i]["name"], invoices[i]["customer"])
@@ -3712,18 +3713,21 @@ def sync_inv_with_zoho_books(invoice, customer):
 			pos_mop_type = "Aurocard"
 
 		elif invoice_doc.payments[0].mode_of_payment in ("UPI", "ICICI UPI") or customer_doc.customer_group == "UPI Payments":
-			customer_id = api_controller.walk_in_upi_contact_id # PT/AVB "UPI Customers" in ZB
+			# customer_id = api_controller.walk_in_upi_contact_id # PT/AVB "UPI Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
 			pos_mop_type = "UPI"
 
 		elif invoice_doc.payments[0].mode_of_payment == "Cash" or customer_doc.customer_group == "Cash Payments":
 			customer_id = api_controller.walk_in_cash_contact_id # AVB "Cash Customers" in ZB
 
 		elif invoice_doc.payments[0].mode_of_payment == "Cards" or customer_doc.customer_group == "Card Payments":
-			customer_id = api_controller.walk_in_card_contact_id # PT/AVB "Card Customers" in ZB
+			# customer_id = api_controller.walk_in_card_contact_id # PT/AVB "Card Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
 			pos_mop_type = "Card"
 
 		elif invoice_doc.payments[0].mode_of_payment in ("Debit Card", "RuPay") or customer_doc.customer_group in ("Debit Card Payments", "RuPay Card Payments"):
-			customer_id = api_controller.walk_in_debit_card_contact_id # PT "Debit Card Customers" in ZB
+			# customer_id = api_controller.walk_in_debit_card_contact_id # PT "Debit Card Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
 			pos_mop_type = "Card"
 
 	else:
@@ -3733,18 +3737,21 @@ def sync_inv_with_zoho_books(invoice, customer):
 			pos_mop_type = "Aurocard"
 
 		elif customer_doc.customer_group == "UPI Payments":
-			customer_id = api_controller.walk_in_upi_contact_id # PT/AVB "UPI Customers" in ZB
+			# customer_id = api_controller.walk_in_upi_contact_id # PT/AVB "UPI Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
 			pos_mop_type = "UPI"
 
 		elif customer_doc.customer_group == "Cash Payments":
 			customer_id = api_controller.walk_in_cash_contact_id # AVB "Cash Customers" in ZB
 
 		elif customer_doc.customer_group == "Card Payments":
-			customer_id = api_controller.walk_in_card_contact_id # PT/AVB "Card Customers" in ZB
+			# customer_id = api_controller.walk_in_card_contact_id # PT/AVB "Card Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
 			pos_mop_type = "Card"
 
 		elif customer_doc.customer_group in ("Debit Card Payments", "RuPay Card Payments"):
-			customer_id = api_controller.walk_in_debit_card_contact_id # PT "Debit Card Customers" in ZB
+			# customer_id = api_controller.walk_in_debit_card_contact_id # PT "Debit Card Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
 			pos_mop_type = "Card"
 
 	# frappe.throw(customer_id)
@@ -3875,6 +3882,8 @@ def sync_inv_with_zoho_books(invoice, customer):
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
+			if api_controller.organization_id == "60040986991": # PT Canteen Org
+				invoice_data['reference_number'] = invoice_doc.amended_from[-16:] # for PT Canteen, from 13-May to 13-June, many cancels/amends were done to add the tax rows
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
 			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
@@ -3947,6 +3956,18 @@ def fetch_unsynced_erp_fs_invoice_list():
 			""",
 			# AND si.customer = c.name AND c.customer_type = "Company"
 			# AND si.posting_date >= "2025-10-01"
+			as_dict=True
+		)
+
+	elif frappe.defaults.get_user_default("company") == "Pour Tous Canteen":
+		return frappe.db.sql(
+			"""
+			SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
+			WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
+			AND custom_fs_account_number IS NOT NULL
+			AND custom_zoho_invoice_id IS NULL
+			AND posting_date >= "2026-05-01"
+			""",
 			as_dict=True
 		)
 
@@ -4079,6 +4100,10 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
+			if api_controller.organization_id == "60040986991": # PT Canteen Org
+				invoice_data['reference_number'] = invoice_doc.amended_from[-16:] # for PT Canteen, from 13-May to 13-June, many cancels/amends were done to add the tax rows
+				# if date < '2026-06-13': # for PT Canteen, from 13-May to 13-June, many cancels/amends were done to add the tax rows
+				# 	pass
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
 			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
@@ -4254,6 +4279,8 @@ def sync_entity_inv_with_zoho_books(invoice, customer):
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
+			if api_controller.organization_id == "60040986991": # PT Canteen Org
+				invoice_data['reference_number'] = invoice_doc.amended_from[-16:] # for PT Canteen, from 13-May to 13-June, many cancels/amends were done to add the tax rows
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
 			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
@@ -4510,6 +4537,8 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
+			if api_controller.organization_id == "60040986991": # PT Canteen Org
+				invoice_data['reference_number'] = invoice_doc.amended_from[-16:] # for PT Canteen, from 13-May to 13-June, many cancels/amends were done to add the tax rows
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
 			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
@@ -4716,6 +4745,8 @@ def sync_aurocard_inv_with_zoho_books(invoice):
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
+			if api_controller.organization_id == "60040986991": # PT Canteen Org
+				invoice_data['reference_number'] = invoice_doc.amended_from[-16:] # for PT Canteen, from 13-May to 13-June, many cancels/amends were done to add the tax rows
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
 			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
@@ -4762,7 +4793,7 @@ def fetch_unsynced_erp_upi_invoice_list():
 	if frappe.defaults.get_user_default("company") == "Auroville Bakery":
 		return frappe.db.sql(
 			"""
-			SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id, si.custom_zoho_payment_id
+			SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id,
 			FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
 			AND posting_date >= "2025-11-01"
 			AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
@@ -4776,7 +4807,7 @@ def fetch_unsynced_erp_upi_invoice_list():
 	elif frappe.defaults.get_user_default("company") == "AV Bakery Cafe":
 		return frappe.db.sql(
 			"""
-			SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id, si.custom_zoho_payment_id
+			SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id,
 			FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
 			AND posting_date >= "2025-10-01"
 			AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
@@ -4790,7 +4821,7 @@ def fetch_unsynced_erp_upi_invoice_list():
 	elif frappe.defaults.get_user_default("company") == "AV Bakery Cafe Townhall":
 		return frappe.db.sql(
 			"""
-			SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id, si.custom_zoho_payment_id
+			SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id
 			FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
 			WHERE si.docstatus = 1
 			AND posting_date >= "2025-10-01"
@@ -4802,25 +4833,51 @@ def fetch_unsynced_erp_upi_invoice_list():
 			# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 		)
 
+	elif frappe.defaults.get_user_default("company") == "Pour Tous Canteen":
+		return frappe.db.sql(
+			"""
+			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status
+			FROM `tabSales Invoice` si, tabCustomer c
+			WHERE si.docstatus = 1 AND status != "Return"
+			AND si.custom_fs_account_number IS NULL AND c.customer_group = "UPI Payments" AND si.customer = c.name
+			AND si.custom_zoho_invoice_id IS NULL
+			AND si.posting_date >= "2026-05-01"
+			""",
+			as_dict=True
+		)
+
 	else:
 		return frappe.db.sql(
 			"""
-			SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id, si.custom_zoho_payment_id
-			FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
+			SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id
+			FROM `tabSales Invoice` si WHERE si.docstatus = 1
 			AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
-			AND si.custom_fs_account_number IS NULL AND c.customer_group = "UPI Payments" AND si.customer = c.name
+			AND si.custom_fs_account_number IS NULL AND si.customer_group = "UPI Payments"
 			AND custom_zoho_invoice_id IS NULL
 			""",
 			as_dict=True
 			# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 		)
 
+		# return frappe.db.sql(
+		# 	"""
+		# 	SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id
+		# 	FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
+		# 	AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
+		# 	AND si.custom_fs_account_number IS NULL AND c.customer_group = "UPI Payments" AND si.customer = c.name
+		# 	AND custom_zoho_invoice_id IS NULL
+		# 	""",
+		# 	as_dict=True
+		# 	# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
+		# )
+
 @frappe.whitelist()
 def sync_upi_inv_with_zoho_books(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
-	customer_id = api_controller.walk_in_upi_contact_id
+	# customer_id = api_controller.walk_in_upi_contact_id
+	customer_id = api_controller.walk_in_upi_card_customer
 
 	# if invoice_doc.company == "Pour Tous Purchasing Service":
 	# 	customer_id = 2464766000000395241
@@ -4931,6 +4988,8 @@ def sync_upi_inv_with_zoho_books(invoice):
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
+			if api_controller.organization_id == "60040986991": # PT Canteen Org
+				invoice_data['reference_number'] = invoice_doc.amended_from[-16:] # for PT Canteen, from 13-May to 13-June, many cancels/amends were done to add the tax rows
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
 			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
@@ -5129,6 +5188,8 @@ def sync_neft_inv_with_zoho_books(invoice, customer):
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
+			if api_controller.organization_id == "60040986991": # PT Canteen Org
+				invoice_data['reference_number'] = invoice_doc.amended_from[-16:] # for PT Canteen, from 13-May to 13-June, many cancels/amends were done to add the tax rows
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
 			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
@@ -5231,7 +5292,8 @@ def sync_card_inv_with_zoho_books(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
-	customer_id = api_controller.walk_in_card_contact_id
+	# customer_id = api_controller.walk_in_card_contact_id
+	customer_id = api_controller.walk_in_upi_card_customer
 
 	if invoice_doc.custom_zoho_invoice_id == None:
 		line_items = []
@@ -5332,6 +5394,8 @@ def sync_card_inv_with_zoho_books(invoice):
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
+			if api_controller.organization_id == "60040986991": # PT Canteen Org
+				invoice_data['reference_number'] = invoice_doc.amended_from[-16:] # for PT Canteen, from 13-May to 13-June, many cancels/amends were done to add the tax rows
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
 			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
@@ -5528,6 +5592,8 @@ def sync_cash_inv_with_zoho_books(invoice):
 
 		#frappe.throw(str(invoice_data))
 		if invoice_doc.amended_from:
+			if api_controller.organization_id == "60040986991": # PT Canteen Org
+				invoice_data['reference_number'] = invoice_doc.amended_from[-16:] # for PT Canteen, from 13-May to 13-June, many cancels/amends were done to add the tax rows
 			void_invoice_id = frappe.get_value("Sales Invoice", invoice_doc.amended_from, "custom_zoho_void_invoice_id")
 			if void_invoice_id and void_invoice_id is not None:
 				res = api_controller.delete_invoice(void_invoice_id)
@@ -5609,7 +5675,13 @@ def void_invoice_in_zoho(doc, method):
 def amend_sales_invoice(doc, method):
 	if doc.amended_from and doc.custom_zoho_void_invoice_id:
 		doc.custom_zoho_void_invoice_id = None
-
+	if not doc.is_pos:
+		doc.posa_client_request_id = None
+		doc.custom_fs_transfer_status = None
+		doc.custom_fs_transaction_id = None
+	if doc.payments and doc.payments[0].mode_of_payment != 'FS':
+		doc.custom_fs_transfer_status = None
+		doc.custom_fs_transaction_id = None
 
 def void_bill_in_zoho(doc, method):
 	if frappe.defaults.get_user_default("company") in ("Pour Tous Canteen"):

@@ -37,6 +37,8 @@
   "walk_in_fs_contact_id",
   "walk_in_aurocard_customer",
   "walk_in_aurocard_contact_id",
+  "walk_in_upi_card_customer",
+  "walk_in_upi_card_contact_id",
   "walk_in_upi_customer",
   "walk_in_upi_contact_id",
   "walk_in_cash_customer",
@@ -230,19 +232,22 @@
    "fetch_from": "walk_in_upi_customer.contact_id",
    "fieldname": "walk_in_upi_contact_id",
    "fieldtype": "Data",
-   "label": "Walk In UPI Contact ID"
+   "label": "Walk In UPI Contact ID",
+   "read_only": 1
   },
   {
    "fetch_from": "walk_in_cash_customer.contact_id",
    "fieldname": "walk_in_cash_contact_id",
    "fieldtype": "Data",
-   "label": "Walk In Cash Contact ID"
+   "label": "Walk In Cash Contact ID",
+   "read_only": 1
   },
   {
    "fetch_from": "walk_in_card_customer.contact_id",
    "fieldname": "walk_in_card_contact_id",
    "fieldtype": "Data",
-   "label": "Walk In Card Contact ID"
+   "label": "Walk In Card Contact ID",
+   "read_only": 1
   },
   {
    "fieldname": "purchase_discount_account",
@@ -278,14 +283,27 @@
    "fetch_from": "walk_in_debit_card_customer.contact_id",
    "fieldname": "walk_in_debit_card_contact_id",
    "fieldtype": "Data",
-   "label": "Walk In Debit Card Contact ID"
+   "label": "Walk In Debit Card Contact ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "walk_in_upi_card_customer",
+   "fieldtype": "Link",
+   "label": "Walk In UPI Card Customer",
+   "options": "Zoho Walk In customer"
+  },
+  {
+   "fetch_from": "walk_in_upi_card_customer.contact_id",
+   "fieldname": "walk_in_upi_card_contact_id",
+   "fieldtype": "Data",
+   "label": "Walk In UPI Card Contact ID"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-07 01:04:38.383702",
+ "modified": "2026-06-19 08:20:15.506492",
  "modified_by": "karan.wilson@auroville.org.in",
  "module": "pourtous",
  "name": "Zoho Books API",

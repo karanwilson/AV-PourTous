@@ -9,6 +9,7 @@ from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_ent
 from payments.payment_gateways.doctype.fs_settings.fs_settings import add_transfer_fs_credit_bill, add_transfer_billing
 
 from stdnum import ean
+import random
 
 
 # for testing/checking frappe.session.user
@@ -61,14 +62,26 @@ def fetch_pur_rec_list():
 @frappe.whitelist()
 def update_batch_price_pur_inv_rec(doctype, doc_name):
 	doc = frappe.get_doc(doctype, doc_name)
+	batch_price_updated = 0
+
 	for item in doc.items:
 		if item.batch_no:
 			if item.custom_selling_price > 0:
 				frappe.set_value("Batch", item.batch_no, "posa_batch_price", item.custom_selling_price)
 			frappe.set_value("Batch", item.batch_no, "custom_buying_price", item.price_list_rate)
+			batch_price_updated = 1
 
-	frappe.set_value(doctype, doc_name, 'custom_batch_price_updated', 1)
-	return { "UPDATED" }
+	if batch_price_updated:
+		if doctype == "Purchase Invoice":
+			if not doc.custom_bill_id:
+				custom_bill_id = doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)) # custom_bill_id is Mandatory & unique
+				frappe.set_value(doctype, doc_name, 'custom_bill_id', custom_bill_id)
+
+		frappe.set_value(doctype, doc_name, 'custom_batch_price_updated', 1)
+		return { "UPDATED" }
+
+	else:
+		return
 
 
 @frappe.whitelist()
