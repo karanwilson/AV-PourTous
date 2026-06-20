@@ -20,6 +20,7 @@
   "token_received_at",
   "token_validity",
   "token_valid_till",
+  "sync_in_progress",
   "test",
   "column_break_shr3d",
   "location",
@@ -297,13 +298,20 @@
    "fieldname": "walk_in_upi_card_contact_id",
    "fieldtype": "Data",
    "label": "Walk In UPI Card Contact ID"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_in_progress",
+   "fieldtype": "Check",
+   "label": "Sync In Progress",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-19 08:20:15.506492",
+ "modified": "2026-06-20 02:23:04.810992",
  "modified_by": "karan.wilson@auroville.org.in",
  "module": "pourtous",
  "name": "Zoho Books API",
