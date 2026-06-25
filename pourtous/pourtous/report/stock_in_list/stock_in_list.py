@@ -120,6 +120,13 @@ def get_columns(filters):
 				},
 
 				{
+					"fieldname": "item_tax_template",
+					"label": "Tax",
+					"fieldtype": "Data",
+					"width": "100"
+				},
+
+				{
 					"fieldname": "rate",
 					"label": "Rate (Old PR)",
 					"fieldtype": "Currency",
@@ -212,6 +219,13 @@ def get_columns(filters):
 					"fieldname": "custom_selling_price",
 					"label": "S Price",
 					"fieldtype": "Currency",
+					"width": "100"
+				},
+
+				{
+					"fieldname": "item_tax_template",
+					"label": "Tax",
+					"fieldtype": "Data",
 					"width": "100"
 				},
 
@@ -392,6 +406,13 @@ def get_columns(filters):
 					"fieldtype": "Currency",
 					"width": "100"
 				},
+
+				{
+					"fieldname": "item_tax_template",
+					"label": "Tax",
+					"fieldtype": "Data",
+					"width": "100"
+				},
 			]
 
 		elif filters.voucher_type == "Purchase Invoice":
@@ -457,6 +478,13 @@ def get_columns(filters):
 					"fieldname": "custom_selling_price",
 					"label": "S Price",
 					"fieldtype": "Currency",
+					"width": "100"
+				},
+
+				{
+					"fieldname": "item_tax_template",
+					"label": "Tax",
+					"fieldtype": "Data",
 					"width": "100"
 				},
 			]
@@ -544,6 +572,7 @@ def get_data1(filters):
 					) AS barcode,
 					`tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty,
 					`tabPurchase Receipt Item`.price_list_rate, `tabPurchase Receipt Item`.custom_selling_price,
+					`tabPurchase Receipt Item`.item_tax_template,
 					IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
 					FROM `tabPurchase Receipt Item`
 					INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
@@ -578,6 +607,7 @@ def get_data1(filters):
 					) AS barcode,
 					`tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty,
 					`tabPurchase Invoice Item`.price_list_rate, `tabPurchase Invoice Item`.custom_selling_price,
+					`tabPurchase Invoice Item`.item_tax_template,
 					IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
 					FROM `tabPurchase Invoice Item`
 					INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name
@@ -683,6 +713,7 @@ def get_data2(filters):
 					) AS barcode,
 					`tabPurchase Receipt Item`.item_name, `tabPurchase Receipt Item`.qty,
 					`tabPurchase Receipt Item`.price_list_rate, `tabPurchase Receipt Item`.custom_selling_price,
+					`tabPurchase Receipt Item`.item_tax_template,
 					IF((`tabPurchase Receipt Item`.custom_selling_price = 0), `tabPurchase Receipt Item`.rate, 0) AS rate
 					FROM `tabPurchase Receipt Item`
 					INNER JOIN `tabPurchase Receipt` ON `tabPurchase Receipt Item`.parent = `tabPurchase Receipt`.name
@@ -717,6 +748,7 @@ def get_data2(filters):
 					) AS barcode,
 					`tabPurchase Invoice Item`.item_name, `tabPurchase Invoice Item`.qty,
 					`tabPurchase Invoice Item`.price_list_rate, `tabPurchase Invoice Item`.custom_selling_price,
+					`tabPurchase Invoice Item`.item_tax_template,
 					IF((`tabPurchase Invoice Item`.custom_selling_price = 0), `tabPurchase Invoice Item`.rate, 0) AS rate
 					FROM `tabPurchase Invoice Item`
 					INNER JOIN `tabPurchase Invoice` ON `tabPurchase Invoice Item`.parent = `tabPurchase Invoice`.name

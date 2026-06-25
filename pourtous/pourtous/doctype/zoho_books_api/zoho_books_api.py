@@ -2682,8 +2682,11 @@ def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
 
 @frappe.whitelist()
 def fetch_erp_bills_list(process_background):
+	from threading import Timer
 	sync_in_progress = int(frappe.db.get_value("Zoho Books API", "Zoho Books API", "sync_in_progress"))
 	if sync_in_progress:
+		t = Timer(60.0, frappe.db.set_value("Zoho Books API", "Zoho Books API", "sync_in_progress", 0))
+		t.start()  # after 30 seconds, "hello, world" will be printed
 		frappe.msgprint("Sync already in progress, please wait")
 		return
 
