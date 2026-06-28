@@ -1263,6 +1263,22 @@ def update_price_lists(doc, method):
 	frappe.db.commit()
 
 
+def stock_recon_record_no_change_items(doc, method):
+	if doc.purpose == "Stock Reconciliation":
+		for item in doc.items:
+			if item.qty == item.current_qty:
+				doc.append(
+					"custom_stock_recon_no_change_item",
+					{
+						"item_code": item.item_code,
+						"item_name": item.item_name,
+						"quantity" : item.qty
+					},
+				)
+
+		# frappe.db.commit()
+
+
 def stock_recon_update_price_lists(doc, method):
 	if doc.purpose == "Stock Reconciliation":
 		for item in doc.items:
