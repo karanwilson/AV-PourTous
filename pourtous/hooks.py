@@ -189,6 +189,7 @@ doc_events = {
         "before_validate": "pourtous.api.update_difference_account"
 	},
     "Stock Reconciliation": {
+        "before_validate": "pourtous.api.stock_recon_record_no_change_items",
         "on_submit": "pourtous.api.stock_recon_update_price_lists"
     },
     "Batch": {

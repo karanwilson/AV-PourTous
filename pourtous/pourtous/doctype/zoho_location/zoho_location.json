@@ -49,10 +49,11 @@
    "options": "Branch"
   }
  ],
+ "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-07 07:23:36.551115",
- "modified_by": "Administrator",
+ "modified": "2026-06-24 17:14:39.357299",
+ "modified_by": "karan.wilson@auroville.org.in",
  "module": "pourtous",
  "name": "Zoho Location",
  "naming_rule": "By fieldname",
@@ -69,8 +70,30 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Item Manager",
+   "share": 1,
+   "write": 1
   }
  ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
