@@ -3550,9 +3550,9 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 @frappe.whitelist()
 def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_return):
 	# frappe.throw(str(line_items_dict))
-	erp_line_items = line_items_dict
+	# erp_line_items = line_items_dict
 
-	# erp_line_items = json.loads(line_items_dict)
+	erp_line_items = json.loads(line_items_dict)
 	#frappe.throw(str(erp_line_items))
 	#frappe.throw(str(erp_line_items[0]))
 
