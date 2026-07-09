@@ -5,6 +5,14 @@
 frappe.query_reports["Zoho Sync Pending"] = {
 	"filters": [
 		{
+			"fieldname": "voucher_type",
+			"label": __("Voucher Type"),
+			"fieldtype": "Select",
+			"options": ["", "Purchase Invoice", "Sales Invoice"],
+			"width": "60px",
+		},
+
+		{
 			"fieldname": "from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",
