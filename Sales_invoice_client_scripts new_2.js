@@ -253,10 +253,10 @@ frappe.listview_settings['Sales Invoice'] = {
                     }
                 }
             });
-        })
+        }, __("FS Credit Bills"));
 
 
-        listview.page.add_inner_button("Process FS Credits in background", () => {
+        listview.page.add_inner_button("Process FS Credits in backend", () => {
             setTimeout(() => {
                 frappe.call({
                     method: 'payments.payment_gateways.doctype.fs_settings.fs_settings.process_fs_credit_bills',

@@ -6,6 +6,7 @@ from frappe.model.document import Document
 from frappe.utils import nowtime, nowdate
 from datetime import datetime, timedelta
 import random
+from threading import Timer
 
 import requests, json, re, csv
 import os
@@ -2682,15 +2683,16 @@ def add_ptdc_erp_bills_debitnotes_in_zoho(bill):
 
 @frappe.whitelist()
 def fetch_erp_bills_list(process_background):
-	from threading import Timer
-	sync_in_progress = int(frappe.db.get_value("Zoho Books API", "Zoho Books API", "sync_in_progress"))
-	if sync_in_progress:
-		t = Timer(60.0, frappe.db.set_value("Zoho Books API", "Zoho Books API", "sync_in_progress", 0))
-		t.start()  # after 30 seconds, "hello, world" will be printed
+	pi_sync_in_progress = int(frappe.db.get_value("Zoho Books API", "Zoho Books API", "pi_sync_in_progress"))
+	if pi_sync_in_progress:
+		t = Timer(60.0, frappe.db.set_value("Zoho Books API", "Zoho Books API", "pi_sync_in_progress", 0))
+		t.start() # resets pi_sync_in_progress to 0
 		frappe.msgprint("Sync already in progress, please wait")
 		return
 
-	frappe.db.set_value("Zoho Books API", "Zoho Books API", "sync_in_progress", 1)
+	frappe.db.set_value("Zoho Books API", "Zoho Books API", "pi_sync_in_progress", 1)
+	t = Timer(60.0, frappe.db.set_value("Zoho Books API", "Zoho Books API", "pi_sync_in_progress", 0))
+	t.start() # resets pi_sync_in_progress to 0
 	frappe.db.commit()
 
 	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
@@ -2729,12 +2731,12 @@ def fetch_erp_bills_list(process_background):
 
 @frappe.whitelist()
 def fetch_erp_debitnotes_list(process_background):
-	sync_in_progress = int(frappe.db.get_value("Zoho Books API", "Zoho Books API", "sync_in_progress"))
-	if sync_in_progress:
+	pi_sync_in_progress = int(frappe.db.get_value("Zoho Books API", "Zoho Books API", "pi_sync_in_progress"))
+	if pi_sync_in_progress:
 		frappe.msgprint("Sync already in progress, please wait")
 		return
 
-	frappe.db.set_value("Zoho Books API", "Zoho Books API", "sync_in_progress", 1)
+	frappe.db.set_value("Zoho Books API", "Zoho Books API", "pi_sync_in_progress", 1)
 	frappe.db.commit()
 
 	frappe.db.delete("Zoho Sync Err Logs") # deletes the old logs
@@ -2789,9 +2791,6 @@ def add_erp_bills_debitnotes_in_zb(bills):
 		)
 
 	frappe.msgprint(f"Pushed {added} of {total_count}")
-	# frappe.db.set_value("Zoho Books API", "Zoho Books API", "sync_in_progress", 0)
-	# frappe.db.commit()
-	# return "Completed"
 
 
 @frappe.whitelist()
@@ -3284,7 +3283,7 @@ def fetch_unsynced_erp_return_invoice_list():
 			"""
 			SELECT si.name, si.customer, si.docstatus, si.status FROM `tabSales Invoice` si, `tabSales Invoice Payment` sip
 			WHERE si.docstatus = 1 AND si.status = "Return"
-			AND si.posting_date BETWEEN "2026-04-01" AND "2026-04-02"
+			AND si.posting_date >= "2026-04-01"
 			AND ((si.custom_fs_account_number IS NOT NULL AND sip.parent = si.name) OR (si.custom_fs_account_number IS NULL AND sip.mode_of_payment = "NEFT" AND sip.parent = si.name))
 			AND si.custom_zb_creditnote_id IS NULL
 			""",
@@ -3301,7 +3300,8 @@ def fetch_unsynced_erp_return_invoice_list():
 			"""
 			SELECT name, customer, docstatus, status FROM `tabSales Invoice`
 			WHERE docstatus = 1 AND status = "Return"
-			AND posting_date BETWEEN "2026-04-01" AND "2026-04-02"
+			AND custom_fs_account_number IS NOT NULL
+			AND posting_date >= "2026-04-01"
 			AND custom_zb_creditnote_id IS NULL
 			""",
 			# AND posting_date >= "2025-10-01"
@@ -3737,12 +3737,24 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 
 @frappe.whitelist()
 def fetch_unsynced_erp_invoice_list():
+	si_sync_in_progress = int(frappe.db.get_value("Zoho Books API", "Zoho Books API", "si_sync_in_progress"))
+	if si_sync_in_progress:
+		t = Timer(60.0, frappe.db.set_value("Zoho Books API", "Zoho Books API", "si_sync_in_progress", 0))
+		t.start() # resets si_sync_in_progress to 0
+		frappe.msgprint("Sync already in progress, please wait")
+		return
+
+	frappe.db.set_value("Zoho Books API", "Zoho Books API", "si_sync_in_progress", 1)
+	t = Timer(60.0, frappe.db.set_value("Zoho Books API", "Zoho Books API", "si_sync_in_progress", 0))
+	t.start() # resets si_sync_in_progress to 0
+	frappe.db.commit()
+
 	if frappe.defaults.get_user_default("company") == "Auroville Bakery":
 		invoices = frappe.db.sql(
 			"""
 			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status
 			FROM `tabSales Invoice` si
-			WHERE si.docstatus = 1 AND AND status != "Return"
+			WHERE si.docstatus = 1 AND status != "Return"
 			AND si.posting_date BETWEEN "2026-04-01" AND "2026-04-02"
 			AND si.custom_zoho_invoice_id IS NULL
 			""",
@@ -3797,14 +3809,14 @@ def bulk_processing(invoices):
 
 		frappe.publish_progress(
 			int((i/total_count)*100),
-			title = "Pushing FS Invoices to Zoho Books",
-			description = f"Pushing {i} of {total_count} bills"
+			title = "Pushing All Sales Invoices to Zoho Books",
+			description = f"Pushed {i+1} of {total_count} Invoices"
 		)
 		if res == "ADDED":
 			sent += 1
 
 	#frappe.publish_progress(100, title="Task Complete", description=f"Pushed {sent} of {total_count}")
-	frappe.msgprint(f"Pushed {sent} of {total_count}")
+	frappe.msgprint(f"Pushed {sent} of {total_count} Sales Invoices")
 
 
 @frappe.whitelist()
@@ -3830,7 +3842,7 @@ def sync_inv_with_zoho_books(invoice, customer):
 
 		elif invoice_doc.payments[0].mode_of_payment in ("UPI", "ICICI UPI") or customer_doc.customer_group == "UPI Payments":
 			# customer_id = api_controller.walk_in_upi_contact_id # PT/AVB "UPI Customers" in ZB
-			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_contact_id # PT "UPI Customers" in ZB
 			pos_mop_type = "UPI"
 
 		elif invoice_doc.payments[0].mode_of_payment == "Cash" or customer_doc.customer_group == "Cash Payments":
@@ -3838,12 +3850,12 @@ def sync_inv_with_zoho_books(invoice, customer):
 
 		elif invoice_doc.payments[0].mode_of_payment == "Cards" or customer_doc.customer_group == "Card Payments":
 			# customer_id = api_controller.walk_in_card_contact_id # PT/AVB "Card Customers" in ZB
-			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_contact_id # PT "UPI Customers" in ZB
 			pos_mop_type = "Card"
 
 		elif invoice_doc.payments[0].mode_of_payment in ("Debit Card", "RuPay") or customer_doc.customer_group in ("Debit Card Payments", "RuPay Card Payments"):
 			# customer_id = api_controller.walk_in_debit_card_contact_id # PT "Debit Card Customers" in ZB
-			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_contact_id # PT "UPI Customers" in ZB
 			pos_mop_type = "Card"
 
 	else:
@@ -3854,7 +3866,7 @@ def sync_inv_with_zoho_books(invoice, customer):
 
 		elif customer_doc.customer_group == "UPI Payments":
 			# customer_id = api_controller.walk_in_upi_contact_id # PT/AVB "UPI Customers" in ZB
-			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_contact_id # PT "UPI Customers" in ZB
 			pos_mop_type = "UPI"
 
 		elif customer_doc.customer_group == "Cash Payments":
@@ -3862,12 +3874,12 @@ def sync_inv_with_zoho_books(invoice, customer):
 
 		elif customer_doc.customer_group == "Card Payments":
 			# customer_id = api_controller.walk_in_card_contact_id # PT/AVB "Card Customers" in ZB
-			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_contact_id # PT "UPI Customers" in ZB
 			pos_mop_type = "Card"
 
 		elif customer_doc.customer_group in ("Debit Card Payments", "RuPay Card Payments"):
 			# customer_id = api_controller.walk_in_debit_card_contact_id # PT "Debit Card Customers" in ZB
-			customer_id = api_controller.walk_in_upi_card_customer # PT "UPI Customers" in ZB
+			customer_id = api_controller.walk_in_upi_card_contact_id # PT "UPI Customers" in ZB
 			pos_mop_type = "Card"
 
 	# frappe.throw(customer_id)
@@ -4049,12 +4061,14 @@ def fetch_unsynced_erp_fs_invoice_list():
 		return frappe.db.sql(
 			"""
 			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status
-			FROM `tabSales Invoice` si, tabCustomer c
+			FROM `tabSales Invoice` si
 			WHERE si.docstatus = 1 AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
-			AND si.posting_date BETWEEN "2026-04-01" AND "2026-04-02"
+			AND si.posting_date >= "2026-04-01"
+			AND si.custom_is_donation = 0
 			AND si.custom_fs_account_number IS NOT NULL
 			AND si.custom_zoho_invoice_id IS NULL
 			""",
+			# , tabCustomer c
 			# AND si.customer = c.name AND c.customer_type = "Company"
 			# AND si.posting_date >= "2025-12-23"
 			as_dict=True
@@ -4065,11 +4079,13 @@ def fetch_unsynced_erp_fs_invoice_list():
 	):
 		return frappe.db.sql(
 			"""
-			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status FROM `tabSales Invoice` si, tabCustomer c
+			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status FROM `tabSales Invoice` si
 			WHERE si.docstatus = 1 AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
+			AND si.posting_date >= "2026-04-01"
 			AND si.custom_fs_account_number IS NOT NULL
 			AND si.custom_zoho_invoice_id IS NULL
 			""",
+			# , tabCustomer c
 			# AND si.customer = c.name AND c.customer_type = "Company"
 			# AND si.posting_date >= "2025-10-01"
 			as_dict=True
@@ -4179,6 +4195,9 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			"discount_type": "entity_level",
 			"line_items": line_items,
 		}
+
+		if invoice_doc.items and len(invoice_doc.items) > 0 and invoice_doc.items[0].sales_order:
+			invoice_data['reference_number'] = invoice_doc.items[0].sales_order
 
 		if invoice_doc.discount_amount:
 			invoice_data['discount'] = invoice_doc.discount_amount
@@ -4975,34 +4994,18 @@ def fetch_unsynced_erp_upi_invoice_list():
 			# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
 		)
 
-		# return frappe.db.sql(
-		# 	"""
-		# 	SELECT si.name, si.docstatus, si.status, si.custom_zoho_invoice_id
-		# 	FROM `tabSales Invoice` si, tabCustomer c WHERE si.docstatus = 1
-		# 	AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
-		# 	AND si.custom_fs_account_number IS NULL AND c.customer_group = "UPI Payments" AND si.customer = c.name
-		# 	AND custom_zoho_invoice_id IS NULL
-		# 	""",
-		# 	as_dict=True
-		# 	# AND posting_date BETWEEN "2025-04-01" AND "2025-04-30"
-		# )
-
 @frappe.whitelist()
 def sync_upi_inv_with_zoho_books(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
-	# customer_id = api_controller.walk_in_upi_contact_id
-	customer_id = api_controller.walk_in_upi_card_customer
 
-	# if invoice_doc.company == "Pour Tous Purchasing Service":
-	# 	customer_id = 2464766000000395241
-	# elif invoice_doc.company == "Auroville Bakery":
-	# 	customer_id = 2386181000000192017 # AVB "UPI Customers" in ZB
-	# elif invoice_doc.company == "AV Bakery Cafe":
-	# 	customer_id = 2567347000000380968 # AVBC "UPI Customers" in ZB
-	# else:
-	# 	frappe.throw("Please set the ZB Walk-in Customer IDs for this Company")
+	if frappe.defaults.get_user_default("company") in (
+		"Pour Tous Purchasing Service", "Pour Tous Canteen"
+	):
+		customer_id = api_controller.walk_in_upi_card_contact_id
+	else:
+		customer_id = api_controller.walk_in_upi_contact_id
 
 	if invoice_doc.custom_zoho_invoice_id == None:
 		line_items = []
@@ -5408,8 +5411,13 @@ def sync_card_inv_with_zoho_books(invoice):
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
-	# customer_id = api_controller.walk_in_card_contact_id
-	customer_id = api_controller.walk_in_upi_card_customer
+
+	if frappe.defaults.get_user_default("company") in (
+		"Pour Tous Purchasing Service", "Pour Tous Canteen"
+	):
+		customer_id = api_controller.walk_in_upi_card_contact_id
+	else:
+		customer_id = api_controller.walk_in_card_contact_id
 
 	if invoice_doc.custom_zoho_invoice_id == None:
 		line_items = []

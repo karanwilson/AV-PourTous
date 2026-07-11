@@ -418,6 +418,7 @@ fixtures = [
 
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
                     "Stock Reconciliation Item-custom_selling_price",
+                    "Stock Reconciliation Item-custom_total_qty", # for total stock in selected Warehouse
 
                     "Batch-custom_barcode", # for adding a batch barcode
                     "Batch-custom_buying_price", # for recording batch wise buying price

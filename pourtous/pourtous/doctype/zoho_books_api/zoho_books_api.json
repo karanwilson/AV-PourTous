@@ -20,7 +20,8 @@
   "token_received_at",
   "token_validity",
   "token_valid_till",
-  "sync_in_progress",
+  "pi_sync_in_progress",
+  "si_sync_in_progress",
   "test",
   "column_break_shr3d",
   "location",
@@ -301,9 +302,16 @@
   },
   {
    "default": "0",
-   "fieldname": "sync_in_progress",
+   "fieldname": "pi_sync_in_progress",
    "fieldtype": "Check",
-   "label": "Sync In Progress",
+   "label": "PI Sync In Progress",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "si_sync_in_progress",
+   "fieldtype": "Check",
+   "label": "SI Sync In Progress",
    "read_only": 1
   }
  ],
@@ -311,7 +319,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-20 02:23:04.810992",
+ "modified": "2026-07-09 21:26:20.245894",
  "modified_by": "karan.wilson@auroville.org.in",
  "module": "pourtous",
  "name": "Zoho Books API",

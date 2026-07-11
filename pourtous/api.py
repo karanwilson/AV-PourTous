@@ -26,6 +26,21 @@ import random
 # 		frappe.throw("else")
 
 @frappe.whitelist()
+def stock_recon_total_store_qty(item_code, warehouse):
+	return frappe.db.sql(
+		"""
+		SELECT `tabStock Ledger Entry`.qty_after_transaction AS custom_total_qty
+		FROM `tabStock Ledger Entry`
+		WHERE `tabStock Ledger Entry`.item_code = '{0}'
+		AND `tabStock Ledger Entry`.is_cancelled=0 AND warehouse LIKE '{1}'
+		ORDER BY posting_date DESC, posting_time DESC, creation DESC
+		LIMIT 1
+		""".format(item_code, warehouse),
+		as_dict=True
+	)
+
+
+@frappe.whitelist()
 def fetch_purchase_invoices():
 	return frappe.db.get_list('Purchase Invoice', filters = {"docstatus": 1})
 
