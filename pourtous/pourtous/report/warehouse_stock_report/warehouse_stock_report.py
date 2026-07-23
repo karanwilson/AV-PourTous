@@ -81,13 +81,14 @@ def get_data(filters):
 			ON ip.item_code = tabItem.item_code
 			AND ip.price_list = "Standard Buying"
 
+			WHERE tabItem.disabled = 0 AND tabItem.is_stock_item = 1
 			) table1
 
 			WHERE table1.item_group = '{1}'
-			AND table1.qty > 0
 			""".format(filters.warehouse, filters.item_group),
 			#.format(filters.warehouse, "Sales Order Reserve - "+abbr, filters.item_group),
 			as_dict=True
+			# AND table1.qty > 0
 			# (
 			# 	select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 			# 	where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
@@ -114,14 +115,16 @@ def get_data(filters):
 				LIMIT 1
 			) AS qty
 			FROM tabItem
+
 			LEFT JOIN `tabItem Price` ip
 			ON ip.item_code = tabItem.item_code
 			AND ip.price_list = "Standard Buying"
 
+			where tabItem.disabled = 0 and tabItem.is_stock_item = 1
 			) table1
 
-			WHERE table1.qty > 0
 			""".format(filters.warehouse),
 			as_dict=True
+			# WHERE table1.qty > 0
 		)
 		return query

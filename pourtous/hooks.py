@@ -189,8 +189,11 @@ doc_events = {
         "before_validate": "pourtous.api.update_difference_account"
 	},
     "Stock Reconciliation": {
-        "before_validate": "pourtous.api.stock_recon_record_no_change_items",
-        "on_submit": "pourtous.api.stock_recon_update_price_lists"
+        "before_validate": [
+            # "pourtous.api.stock_recon_record_no_change_items",
+            "pourtous.api.add_serial_batch_bundle",
+        ],
+        "on_submit": "pourtous.api.stock_recon_update_price_lists",
     },
     "Batch": {
         "after_insert": "pourtous.api.create_batch_barcode", # Adds a Batch Barcode
@@ -418,6 +421,7 @@ fixtures = [
 
                     "Stock Reconciliation Item-custom_comments", # to add comments regarding a stock reconciliation
                     "Stock Reconciliation Item-custom_selling_price",
+                    "Stock Reconciliation Item-custom_current_total_qty", # for total stock in selected Warehouse
                     "Stock Reconciliation Item-custom_total_qty", # for total stock in selected Warehouse
 
                     "Batch-custom_barcode", # for adding a batch barcode

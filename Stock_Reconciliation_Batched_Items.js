@@ -11,6 +11,7 @@ frappe.ui.form.on('Stock Reconciliation', {
 					item: item.item_code,
 					batch_qty: ["!=", 0]
 				},
+				order_by: "batch_qty desc"
 			};
 		});
 	},
@@ -19,6 +20,15 @@ frappe.ui.form.on('Stock Reconciliation', {
 frappe.ui.form.on('Stock Reconciliation Item', {
 	item_code: function (frm, cdt, cdn) {
 		var d = locals[cdt][cdn];
+
+		if (!frm.doc.purpose) {
+			frappe.msgprint("Stock Reconciliation Purpose not set");
+			return;
+		}
+
+		if (!d.warehouse) {
+			frappe.throw("Please set the default Warehouse");
+		}
 
 		frappe.call({
 			method: 'pourtous.api.stock_recon_total_store_qty',
@@ -29,8 +39,8 @@ frappe.ui.form.on('Stock Reconciliation Item', {
 			async: false,
 			callback: (r) => {
 				if (r.message) {
-					console.log('r.message[0]["custom_total_qty"] : ', r.message[0]["custom_total_qty"]);
-					frappe.model.set_value(cdt, cdn, "custom_total_qty", r.message[0]["custom_total_qty"]);
+					console.log('r.message[0]["custom_current_total_qty"] : ', r.message[0]["custom_current_total_qty"]);
+					frappe.model.set_value(cdt, cdn, "custom_current_total_qty", r.message[0]["custom_current_total_qty"]);
 				}
 			}
 		});

@@ -6,6 +6,8 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_a
 from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
+from erpnext.stock.doctype.batch.batch import get_batch_qty
+
 from payments.payment_gateways.doctype.fs_settings.fs_settings import add_transfer_fs_credit_bill, add_transfer_billing
 
 from stdnum import ean
@@ -25,11 +27,168 @@ import random
 # 	else:
 # 		frappe.throw("else")
 
+
+@frappe.whitelist()
+def fetch_pending_stock_recons():
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		stock_recons = frappe.db.sql(
+			"""
+			SELECT name FROM `tabStock Reconciliation` WHERE docstatus = 0;
+			""",
+			as_dict=True
+		)
+		# frappe.throw(str(stock_recon))
+	frappe.enqueue(add_serial_batch_bundle, doc=stock_recons[0]["name"], script_call=True,
+				queue="long", timeout=6000, is_async=False, at_front=True)
+
+
+# called from Stock Recon hook:-
+@frappe.whitelist()
+def add_serial_batch_bundle(doc, method=None, script_call=False):
+	if not frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		return
+
+	if script_call:
+		doc = frappe.get_doc("Stock Reconciliation", doc)
+
+	if not doc.items:
+		frappe.msgprint("No Items added!")
+		return
+
+	if not doc.set_warehouse:
+		frappe.msgprint("Please set the Default Warehouse")
+		return
+
+	if doc.purpose == "Stock Reconciliation":
+		count = len(doc.items)
+		i = 0
+
+		# for i in range(count):
+		for item in doc.items:
+			# Initialising variables for re-use in for-loop
+			has_batch = batch_list = bundle = batch_bundle = qty_add = qty_reduce = batch_qty = res = None
+			bundle_batches = []
+
+			item.valuation_rate = frappe.get_value("Item Price", {"price_list": "Standard Buying", "item_code": item.item_code}, "price_list_rate")
+			# if hasattr(item, "serial_and_batch_bundle"): # for ERPNext version-15 only
+
+			# if script_call:
+			res = stock_recon_total_store_qty(item.item_code, item.warehouse)
+			if res:
+				item.custom_current_total_qty = res[0]["custom_current_total_qty"]
+
+			# has_batch = frappe.get_value("Item", {"has_batch_no": 1, "item_code": item.item_code}, "name")
+			has_batch_no = frappe.get_value("Item", {"item_code": item.item_code}, "has_batch_no")
+
+			if item.custom_total_qty and item.custom_current_total_qty:
+				if has_batch_no == 0 or float(item.custom_current_total_qty) == float(item.custom_total_qty):
+					item.qty = item.custom_total_qty
+			else:
+				continue
+
+			# if item.item_code == "243":
+			# 	frappe.throw(str(item.custom_total_qty))
+
+			# if has_batch and item.qty !=0 and item.qty != item.current_qty:
+			# if custom_total_qty is None then the following if condition is falsy; if it is 0 or any value, then it is truthy
+			# if has_batch and (item.custom_total_qty >= 0) and (item.custom_current_total_qty != item.custom_total_qty):
+			if has_batch_no == 1 and float(item.custom_current_total_qty) != float(item.custom_total_qty) and item.custom_total_qty is not None:
+				if item.serial_and_batch_bundle or item.current_serial_and_batch_bundle:
+					continue # bundle is already set
+
+				# frappe.throw(str(i))
+				item.use_serial_batch_fields = 0
+
+				batch_list = get_batch_qty(item_code=item.item_code, warehouse=item.warehouse)
+
+				if len(batch_list) > 0:
+					# frappe.throw(str(batch_list))
+					bundle_batches = []
+
+					if item.custom_total_qty > item.custom_current_total_qty: # Qty Add
+						qty_add = item.custom_total_qty - item.custom_current_total_qty
+
+						# Adding to 1st available batch in list
+						bundle_batches.append({
+							"batch_no": batch_list[0].batch_no,
+							"qty": (batch_list[0].qty + qty_add)
+						})
+
+					else: # Qty Reduce
+						qty_reduce = item.custom_current_total_qty - item.custom_total_qty
+
+						for batch in batch_list:
+							if qty_reduce > 0:
+								if batch.qty > qty_reduce:
+									batch_qty = batch.qty - qty_reduce
+								else:
+									batch_qty = 0
+
+								bundle_batches.append({
+									"batch_no": batch.batch_no,
+									"qty": batch_qty
+								})
+
+								qty_reduce -= batch.qty
+
+							else:
+								bundle_batches.append({
+									"batch_no": batch.batch_no,
+									"qty": batch.qty
+								})
+
+				else: # create a new batch for the bundle
+					batch_doc = frappe.get_doc(
+						{
+							"doctype": "Batch",
+							"item": item.item_code,
+							"batch_qty": item.custom_total_qty,
+						}
+					)
+
+					batch_doc.insert()
+					bundle_batches.append({
+						"batch_no": batch_doc.name,
+						"qty": batch_doc.batch_qty
+					})
+
+				bundle = {
+					"doctype": "Serial and Batch Bundle",
+					"item_code": item.item_code,
+					"warehouse": item.warehouse,
+					"voucher_type": "Stock Reconciliation",
+					"type_of_transaction": "Inward", # or "Outward"
+					"posting_date": doc.get("posting_date"),
+					"posting_time": doc.get("posting_time"),
+					"company": doc.get("company"),
+					"entries": bundle_batches
+				}
+
+				batch_bundle = frappe.get_doc(bundle)
+				batch_bundle.insert()
+
+				# frappe.throw(str(batch_bundle))
+				item.serial_and_batch_bundle = batch_bundle.name
+				item.qty = frappe.db.get_value("Serial and Batch Bundle", batch_bundle.name, "total_qty")
+
+				frappe.publish_progress(
+					int((i/count)*100),
+					title = "Processing Stock Reconciliation Item Batch Bundles",
+					description = f"Processing {i} of {count} Item Rows"
+				)
+				i += 1
+
+		frappe.msgprint(f"Processed {i} of {count} Stock Recons")
+
+	if script_call:
+		doc.save()
+
+
 @frappe.whitelist()
 def stock_recon_total_store_qty(item_code, warehouse):
 	return frappe.db.sql(
 		"""
-		SELECT `tabStock Ledger Entry`.qty_after_transaction AS custom_total_qty
+		SELECT `tabStock Ledger Entry`.qty_after_transaction AS custom_current_total_qty
 		FROM `tabStock Ledger Entry`
 		WHERE `tabStock Ledger Entry`.item_code = '{0}'
 		AND `tabStock Ledger Entry`.is_cancelled=0 AND warehouse LIKE '{1}'
@@ -38,6 +197,25 @@ def stock_recon_total_store_qty(item_code, warehouse):
 		""".format(item_code, warehouse),
 		as_dict=True
 	)
+
+def stock_recon_record_no_change_items(doc, method):
+	if doc.purpose == "Stock Reconciliation":
+		for item in doc.items:
+			if (item.qty == item.current_qty and not (item.custom_current_total_qty != 0 and item.qty == 0 and item.current_qty == 0)) or (
+				item.custom_current_total_qty == 0 and item.qty == 0 and item.current_qty == 0):
+				if any(row.item_code == item.item_code for row in doc.get("custom_stock_recon_no_change_item")):
+					continue
+				else:
+					doc.append(
+						"custom_stock_recon_no_change_item",
+						{
+							"item_code": item.item_code,
+							"item_name": item.item_name,
+							"quantity" : item.custom_total_qty
+						},
+					)
+
+		# frappe.db.commit()
 
 
 @frappe.whitelist()
@@ -255,6 +433,8 @@ def make_fs_payment(doc, method):
 					else:
 						frappe.db.set_value('Sales Invoice', doc.name, 'remarks', res['remarks'])
 
+					frappe.db.set_value('Sales Invoice', doc.name, 'paid_amount', fAmount)
+
 			else:
 				frappe.db.set_value('Sales Invoice', doc.name, 'custom_fs_transfer_status', res['custom_fs_transfer_status'])
 				existing_remarks = frappe.db.get_value('Sales Invoice', doc.name, 'remarks')
@@ -268,6 +448,7 @@ def make_fs_payment(doc, method):
 
 		else:
 			frappe.db.set_value('Sales Invoice', doc.name, 'custom_fs_transfer_status', 'Pending')
+			frappe.db.commit()
 
 
 def cancel_payment_entry(doc, method):
@@ -1221,7 +1402,7 @@ def update_price_lists(doc, method):
 						#"batch_no": item.batch_no
 					})
 
-				item_price.insert()
+					item_price.insert()
 
 		else:
 			existing_item_sell_price_entry_list = frappe.db.get_list(
@@ -1276,22 +1457,6 @@ def update_price_lists(doc, method):
 				frappe.db.set_value("Item Price", existing_item_buy_price_entry_list[0]['name'], "price_list_rate", item.price_list_rate)
 
 	frappe.db.commit()
-
-
-def stock_recon_record_no_change_items(doc, method):
-	if doc.purpose == "Stock Reconciliation":
-		for item in doc.items:
-			if item.qty == item.current_qty:
-				doc.append(
-					"custom_stock_recon_no_change_item",
-					{
-						"item_code": item.item_code,
-						"item_name": item.item_name,
-						"quantity" : item.qty
-					},
-				)
-
-		# frappe.db.commit()
 
 
 def stock_recon_update_price_lists(doc, method):
