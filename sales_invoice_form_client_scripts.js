@@ -1,13 +1,4 @@
 frappe.ui.form.on('Sales Invoice', {
-	//refresh(frm) {
-		// your code here
-	//},
-
-	// before_save(frm) {
-	// 	if (!frm.doc.amended_from)
-    //         frappe.throw(__("Please submit Sales Invoices from the POS"));
-	// },
-
 	custom_fs_account_number(frm) {
 		if (!frm.doc.customer) {
 			frappe.call({
@@ -26,7 +17,6 @@ frappe.ui.form.on('Sales Invoice', {
 		frm.refresh_field("update_stock");
 		frm.refresh_field("set_warehouse");
 	},
-
 
 	before_submit(frm) {
 		if (!frm.doc.amended_from) {
@@ -61,7 +51,17 @@ frappe.ui.form.on('Sales Invoice', {
 				frappe.session.user == "karan.wilson@auroville.org.in") {
 				}
 			else {
-				frappe.throw("Please request the executives to cancell Invoice");
+				frappe.throw("Please request the executives to cancel Invoice");
+			}
+		}
+		else if (frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service") {
+			if (frappe.session.user == "Administrator" ||
+				frappe.session.user == "kumaran@auroville.org.in" ||
+				frappe.session.user == "iyyappan@auroville.org.in" ||
+				frappe.session.user == "karan.wilson@auroville.org.in") {
+				}
+			else {
+				frappe.throw("Please request the executives to cancel Invoice");
 			}
 		}
 	}
