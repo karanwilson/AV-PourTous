@@ -2903,8 +2903,8 @@ def fetch_erp_bills_list(process_background):
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 0 AND custom_zoho_bill_id IS NULL
-			AND posting_date between "2025-06-01" and "2026-05-31"
-			AND bill_date <= "2026-05-31"
+			AND posting_date between "2025-06-01" and "2026-07-31"
+			AND bill_date <= "2026-06-31"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
@@ -2947,7 +2947,7 @@ def fetch_erp_debitnotes_list(process_background):
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-			AND posting_date between "2025-06-01" and "2026-05-31"
+			AND posting_date between "2025-06-01" and "2026-06-31"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
@@ -3158,11 +3158,13 @@ def add_erp_bill_debitnote_in_zoho(bill):
 
 		if bill_doc.return_against:
 			return_against_bill_id = frappe.get_value("Purchase Invoice", bill_doc.return_against, "custom_zoho_bill_id")
-			if not return_against_bill_id:
-				frappe.msgprint("Please push the linked Purchase Invoice, before pushing this Purchase-Return Invoice")
-				return
-			else:
-				is_return = True
+			# if not return_against_bill_id:
+			# 	frappe.msgprint("Please push the linked Purchase Invoice, before pushing this Purchase-Return Invoice")
+			# 	return
+			# else:
+			# 	is_return = True
+
+			is_return = True
 
 		else:
 			is_return = False
@@ -3210,7 +3212,11 @@ def add_erp_bill_debitnote_in_zoho(bill):
 			bill_doc.reload()
 			bill_doc.custom_zb_vendor_credit_id = zb_vendor_credit_id
 			if not bill_doc.custom_bill_id:
-				bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)) # custom_bill_id is Mandatory & unique
+				if bill_doc.bill_no:
+					bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)) # custom_bill_id is Mandatory & unique
+				else:
+					bill_doc.custom_bill_id = bill_doc.name # custom_bill_id is Mandatory & unique
+
 			bill_doc.save()
 			frappe.db.commit()
 			# return { "ADDED" }
@@ -3301,7 +3307,18 @@ def add_erp_bill_debitnote_in_zoho(bill):
 					msg = res.get("message") + " for location: " + api_controller.location_name
 					frappe.throw(msg)
 			else:
-				zb_bill_id = res2[0].get("bill_id")
+				bill_exists = frappe.db.exists("Purchase Invoice", {"custom_zoho_bill_id": res2[0].get("bill_id")})
+				if bill_exists:
+					if bill_doc.bill_no == bill_doc.custom_bill_id:
+						bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999))
+						bill_doc.save()
+					data["bill_number"] = bill_doc.custom_bill_id[:16] # New Mandatory unique Supplier Bill Id
+					res = api_controller.post_bill(data)
+					if "bill_id" in res:
+						zb_bill_id = res.get('bill_id')
+
+				else:
+					zb_bill_id = res2[0].get("bill_id")
 
 		else:
 			res = api_controller.post_bill(data)
@@ -3752,9 +3769,9 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 @frappe.whitelist()
 def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_return):
 	# frappe.throw(str(line_items_dict))
-	# erp_line_items = line_items_dict
+	erp_line_items = line_items_dict
 
-	erp_line_items = json.loads(line_items_dict)
+	# erp_line_items = json.loads(line_items_dict)
 	#frappe.throw(str(erp_line_items))
 	#frappe.throw(str(erp_line_items[0]))
 

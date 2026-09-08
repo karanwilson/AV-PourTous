@@ -319,8 +319,7 @@
    "default": "0",
    "fieldname": "pi_sync_in_progress",
    "fieldtype": "Check",
-   "label": "PI Sync In Progress",
-   "read_only": 1
+   "label": "PI Sync In Progress"
   },
   {
    "default": "0",
@@ -393,7 +392,6 @@
    "fieldtype": "Column Break"
   }
  ],
- "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
@@ -444,8 +442,6 @@
    "write": 1
   }
  ],
- "row_format": "Dynamic",
- "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

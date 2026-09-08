@@ -50,57 +50,8 @@ frappe.query_reports["Push Consol Sales-Inv ZB-API"] = {
 						custom_fs_account_number: custom_fs_account_number,
 						is_return: is_return
 					},
-					freeze: true,
-					timeout: 0,
-					async: false,
-					callback: function (r) {
-						console.log("r: ", r);
-						if (r.message) {
-							const length = Object.keys(r.message).length;
-							//console.log("typeof(r.message): ", typeof(r.message));
-							console.log("Number of PT invoices to sync: ", length);
-							console.log("Invoice List: ", r.message);
-
-							let added = 0;
-							let counter = 0;
-
-							for (const key in r.message) {
-								//if (counter == 1) // comment this for full run of the loop
-								//	break; // comment this for full run of the loop
-								//console.log("key: ", key);
-								//console.log("r.message[key]: ", r.message[key]);
-
-								//counter++ // comment this for full run of the loop
-
-								setTimeout(() => {
-									frappe.call({
-										method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.sync_pt_consol_inv_with_zb',
-										args: {
-											consol_inv_pt_account: key,
-											line_items_dict: r.message[key],
-											date: to_date,
-											is_return: is_return
-										},
-										async: false, // comment this for limited/trial runs of the loop
-									}).then(r => {
-										if (r.message == "ADDED")
-											added++;
-									}).then(r => {
-										// placing this statement block here as it does not work outside of the main frappe.call block
-										// though it prints on console for each loop iteration (comes in only one line, with the loop count),
-										// it shows an accurate result in the end. This design works.
-										console.log("Added ", added, ", of ", length);
-									});
-									//const count = counter+1;
-									counter++ // comment this for limited/trial runs of the loop
-									const message = "Adding "+counter+" of "+length;
-									frappe.show_progress("Pushing PT Invoices to Zoho Books", counter, length, message);
-								}, 0);
-							}
-						}
-					},
 				});
-				// frappe.show_alert({message: __('Initiated Background Push of Invoices to Zoho Books'), indicator: 'green'});
+				frappe.show_alert({message: __('Initiated Background Push of Invoices to Zoho Books'), indicator: 'green'});
 			}
 		);
 	}

@@ -48,6 +48,12 @@ def get_columns():
 				"width": "200"
 			},
 			{
+				"fieldname": "price_list_rate",
+				"label": "Last Sell Price",
+				"fieldtype": "Currency",
+				"width": "100"
+			},
+			{
 				"fieldname": "stores_qty",
 				"label": "Stores",
 				"fieldtype": "Float",
@@ -78,7 +84,7 @@ def get_columns():
 				"width": "80"
 			},
 		]
-	
+
 	else:
 		return [
 			{
@@ -106,6 +112,12 @@ def get_columns():
 				"width": "200"
 			},
 			{
+				"fieldname": "price_list_rate",
+				"label": "Last Sell Price",
+				"fieldtype": "Currency",
+				"width": "120"
+			},
+			{
 				"fieldname": "stores_qty",
 				"label": "Stores Qty",
 				"fieldtype": "Float",
@@ -129,7 +141,7 @@ def get_data(filters):
 				FROM
 
 				(
-				SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier,
+				SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier, `tabItem Price`.price_list_rate,
 				(
 					select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 					where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
@@ -166,6 +178,7 @@ def get_data(filters):
 					limit 1
 				) AS store_3_qty
 				FROM tabItem, `tabItem Supplier`
+				LEFT JOIN `tabItem Price` ON `tabItem Price`.item_code = tabItem.item_code
 				WHERE tabItem.item_code = `tabItem Supplier`.parent
 				AND `tabItem Supplier`.supplier = '{5}'
 				) table1
@@ -180,7 +193,7 @@ def get_data(filters):
 				FROM
 
 				(
-				SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier,
+				SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier, `tabItem Price`.price_list_rate,
 				(
 					select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 					where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
@@ -217,6 +230,7 @@ def get_data(filters):
 					limit 1
 				) AS store_3_qty
 				FROM tabItem, `tabItem Supplier`
+				LEFT JOIN `tabItem Price` ON `tabItem Price`.item_code = tabItem.item_code
 				WHERE tabItem.item_code = `tabItem Supplier`.parent
 				) table1
 				""".format("Stores%", "Stall%", "Store 1%", "Store 2%", "Store 3%"),
@@ -224,7 +238,7 @@ def get_data(filters):
 			)
 
 		return query
-	
+
 	else:
 		if filters.supplier:
 			query = frappe.db.sql(
@@ -233,7 +247,7 @@ def get_data(filters):
 				FROM
 
 				(
-				SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier,
+				SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier, `tabItem Price`.price_list_rate,
 				(
 					select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 					where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
@@ -248,9 +262,10 @@ def get_data(filters):
 					order by posting_date desc, posting_time desc, creation desc
 					limit 1
 				) AS sunship_qty
-				FROM tabItem, `tabItem Supplier`
-				WHERE tabItem.item_code = `tabItem Supplier`.parent
+				FROM tabItem JOIN `tabItem Supplier` ON tabItem.item_code = `tabItem Supplier`.parent
 				AND `tabItem Supplier`.supplier = '{2}'
+				LEFT JOIN `tabItem Price` ON `tabItem Price`.item_code = tabItem.item_code
+				AND `tabItem Price`.price_list = "Standard Selling"
 				) table1
 				""".format("Stores%", "Sunship%", filters.supplier),
 				as_dict=True
@@ -263,7 +278,7 @@ def get_data(filters):
 				FROM
 
 				(
-				SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier,
+				SELECT tabItem.item_code, tabItem.item_name, tabItem.item_group, `tabItem Supplier`.supplier, `tabItem Price`.price_list_rate,
 				(
 					select `tabStock Ledger Entry`.qty_after_transaction from `tabStock Ledger Entry`
 					where (`tabStock Ledger Entry`.item_code = tabItem.item_code) and `tabStock Ledger Entry`.is_cancelled=0
@@ -278,8 +293,9 @@ def get_data(filters):
 					order by posting_date desc, posting_time desc, creation desc
 					limit 1
 				) AS sunship_qty
-				FROM tabItem, `tabItem Supplier`
-				WHERE tabItem.item_code = `tabItem Supplier`.parent
+				FROM tabItem JOIN `tabItem Supplier` ON tabItem.item_code = `tabItem Supplier`.parent
+				LEFT JOIN `tabItem Price` ON `tabItem Price`.item_code = tabItem.item_code
+				AND `tabItem Price`.price_list = "Standard Selling"
 				) table1
 				""".format("Stores%", "Sunship%"),
 				as_dict=True
