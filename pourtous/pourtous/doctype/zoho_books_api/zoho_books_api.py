@@ -26,6 +26,7 @@ class ZohoBooksAPI(Document):
 			self.validate_zoho_api_params(self.scope)
 			self.update_locations()
 			self.update_accounts()
+			self.update_bank_accounts()
 			self.update_walk_in_customer()
 
 
@@ -181,6 +182,25 @@ class ZohoBooksAPI(Document):
 			asset_account.insert()
 
 
+	def update_bank_accounts(self):
+		zoho_bank_accounts = self.get_bank_accounts('Status.Active')
+
+		frappe.db.delete("Zoho Bank Accounts") # delete the old Zoho Bank Accounts data
+
+		for data in zoho_bank_accounts:
+			bank_account = frappe.get_doc({
+					"doctype": 'Zoho Bank Accounts',
+					"account_id": data.get('account_id'),
+					"account_name": data.get('account_name'),
+					"account_number": data.get('account_number'),
+					"account_code": data.get('account_code'),
+					"account_type": data.get('account_type'),
+					"filter_by": 'Active',
+					"bank_name": data.get('bank_name')
+				})
+			bank_account.insert()
+
+
 	def update_walk_in_customer(self):
 		customers = self.get_contacts(contact_type='customer',company_name='Walk In customers')
 		frappe.db.delete("Zoho Walk In customer") # delete the old Contact data
@@ -196,7 +216,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_locations(self):
-		master = "locations"
+		master = 'locations'
 		scope='ZohoBooks.settings.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -224,7 +244,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_accounts(self, account_type):
-		master = "chartofaccounts"
+		master = 'chartofaccounts'
 		scope='ZohoBooks.accountants.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -252,8 +272,163 @@ class ZohoBooksAPI(Document):
 				r.raise_for_status()
 
 
+	def get_bank_accounts(self, status):
+		master = 'bankaccounts'
+		scope='ZohoBooks.banking.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/bankaccounts?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'filter_by': status
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get('message') == 'success':
+				return r.json().get('bankaccounts')
+			else:
+				r.raise_for_status()
+
+
+	# def get_transactions_list(self, account_id, reference_number, filter_by):
+	def get_transactions_list(self, account_id, filter_by, page):
+		master = 'banktransactions'
+		scope='ZohoBooks.banking.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/banktransactions?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'account_id': account_id,
+				# 'reference_number': reference_number,
+				'filter_by': filter_by,
+				'page': page
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			if r.json().get('message') == 'success':
+				return r.json().get('banktransactions')
+			else:
+				frappe.msgprint(r.json().get('message'))
+				r.raise_for_status()
+
+
+	def get_matching_transactions(self, transaction_id, transaction_type, reference_number):
+		master = 'banktransactions'
+		scope='ZohoBooks.banking.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/banktransactions/uncategorized/' + transaction_id + '/match?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'transaction_type': transaction_type,
+ 				'reference_number': reference_number
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+
+			# frappe.msgprint(r.json().get('message'))
+			return r.json()
+
+			# if r.json().get('message') == 'success':
+			# 	return r.json().get('banktransactions')
+			# else:
+			# 	r.raise_for_status()
+
+
+	def match_transaction(self, account_id, transaction_id, data):
+		master = 'uncategorized'
+		scope='ZohoBooks.banking.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/banktransactions/uncategorized/' + transaction_id + '/match?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'account_id': account_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url, data=json.dumps(data))
+
+			return r.json()
+
+			# if r.json().get('message') != 'The transaction has been matched.':
+			# 	frappe.msgprint("r.json().get('message')")
+			# 	r.raise_for_status()
+
+
+	def categorize_as_customer_payment(self, transaction_id, data):
+		master = 'uncategorized'
+		scope='ZohoBooks.banking.CREATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/banktransactions/uncategorized/' + transaction_id + '/categorize/customerpayments?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.post(api_url, data=json.dumps(data))
+
+			return r.json()
+
+			# if r.json().get('message') != 'The transaction has been matched.':
+			# 	frappe.msgprint("r.json().get('message')")
+			# 	r.raise_for_status()
+
+
 	def post_contact(self, data):
-		master = "contacts"
+		master = 'contacts'
 		scope='ZohoBooks.contacts.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -283,18 +458,23 @@ class ZohoBooksAPI(Document):
 			# 	if not frappe.db.get_value("Customer", {"customer_name": data["contact_name"]}, 'customer_name'):
 			# 		return self.put_contact(data)
 			#if r.json().get('message') == 'The contact has been added.':
+
+			frappe.msgprint(r.json().get('message'))
+
 			if r.json().get('code') == 0:
-				frappe.msgprint(r.json().get('message'))
+				# frappe.msgprint(r.json().get('message'))
 				return {
-					"custom_zoho_contact_id": r.json().get('contact').get('contact_id'),
+					'custom_zoho_contact_id': r.json().get('contact').get('contact_id'),
 				}
 			else:
-				frappe.msgprint(r.json().get('message'))
+				return {
+					'message': r.json().get('message')
+				}
 				#r.raise_for_status()
 
 
 	def put_contact(self, contact_id, data):
-		master = "contacts"
+		master = 'contacts'
 		scope='ZohoBooks.contacts.UPDATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -327,7 +507,7 @@ class ZohoBooksAPI(Document):
 
 
 	def delete_contact(self, contact_id):
-		master = "contacts"
+		master = 'contacts'
 		scope='ZohoBooks.contacts.DELETE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -352,8 +532,8 @@ class ZohoBooksAPI(Document):
 			# r.raise_for_status()
 
 
-	def get_contacts(self, contact_type=None, company_name=None):
-		master = "contacts"
+	def get_contacts(self, contact_type=None, company_name=None, contact_name=None):
+		master = 'contacts'
 		scope='ZohoBooks.contacts.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -366,7 +546,8 @@ class ZohoBooksAPI(Document):
 			s.params = {
 				'organization_id': self.organization_id,
 				'contact_type': contact_type,
-				'company_name': company_name
+				'company_name': company_name,
+				'contact_name': contact_name
 			}
 
 			s.headers = {
@@ -383,7 +564,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_a_contact(self, contact_id):
-		master = "contacts"
+		master = 'contacts'
 		scope='ZohoBooks.contacts.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -411,7 +592,7 @@ class ZohoBooksAPI(Document):
 
 
 	def post_tax(self, data):
-		master = "settings"
+		master = 'settings'
 		scope='ZohoBooks.settings.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -445,7 +626,7 @@ class ZohoBooksAPI(Document):
 
 
 	def put_tax(self, tax_id, data):
-		master = "settings"
+		master = 'settings'
 		scope='ZohoBooks.settings.UPDATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -478,7 +659,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_a_tax(self, tax_id):
-		master = "settings"
+		master = 'settings'
 		scope='ZohoBooks.settings.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -501,7 +682,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_taxes(self):
-		master = "settings"
+		master = 'settings'
 		scope='ZohoBooks.settings.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -530,7 +711,7 @@ class ZohoBooksAPI(Document):
 
 
 	def delete_tax(self, tax_id):
-		master = "settings"
+		master = 'settings'
 		scope='ZohoBooks.settings.DELETE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -558,7 +739,7 @@ class ZohoBooksAPI(Document):
 
 
 	def post_tax_group(self, data):
-		master = "settings"
+		master = 'settings'
 		scope='ZohoBooks.settings.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -586,7 +767,7 @@ class ZohoBooksAPI(Document):
 
 
 	def put_tax_group(self, tax_id, data):
-		master = "settings"
+		master = 'settings'
 		scope='ZohoBooks.settings.UPDATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -609,7 +790,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_a_tax_group(self, tax_id):
-		master = "settings"
+		master = 'settings'
 		scope='ZohoBooks.settings.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -637,7 +818,7 @@ class ZohoBooksAPI(Document):
 
 
 	def delete_tax_group(self, tax_id):
-		master = "settings"
+		master = 'settings'
 		scope='ZohoBooks.settings.DELETE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -666,7 +847,7 @@ class ZohoBooksAPI(Document):
 
 
 	def post_item(self, data):
-		master = "items"
+		master = 'items'
 		scope='ZohoBooks.settings.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -704,7 +885,7 @@ class ZohoBooksAPI(Document):
 
 
 	def put_item(self, item_id, data):
-		master = "items"
+		master = 'items'
 		scope='ZohoBooks.settings.UPDATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -732,7 +913,7 @@ class ZohoBooksAPI(Document):
 
 
 	def delete_item(self, item_id):
-		master = "items"
+		master = 'items'
 		scope='ZohoBooks.settings.DELETE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -760,7 +941,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_an_item(self, item):
-		master = "items"
+		master = 'items'
 		scope='ZohoBooks.settings.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -790,7 +971,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_items(self, sku=None, name=None):
-		master = "items"
+		master = 'items'
 		scope='ZohoBooks.settings.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -820,7 +1001,7 @@ class ZohoBooksAPI(Document):
 
 
 	def post_bill(self, data):
-		master = "bills"
+		master = 'bills'
 		scope='ZohoBooks.bills.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -849,6 +1030,7 @@ class ZohoBooksAPI(Document):
 
 			else:
 				frappe.msgprint(r.json().get('message'))
+				# frappe.throw(r.json().get('message'))
 				return r.json()
 				#with open('tax_info_list_exception_err.txt', 'w') as file:
 				#	file.write(r.json().get('message'))
@@ -856,7 +1038,7 @@ class ZohoBooksAPI(Document):
 
 
 	def put_bill(self, bill_id, data):
-		master = "bills"
+		master = 'bills'
 		scope='ZohoBooks.bills.UPDATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -882,7 +1064,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_a_bill(self, bill_id):
-		master = "bills"
+		master = 'bills'
 		scope='ZohoBooks.bills.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -914,7 +1096,7 @@ class ZohoBooksAPI(Document):
 	def add_attachment_to_bill(self, bill_id, file_name, file_url):
 		from pathlib import Path
 
-		master = "bills"
+		master = 'bills'
 		scope = "ZohoBooks.bills.CREATE"
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -968,7 +1150,7 @@ class ZohoBooksAPI(Document):
 			return r.json()
 
 
-	def query_bill(self, bill_number, reference_number):
+	def query_bill(self, bill_number=None, reference_number=None):
 		master = "bills"
 		scope='ZohoBooks.bills.READ'
 
@@ -1145,7 +1327,7 @@ class ZohoBooksAPI(Document):
 
 
 	def post_invoice(self, data):
-		master = "invoices"
+		master = 'invoices'
 		scope='ZohoBooks.invoices.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1178,7 +1360,7 @@ class ZohoBooksAPI(Document):
 
 
 	def post_creditnote(self, data):
-		master = "creditnotes"
+		master = 'creditnotes'
 		scope='ZohoBooks.creditnotes.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1210,7 +1392,7 @@ class ZohoBooksAPI(Document):
 
 
 	def post_creditnote_refund(self, data, creditnote_id):
-		master = "creditnotes"
+		master = 'creditnotes'
 		scope='ZohoBooks.creditnotes.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1242,7 +1424,7 @@ class ZohoBooksAPI(Document):
 
 
 	def delete_creditnote(self, custom_zb_creditnote_id):
-		master = "creditnotes"
+		master = 'creditnotes'
 		scope='ZohoBooks.creditnotes.DELETE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1269,7 +1451,7 @@ class ZohoBooksAPI(Document):
 
 
 	def void_creditnote(self, custom_zb_creditnote_id):
-		master = "creditnotes"
+		master = 'creditnotes'
 		scope='ZohoBooks.creditnotes.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1296,7 +1478,7 @@ class ZohoBooksAPI(Document):
 
 
 	def delete_creditnote_refund(self, custom_zb_creditnote_id, custom_zb_creditnote_refund_id):
-		master = "creditnotes"
+		master = 'creditnotes'
 		scope='ZohoBooks.creditnotes.DELETE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1323,7 +1505,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_a_credit_note(self, creditnote_id):
-		master = "creditnotes"
+		master = 'creditnotes'
 		scope='ZohoBooks.creditnotes.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1352,7 +1534,7 @@ class ZohoBooksAPI(Document):
 
 
 	def query_credit_note(self, creditnote_number=None):
-		master = "creditnotes"
+		master = 'creditnotes'
 		scope='ZohoBooks.creditnotes.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1383,7 +1565,7 @@ class ZohoBooksAPI(Document):
 
 
 	def query_invoice(self, invoice_number=None):
-		master = "invoices"
+		master = 'invoices'
 		scope='ZohoBooks.invoices.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1413,7 +1595,7 @@ class ZohoBooksAPI(Document):
 
 
 	def query_credit_note(self, creditnote_number=None):
-		master = "creditnotes"
+		master = 'creditnotes'
 		scope='ZohoBooks.creditnotes.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1443,7 +1625,7 @@ class ZohoBooksAPI(Document):
 
 
 	def get_an_invoice(self, invoice_id):
-		master = "invoices"
+		master = 'invoices'
 		scope='ZohoBooks.invoices.READ'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1473,7 +1655,7 @@ class ZohoBooksAPI(Document):
 
 
 	def put_invoice(self, invoice_id, data):
-		master = "invoices"
+		master = 'invoices'
 		scope='ZohoBooks.invoices.UPDATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1502,7 +1684,7 @@ class ZohoBooksAPI(Document):
 
 
 	def void_invoice(self, invoice_id):
-		master = "invoices"
+		master = 'invoices'
 		scope='ZohoBooks.invoices.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1529,7 +1711,7 @@ class ZohoBooksAPI(Document):
 
 
 	def mark_invoice_as_sent(self, invoice_id):
-		master = "invoices"
+		master = 'invoices'
 		scope='ZohoBooks.invoices.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1556,7 +1738,7 @@ class ZohoBooksAPI(Document):
 
 
 	def delete_invoice(self, invoice_id):
-		master = "invoices"
+		master = 'invoices'
 		scope='ZohoBooks.invoices.DELETE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1583,7 +1765,7 @@ class ZohoBooksAPI(Document):
 
 
 	def delete_customerpayments(self, payment_id):
-		master = "payments"
+		master = 'payments'
 		scope='ZohoBooks.customerpayments.DELETE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1610,7 +1792,7 @@ class ZohoBooksAPI(Document):
 
 
 	def post_payment(self, data):
-		master = "payments"
+		master = 'payments'
 		scope='ZohoBooks.customerpayments.CREATE'
 
 		token_to_use = self.query_stored_tokens(master, scope)
@@ -1627,7 +1809,7 @@ class ZohoBooksAPI(Document):
 			s.headers = {
 				'Authorization': authorization,
 				'content-type': 'application/json'
-				}			
+				}
 
 			r = s.post(api_url, data=json.dumps(data))
 			#frappe.throw(str(r.json()))
@@ -1694,6 +1876,15 @@ def update_contact_in_zoho(doc, method):
 		res = api_controller.post_contact(data)
 		if res.get("custom_zoho_contact_id"):
 			doc.custom_zoho_contact_id = res.get("custom_zoho_contact_id")
+
+		elif res.get("message"):
+			if "already exists" in res.get("message"):
+				contacts = api_controller.get_contacts(contact_type='customer', contact_name = doc.customer_name)
+				if contacts:
+					if len(contacts) == 1:
+						contact_id = contacts[0].get("contact_id")
+						doc.custom_zoho_contact_id = contact_id
+						res = api_controller.put_contact(contact_id, data)
 
 	else:
 		# put/update existing Contact
@@ -1770,6 +1961,15 @@ def update_supplier_contact_in_zoho(doc, method):
 				doc.custom_zoho_contact_id = res.get("custom_zoho_contact_id")
 				return doc.custom_zoho_contact_id
 				# returning this value for the add_supplier_to_zb function below (for bulk Supplier additions to Zoho)
+
+			elif res.get("message"):
+				if "duplicate vendor names" in res.get("message"):
+					contacts = api_controller.get_contacts(contact_type='vendor', contact_name = doc.supplier_name)
+					if contacts:
+						if len(contacts) == 1:
+							contact_id = contacts[0].get("contact_id")
+							doc.custom_zoho_contact_id = contact_id
+							res = api_controller.put_contact(contact_id, data)
 
 	else:
 		# put/update existing Contact
@@ -3089,8 +3289,9 @@ def add_erp_bill_debitnote_in_zoho(bill):
 		zb_bill_id = None
 
 		# check if bill already exists
-		res2 = api_controller.query_bill(data["bill_number"], data["reference_number"])
-		#frappe.throw(str(res2))
+		# res2 = api_controller.query_bill(data["bill_number"], data["reference_number"])
+		res2 = api_controller.query_bill(None, data["reference_number"])
+		# frappe.throw(str(res2))
 		if res2:
 			#frappe.throw(res2[0].get("bill_id"))
 			if api_controller.location_id:
@@ -3104,22 +3305,14 @@ def add_erp_bill_debitnote_in_zoho(bill):
 
 		else:
 			res = api_controller.post_bill(data)
+			if res.get('message') == 'A bill with this number has already been created for this vendor. Please check and try again.':
+				# res2 = api_controller.query_bill(data["bill_number"], data["reference_number"])
+				#frappe.throw(str(res2))
+				data["bill_number"] = bill_doc.custom_bill_id[:16] # New Mandatory unique Supplier Bill Id
+				res = api_controller.post_bill(data) # re-post after amending the duplication bill_number, with unique bill_id
+
 			if "bill_id" in res:
 				zb_bill_id = res.get('bill_id')
-
-		# elif res.get('message') == 'A bill with this number has already been created for this vendor. Please check and try again.':
-		# 	res2 = api_controller.query_bill(data["bill_number"], data["reference_number"])
-		# 	#frappe.throw(str(res2))
-		# 	if res2:
-		# 		#frappe.throw(res2[0].get("bill_id"))
-		# 		if api_controller.location_id:
-		# 			if res2[0].get("location_id") == api_controller.location_id:
-		# 				zb_bill_id = res2[0].get("bill_id")
-		# 			else:
-		# 				msg = res.get("message") + " for location: " + api_controller.location_name
-		# 				frappe.throw(msg)
-		# 		else:
-		# 			zb_bill_id = res2[0].get("bill_id")
 
 		if zb_bill_id is not None:
 			if bill_doc.custom_zoho_bill_id:
@@ -3451,6 +3644,12 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 					"label": "cf_fs_account_number",
 					"value": invoice_doc.custom_fs_account_number,
 					"data_type": "text"
+				},
+				{
+					"index": 5,
+					"label": "cf_fs_transaction_id",
+					"value": invoice_doc.custom_fs_transaction_id,
+					"data_type": "text"
 				}
 			]
 
@@ -3509,7 +3708,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 			creditnote_data['is_inclusive_tax'] = is_inclusive_tax
 
 		if invoice_doc.discount_amount:
-			creditnote_data['discount'] = invoice_doc.discount_amount
+			creditnote_data['discount'] = abs(invoice_doc.discount_amount) # Zoho Books expects discount amount to be a positive value
 			if invoice_doc.apply_discount_on == "Grand Total":
 				creditnote_data['is_discount_before_tax'] = False
 			else:
@@ -3948,6 +4147,12 @@ def sync_inv_with_zoho_books(invoice, customer):
 					"label": "cf_fs_account_number",
 					"value": invoice_doc.custom_fs_account_number,
 					"data_type": "text"
+				},
+				{
+					"index": 5,
+					"label": "cf_fs_transaction_id",
+					"value": invoice_doc.custom_fs_transaction_id,
+					"data_type": "text"
 				}
 			]
 
@@ -4043,16 +4248,64 @@ def sync_inv_with_zoho_books(invoice, customer):
 		else:
 			frappe.throw(str(res))
 
-		#if "invoice_id" in res:
+		# #if "invoice_id" in res:
+		# if zb_invoice_id and zb_invoice_id is not None:
+		# 	#zb_invoice_id = res.get('invoice_id')
+		# 	invoice_doc.custom_zoho_invoice_id = zb_invoice_id
+		# 	invoice_doc.save()
+		# 	frappe.db.commit()
+
+		# 	res2 = api_controller.mark_invoice_as_sent(zb_invoice_id)
+		# 	if res2 == "Invoice status has been changed to Sent.":
+		# 		return "ADDED"
+
 		if zb_invoice_id and zb_invoice_id is not None:
 			#zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
-			invoice_doc.save()
-			frappe.db.commit()
+			response = "SAVED"
 
-			res2 = api_controller.mark_invoice_as_sent(zb_invoice_id)
-			if res2 == "Invoice status has been changed to Sent.":
-				return "ADDED"
+			# in case Invoice is unpaid, then mark as sent, for future payment collection
+			if invoice_doc.outstanding_amount != 0:
+				res2 = api_controller.mark_invoice_as_sent(zb_invoice_id)
+				if res2 == "Invoice status has been changed to Sent.":
+					response = "ADDED"
+					# return "ADDED"
+
+	if invoice_doc.custom_fs_account_number and invoice_doc.custom_zoho_invoice_id and invoice_doc.custom_zoho_payment_id == None:
+		# Recording a Zoho Payment, also marks the Invoice as 'Sent'
+		if invoice_doc.outstanding_amount == 0:
+			# add_payment = True
+
+			payments_data = {
+				'customer_id': customer_id,
+				'payment_mode': 'AVMF',
+				'amount': invoice_doc.grand_total,
+				'invoices': [],
+				# 'reference_number': invoice_doc.custom_fs_transaction_id,
+				'reference_number': invoice_doc.name,
+				'account_id': api_controller.fs_bank_acount_id,
+				'date': date,
+			}
+
+
+			# if payments_data:
+			zb_invoice = {
+				'invoice_id': invoice_doc.custom_zoho_invoice_id,
+				'amount_applied': invoice_doc.grand_total
+			}
+			payments_data['invoices'].append(zb_invoice)
+
+			payment_id = api_controller.post_payment(payments_data) # returns payment_id
+			if payment_id:
+				invoice_doc.custom_zoho_payment_id = payment_id
+				response = "ADDED"
+
+				# The "match transaction" API call can be added here
+
+
+	invoice_doc.save()
+	frappe.db.commit()
+	return response
 
 
 @frappe.whitelist()
@@ -4063,14 +4316,15 @@ def fetch_unsynced_erp_fs_invoice_list():
 			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status
 			FROM `tabSales Invoice` si
 			WHERE si.docstatus = 1 AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
-			AND si.posting_date >= "2026-04-01"
+			AND si.posting_date BETWEEN "2026-07-01" AND "2026-07-31"
 			AND si.custom_is_donation = 0
 			AND si.custom_fs_account_number IS NOT NULL
-			AND si.custom_zoho_invoice_id IS NULL
+			AND (si.custom_zoho_invoice_id IS NULL OR si.custom_zoho_payment_id IS NULL)
 			""",
+			# AND si.posting_date >= "2026-04-01"
+			# AND si.posting_date BETWEEN "2026-07-01" AND "2026-07-31"
 			# , tabCustomer c
 			# AND si.customer = c.name AND c.customer_type = "Company"
-			# AND si.posting_date >= "2025-12-23"
 			as_dict=True
 		)
 
@@ -4125,10 +4379,11 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 	if frappe.get_value("Customer", customer, "customer_type") == "Company":
 		customer_id = frappe.get_value("Customer", customer, "custom_zoho_contact_id")
 	else:
-		customer_id = api_controller.walk_in_fs_contact_id		
-
+		customer_id = api_controller.walk_in_fs_contact_id
 
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+
+	response = None
 
 	if invoice_doc.custom_zoho_invoice_id == None:
 		line_items = []
@@ -4182,19 +4437,26 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			#'location_id': api_controller.location_id,
 			#"is_inclusive_tax": is_inclusive_tax,
 			#'price_precision': 2,
-			"custom_fields": [
+			'custom_fields': [
 				{
 					"index": 1,
 					"label": "cf_fs_account_number",
 					"value": invoice_doc.custom_fs_account_number,
 					"data_type": "text"
+				},
+				{
+					"index": 5,
+					"label": "cf_fs_transaction_id",
+					"value": invoice_doc.custom_fs_transaction_id,
+					"data_type": "text"
 				}
 			],
-			"discount": float(invoice_doc.discount_amount),
-			"is_discount_before_tax": True,
-			"discount_type": "entity_level",
-			"line_items": line_items,
+			'discount': float(invoice_doc.discount_amount),
+			'is_discount_before_tax': True,
+			'discount_type': 'entity_level',
+			'line_items': line_items,
 		}
+
 
 		if invoice_doc.items and len(invoice_doc.items) > 0 and invoice_doc.items[0].sales_order:
 			invoice_data['reference_number'] = invoice_doc.items[0].sales_order
@@ -4274,12 +4536,259 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 		if zb_invoice_id and zb_invoice_id is not None:
 			#zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
-			invoice_doc.save()
-			frappe.db.commit()
+			response = "SAVED"
 
-			res2 = api_controller.mark_invoice_as_sent(zb_invoice_id)
-			if res2 == "Invoice status has been changed to Sent.":
-				return "ADDED"
+			# in case Invoice is unpaid, then mark as sent, for future payment collection
+			if invoice_doc.outstanding_amount != 0:
+				res2 = api_controller.mark_invoice_as_sent(zb_invoice_id)
+				if res2 == "Invoice status has been changed to Sent.":
+					response = "ADDED"
+					# return "ADDED"
+
+
+	if invoice_doc.custom_zoho_invoice_id and invoice_doc.custom_zoho_payment_id == None:
+		# Recording a Zoho Payment, also marks the Invoice as 'Sent'
+		if invoice_doc.outstanding_amount == 0:
+			# add_payment = True
+
+			payments_data = {
+				'customer_id': customer_id,
+				'payment_mode': 'AVMF',
+				'amount': invoice_doc.grand_total,
+				'invoices': [],
+				# 'reference_number': invoice_doc.custom_fs_transaction_id,
+				'reference_number': invoice_doc.name,
+				'account_id': api_controller.fs_bank_acount_id,
+				'date': date,
+			}
+
+
+			# if payments_data:
+			zb_invoice = {
+				'invoice_id': invoice_doc.custom_zoho_invoice_id,
+				'amount_applied': invoice_doc.grand_total
+			}
+			payments_data['invoices'].append(zb_invoice)
+
+			payment_id = api_controller.post_payment(payments_data) # returns payment_id
+			if payment_id:
+				invoice_doc.custom_zoho_payment_id = payment_id
+				response = "ADDED"
+
+				# The "match transaction" API call can be added here
+
+
+	invoice_doc.save()
+	frappe.db.commit()
+	return response
+
+
+@frappe.whitelist()
+def fetch_uncategorised_fs_transactions(process_background):
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	account_id = api_controller.fs_bank_acount_id
+	filter_by = 'Status.Uncategorized'
+	# transaction_type = 'customer_payment'
+
+	banktransactions = []
+	banktransactions_per_page = []
+
+	page_total = 25
+	for page in range(page_total):
+		page += 1
+		banktransactions_per_page = api_controller.get_transactions_list(account_id, filter_by, page)
+		if banktransactions_per_page:
+			banktransactions.extend(banktransactions_per_page)
+		else:
+			break
+
+	# frappe.throw(str(banktransactions))
+	if process_background == "true":
+		#frappe.enqueue(bulk_processing, invoices=invoices, queue="long", timeout=6000, is_async=False, now=True, at_front=True)
+		frappe.enqueue(bulk_process_match_fs_trans, banktransactions=banktransactions, queue="long", timeout=6000, is_async=False, at_front=True)
+	else:
+		return banktransactions
+
+
+def bulk_process_match_fs_trans(banktransactions):
+	if banktransactions:
+		total_count = len(banktransactions)
+		# total_count = 50
+		i = 0
+		matched = 0
+
+		for transaction in banktransactions:
+			res = match_an_uncategorised_fs_transaction(transaction)
+			if res == "MATCHED":
+				matched += 1
+
+			i += 1
+			frappe.publish_progress(
+				int((i/total_count)*100),
+				title = "Matching Uncategorised Bank Transactions with Invoices Customer Payments in Zoho Books",
+				description = f"Matched {matched} of {total_count} Invoices"
+			)
+		frappe.msgprint(f"Matched {matched} of {total_count} Invoices")
+
+
+@frappe.whitelist()
+def match_an_uncategorised_fs_transaction(transaction=None, transaction_json=None):
+	if transaction_json:
+		transaction = json.loads(transaction_json)
+		# frappe.throw(str(transaction))
+
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	# try:
+	# account_id = api_controller.fs_bank_acount_id
+	# filter_by = 'Status.Uncategorized'
+	transaction_type = 'customer_payment'
+
+	transaction_reference_number = transaction.get("reference_number")
+
+	reference_number = None
+	if "SAL-ORD-" in transaction_reference_number:
+		query_sales_invoice = frappe.db.sql(
+			"""
+			select si.name as sales_invoice from `tabSales Invoice` si, `tabSales Invoice Item` sii
+			where si.docstatus = 1 and sii.parent = si.name and sii.sales_order = '{0}'
+			""".format(transaction_reference_number),
+			as_dict = True
+		)
+		reference_number = query_sales_invoice[0]["sales_invoice"]
+	else:
+		reference_number = transaction_reference_number
+
+	transaction_id = transaction.get("transaction_id")
+	# frappe.throw(str(transaction.get("reference_number")))
+
+	# fetch the transaction to match
+	matching_transactions_res = None
+	matching_transactions = None
+
+	matching_transactions_res = api_controller.get_matching_transactions(transaction_id, transaction_type, reference_number)
+
+	if matching_transactions_res:
+		if matching_transactions_res.get("message") == "success":
+			matching_transactions = matching_transactions_res.get("matching_transactions")
+			# frappe.throw(str(matching_transactions[0]))
+
+			if matching_transactions:
+				if matching_transactions[0].get("reference_number") == reference_number:
+					transactions_data = {
+						'transactions_to_be_matched': [
+							{
+								# 'transaction_id': transaction_id,
+								'transaction_id': matching_transactions[0].get("transaction_id"),
+								'transaction_type': transaction_type,
+							}
+						]
+					}
+				match = api_controller.match_transaction(api_controller.fs_bank_acount_id, transaction_id, transactions_data)
+
+				if match.get('code') == 0:
+					return "MATCHED"
+				else:
+					frappe.msgprint(match.get('message'))
+
+				# if match.get('message') == 'The transaction has been matched.':
+					# return "MATCHED"
+				# frappe.throw(str(match))
+
+	# except Exception as err:
+		# invoice_doc.save()
+		# frappe.db.commit()
+		# raise err
+
+
+@frappe.whitelist()
+def match_uncategorised_fs_transactions():
+	api_controller = frappe.get_doc("Zoho Books API")
+
+	# try:
+	account_id = api_controller.fs_bank_acount_id
+	filter_by = 'Status.Uncategorized'
+	transaction_type = 'customer_payment'
+
+	banktransactions = []
+	banktransactions_per_page = []
+
+	page_total = 25
+	for page in range(page_total):
+		page += 1
+		banktransactions_per_page = api_controller.get_transactions_list(account_id, filter_by, page)
+		if banktransactions_per_page:
+			banktransactions.extend(banktransactions_per_page)
+
+	# frappe.throw(str(banktransactions))
+
+	if banktransactions:
+		total_count = len(banktransactions)
+		i = 0
+		matched = 0
+
+		for transaction in banktransactions:
+			transaction_reference_number = transaction.get("reference_number")
+
+			# if transaction_reference_number != "IN-07-26-00001":
+			# 	continue
+
+			reference_number = None
+			if "SAL-ORD-" in transaction_reference_number:
+				query_sales_invoice = frappe.db.sql(
+					"""
+					select si.name as sales_invoice from `tabSales Invoice` si, `tabSales Invoice Item` sii
+					where si.docstatus = 1 and sii.parent = si.name and sii.sales_order = '{0}'
+					""".format(transaction_reference_number),
+					as_dict = True
+				)
+				reference_number = query_sales_invoice[0]["sales_invoice"]
+			else:
+				reference_number = transaction_reference_number
+
+			transaction_id = transaction.get("transaction_id")
+			# frappe.throw(str(transaction.get("reference_number")))
+
+			# fetch the transaction to match
+			matching_transactions_res = None
+			matching_transactions = None
+
+			matching_transactions_res = api_controller.get_matching_transactions(transaction_id, transaction_type, reference_number)
+
+			if matching_transactions_res:
+				if matching_transactions_res.get("message") == "success":
+					matching_transactions = matching_transactions_res.get("matching_transactions")
+					# frappe.throw(str(matching_transactions[0]))
+
+					if matching_transactions:
+						if matching_transactions[0].get("reference_number") == reference_number:
+							transactions_data = {
+								'transactions_to_be_matched': [
+									{
+										# 'transaction_id': transaction_id,
+										'transaction_id': matching_transactions[0].get("transaction_id"),
+										'transaction_type': transaction_type,
+									}
+								]
+							}
+						match = api_controller.match_transaction(api_controller.fs_bank_acount_id, transaction_id, transactions_data)
+
+						if match.get('message') == 'The transaction has been matched.':
+							matched += 1
+						# frappe.throw(str(match))
+
+			i += 1
+			frappe.publish_progress(
+				int((i/total_count)*100),
+				title = "Matching Uncategorised Bank Transactions with Invoices Customer Payments, in Zoho Books",
+				description = f"Matched {matched} of {total_count} Invoices"
+			)
+
+	# except Exception as err:
+		# invoice_doc.save()
+		# frappe.db.commit()
+		# raise err
 
 
 @frappe.whitelist()
@@ -4629,6 +5138,12 @@ def sync_adv_payment_inv_with_zoho_books(invoice, customer):
 					"index": 1,
 					"label": "cf_fs_account_number",
 					"value": fs_account_number,
+					"data_type": "text"
+				},
+				{
+					"index": 5,
+					"label": "cf_fs_transaction_id",
+					"value": invoice_doc.custom_fs_transaction_id,
 					"data_type": "text"
 				}
 			]

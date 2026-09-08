@@ -79,6 +79,61 @@ frappe.listview_settings['Sales Invoice'] = {
         }, __("Sync with ZB"));
 
 
+        listview.page.add_inner_button("Match FS Statement FG", () => {
+            frappe.call({
+                method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_uncategorised_fs_transactions',
+                async: false,
+                callback: (r) => {
+                    if (r.message) {
+                        const length = r.message.length;
+                        console.log("Number of Uncategorised transactions to sync: ", length);
+                        console.log("Uncat Trans List: ", r.message);
+                        console.log("r.message[0]: ", r.message[0]);
+
+                        // let added = 0;
+                        let matched = 0;
+                        for (let i = 0; i < length; i++) {
+                            setTimeout(() => {
+                                frappe.call({
+                                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.match_an_uncategorised_fs_transaction',
+                                    args: {
+                                        transaction_json: r.message[i]
+                                    },
+                                    async: false,
+                                }).then(r => {
+                                    if (r.message == "MATCHED")
+                                        matched++;
+                                }).then(r => {
+                                    // placing this statement block here as it does not work outside of the main frappe.call block
+                                    // though it prints on console for each loop iteration (comes in only one line, with the loop count),
+                                    // it shows an accurate result in the end. This design works.
+                                    // console.log("Added ", added, ", of ", length);
+                                    console.log("Matched ", matched, ", of ", length);
+                                });
+                                const count = i+1;
+                                const message = "Matching "+count+" of "+length;
+                                frappe.show_progress("Matching FS Invoice Payment to Bank Statement", count, length, message);
+                            }, 0);
+                        }
+                    }
+                }
+            });
+        }, __("Sync with ZB"));
+
+        listview.page.add_inner_button("Match FS Statement BG", () => {
+            setTimeout(() => {
+                frappe.call({
+                    // method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.match_uncategorised_fs_transactions',
+                    method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_uncategorised_fs_transactions',
+                    args: {
+                        process_background: true
+                    }
+                });
+                frappe.show_alert({message: __('Initiated Background Matching of Invoice Payments with Bank Statements, in Zoho Books'), indicator: 'green'});
+            }, 0);
+        }, __("Sync with ZB"));
+
+
         listview.page.add_inner_button("Aurocard Inv to ZB", () => {
             frappe.call({
                 method: 'pourtous.pourtous.doctype.zoho_books_api.zoho_books_api.fetch_unsynced_erp_aurocard_invoice_list',

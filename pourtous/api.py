@@ -12,6 +12,7 @@ from payments.payment_gateways.doctype.fs_settings.fs_settings import add_transf
 
 from stdnum import ean
 import random
+import json
 
 
 # for testing/checking frappe.session.user
@@ -376,6 +377,31 @@ def pe_fapi_transfer(doc, method):
 				frappe.throw("No Response")
 		else:
 			frappe.throw("Receiving Payment via FS API is configured for a single Invoice/Order only")
+
+
+@frappe.whitelist()
+def check_cart_stock(cart_items, warehouse):
+    # Validates if the requested cart quantities are available in the warehouse.
+    # cart_items: JSON string passed from JS containing list of dicts with item_code and qty
+
+	# frappe.throw(cart_items)
+	items = json.loads(cart_items)
+	unavailable_items = []
+
+	for item in items:
+		# Get actual available stock from Bin
+		actual_qty = frappe.db.get_value("Bin", {
+			"item_code": item['item_code'], "warehouse": warehouse
+		}, "actual_qty") or 0
+
+		if actual_qty < item['qty']:
+			unavailable_items.append({
+				"item_code": item['item_code'],
+				"requested": item['qty'],
+				"available": actual_qty
+			})
+
+	return unavailable_items
 
 
 def make_fs_payment(doc, method):
