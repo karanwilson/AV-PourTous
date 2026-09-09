@@ -356,6 +356,7 @@
    "options": "Zoho Bank Accounts"
   },
   {
+   "fetch_from": "icici_bank_account.account_id",
    "fieldname": "icici_bank_account_id",
    "fieldtype": "Data",
    "label": "ICICI Bank Account ID"
@@ -367,6 +368,7 @@
    "options": "Zoho Bank Accounts"
   },
   {
+   "fetch_from": "sbi_bank_account.account_id",
    "fieldname": "sbi_bank_account_id",
    "fieldtype": "Data",
    "label": "SBI Bank Account ID"
@@ -378,6 +380,7 @@
    "options": "Zoho Bank Accounts"
   },
   {
+   "fetch_from": "cash_bank_account.account_id",
    "fieldname": "cash_bank_account_id",
    "fieldtype": "Data",
    "label": "Cash Bank Account ID"
@@ -395,7 +398,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-08-27 13:31:37.031351",
+ "modified": "2026-09-09 19:55:48.458730",
  "modified_by": "karan.wilson@auroville.org.in",
  "module": "pourtous",
  "name": "Zoho Books API",
@@ -442,6 +445,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

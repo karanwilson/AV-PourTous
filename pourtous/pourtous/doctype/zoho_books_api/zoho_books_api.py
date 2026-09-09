@@ -1383,11 +1383,14 @@ class ZohoBooksAPI(Document):
 			#frappe.throw(str(r.json()))
 			#if r.json().get('message') == 'The credit note has been created.':
 			if r.json().get('code') == 0:
-				return r.json().get('creditnote')
+				if r.json().get('creditnote'):
+					return r.json().get('creditnote')
+				else:
+					frappe.msgprint(r.json().get('message'))
 				#return r.json().get('invoice').get('invoice_id')
 			else :
 				frappe.msgprint(r.json().get('message'))
-				return r.json()
+				# return r.json()
 				#r.raise_for_status()
 
 
@@ -3758,6 +3761,7 @@ def sync_return_inv_with_zoho_books(invoice, customer):
 		#frappe.throw(str(creditnote_data))
 		res = api_controller.post_creditnote(creditnote_data)
 		if res:
+			# frappe.throw(str(res))
 			invoice_doc.custom_zb_creditnote_id = res.get('creditnote_id')
 			invoice_doc.save()
 			frappe.db.commit()
@@ -4702,7 +4706,7 @@ def match_an_uncategorised_fs_transaction(transaction=None, transaction_json=Non
 							}
 						]
 					}
-				match = api_controller.match_transaction(api_controller.fs_bank_acount_id, transaction_id, transactions_data)
+					match = api_controller.match_transaction(api_controller.fs_bank_acount_id, transaction_id, transactions_data)
 
 				if match.get('code') == 0:
 					return "MATCHED"
@@ -4719,93 +4723,93 @@ def match_an_uncategorised_fs_transaction(transaction=None, transaction_json=Non
 		# raise err
 
 
-@frappe.whitelist()
-def match_uncategorised_fs_transactions():
-	api_controller = frappe.get_doc("Zoho Books API")
+# @frappe.whitelist()
+# def match_uncategorised_fs_transactions():
+# 	api_controller = frappe.get_doc("Zoho Books API")
 
-	# try:
-	account_id = api_controller.fs_bank_acount_id
-	filter_by = 'Status.Uncategorized'
-	transaction_type = 'customer_payment'
+# 	# try:
+# 	account_id = api_controller.fs_bank_acount_id
+# 	filter_by = 'Status.Uncategorized'
+# 	transaction_type = 'customer_payment'
 
-	banktransactions = []
-	banktransactions_per_page = []
+# 	banktransactions = []
+# 	banktransactions_per_page = []
 
-	page_total = 25
-	for page in range(page_total):
-		page += 1
-		banktransactions_per_page = api_controller.get_transactions_list(account_id, filter_by, page)
-		if banktransactions_per_page:
-			banktransactions.extend(banktransactions_per_page)
+# 	page_total = 25
+# 	for page in range(page_total):
+# 		page += 1
+# 		banktransactions_per_page = api_controller.get_transactions_list(account_id, filter_by, page)
+# 		if banktransactions_per_page:
+# 			banktransactions.extend(banktransactions_per_page)
 
-	# frappe.throw(str(banktransactions))
+# 	# frappe.throw(str(banktransactions))
 
-	if banktransactions:
-		total_count = len(banktransactions)
-		i = 0
-		matched = 0
+# 	if banktransactions:
+# 		total_count = len(banktransactions)
+# 		i = 0
+# 		matched = 0
 
-		for transaction in banktransactions:
-			transaction_reference_number = transaction.get("reference_number")
+# 		for transaction in banktransactions:
+# 			transaction_reference_number = transaction.get("reference_number")
 
-			# if transaction_reference_number != "IN-07-26-00001":
-			# 	continue
+# 			# if transaction_reference_number != "IN-07-26-00001":
+# 			# 	continue
 
-			reference_number = None
-			if "SAL-ORD-" in transaction_reference_number:
-				query_sales_invoice = frappe.db.sql(
-					"""
-					select si.name as sales_invoice from `tabSales Invoice` si, `tabSales Invoice Item` sii
-					where si.docstatus = 1 and sii.parent = si.name and sii.sales_order = '{0}'
-					""".format(transaction_reference_number),
-					as_dict = True
-				)
-				reference_number = query_sales_invoice[0]["sales_invoice"]
-			else:
-				reference_number = transaction_reference_number
+# 			reference_number = None
+# 			if "SAL-ORD-" in transaction_reference_number:
+# 				query_sales_invoice = frappe.db.sql(
+# 					"""
+# 					select si.name as sales_invoice from `tabSales Invoice` si, `tabSales Invoice Item` sii
+# 					where si.docstatus = 1 and sii.parent = si.name and sii.sales_order = '{0}'
+# 					""".format(transaction_reference_number),
+# 					as_dict = True
+# 				)
+# 				reference_number = query_sales_invoice[0]["sales_invoice"]
+# 			else:
+# 				reference_number = transaction_reference_number
 
-			transaction_id = transaction.get("transaction_id")
-			# frappe.throw(str(transaction.get("reference_number")))
+# 			transaction_id = transaction.get("transaction_id")
+# 			# frappe.throw(str(transaction.get("reference_number")))
 
-			# fetch the transaction to match
-			matching_transactions_res = None
-			matching_transactions = None
+# 			# fetch the transaction to match
+# 			matching_transactions_res = None
+# 			matching_transactions = None
 
-			matching_transactions_res = api_controller.get_matching_transactions(transaction_id, transaction_type, reference_number)
+# 			matching_transactions_res = api_controller.get_matching_transactions(transaction_id, transaction_type, reference_number)
 
-			if matching_transactions_res:
-				if matching_transactions_res.get("message") == "success":
-					matching_transactions = matching_transactions_res.get("matching_transactions")
-					# frappe.throw(str(matching_transactions[0]))
+# 			if matching_transactions_res:
+# 				if matching_transactions_res.get("message") == "success":
+# 					matching_transactions = matching_transactions_res.get("matching_transactions")
+# 					# frappe.throw(str(matching_transactions[0]))
 
-					if matching_transactions:
-						if matching_transactions[0].get("reference_number") == reference_number:
-							transactions_data = {
-								'transactions_to_be_matched': [
-									{
-										# 'transaction_id': transaction_id,
-										'transaction_id': matching_transactions[0].get("transaction_id"),
-										'transaction_type': transaction_type,
-									}
-								]
-							}
-						match = api_controller.match_transaction(api_controller.fs_bank_acount_id, transaction_id, transactions_data)
+# 					if matching_transactions:
+# 						if matching_transactions[0].get("reference_number") == reference_number:
+# 							transactions_data = {
+# 								'transactions_to_be_matched': [
+# 									{
+# 										# 'transaction_id': transaction_id,
+# 										'transaction_id': matching_transactions[0].get("transaction_id"),
+# 										'transaction_type': transaction_type,
+# 									}
+# 								]
+# 							}
+# 						match = api_controller.match_transaction(api_controller.fs_bank_acount_id, transaction_id, transactions_data)
 
-						if match.get('message') == 'The transaction has been matched.':
-							matched += 1
-						# frappe.throw(str(match))
+# 						if match.get('message') == 'The transaction has been matched.':
+# 							matched += 1
+# 						# frappe.throw(str(match))
 
-			i += 1
-			frappe.publish_progress(
-				int((i/total_count)*100),
-				title = "Matching Uncategorised Bank Transactions with Invoices Customer Payments, in Zoho Books",
-				description = f"Matched {matched} of {total_count} Invoices"
-			)
+# 			i += 1
+# 			frappe.publish_progress(
+# 				int((i/total_count)*100),
+# 				title = "Matching Uncategorised Bank Transactions with Invoices Customer Payments, in Zoho Books",
+# 				description = f"Matched {matched} of {total_count} Invoices"
+# 			)
 
-	# except Exception as err:
-		# invoice_doc.save()
-		# frappe.db.commit()
-		# raise err
+# 	# except Exception as err:
+# 		# invoice_doc.save()
+# 		# frappe.db.commit()
+# 		# raise err
 
 
 @frappe.whitelist()
