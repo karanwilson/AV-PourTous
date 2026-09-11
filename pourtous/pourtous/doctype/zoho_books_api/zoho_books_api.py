@@ -3731,10 +3731,15 @@ def sync_pt_consol_inv_with_zb(consol_inv_pt_account, line_items_dict, date, is_
 				if res3.get('invoice_id'):
 					custom_zb_consol_inv_id = res3.get('invoice_id')
 
-			# else:
-			# 	res2 = api_controller.query_invoice(data["invoice_number"])
-			# 	if res2:
-			# 		custom_zb_consol_inv_id = res2[0].get("invoice_id")
+			else:
+				data["invoice_number"] = consol_inv_pt_account+"/"+date[5:]+"/"+str(random.randint(100,999))
+				res3 = api_controller.post_invoice(data)
+
+				if res3.get('invoice_id'):
+					custom_zb_consol_inv_id = res3.get('invoice_id')
+				# res2 = api_controller.query_invoice(data["invoice_number"])
+				# if res2:
+				# 	custom_zb_consol_inv_id = res2[0].get("invoice_id")
 
 		elif res.get('invoice_id'):
 			custom_zb_consol_inv_id = res.get('invoice_id')
