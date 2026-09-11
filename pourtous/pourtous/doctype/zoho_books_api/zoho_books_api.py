@@ -2906,8 +2906,8 @@ def fetch_erp_bills_list(process_background):
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 0 AND custom_zoho_bill_id IS NULL
-			AND posting_date between "2025-06-01" and "2026-07-31"
-			AND bill_date <= "2026-06-31"
+			AND posting_date between "2025-06-01" and "2026-08-31"
+			AND bill_date <= "2026-08-31"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
@@ -2950,7 +2950,7 @@ def fetch_erp_debitnotes_list(process_background):
 			"""
 			SELECT name FROM `tabPurchase Invoice` WHERE docstatus = 1
 			AND is_return = 1 AND custom_zb_vendor_credit_id IS NULL
-			AND posting_date between "2025-06-01" and "2026-06-31"
+			AND posting_date between "2025-06-01" and "2026-08-31"
 			""",
 			# applying a posting_date filter, because for the month of April, accounts team has recorded the credit notes manually in ZB
 			as_dict=True
@@ -3975,7 +3975,7 @@ def fetch_unsynced_erp_invoice_list():
 			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status
 			FROM `tabSales Invoice` si
 			WHERE si.docstatus = 1 AND status != "Return"
-			AND si.posting_date BETWEEN "2026-04-01" AND "2026-04-02"
+			AND si.posting_date >= "2026-04-01"
 			AND si.custom_zoho_invoice_id IS NULL
 			""",
 			# AND si.posting_date >= "2025-12-23"
@@ -4280,7 +4280,7 @@ def sync_inv_with_zoho_books(invoice, customer):
 		# 	if res2 == "Invoice status has been changed to Sent.":
 		# 		return "ADDED"
 
-		if zb_invoice_id and zb_invoice_id is not None:
+		if zb_invoice_id is not None:
 			#zb_invoice_id = res.get('invoice_id')
 			invoice_doc.custom_zoho_invoice_id = zb_invoice_id
 			response = "SAVED"
@@ -4337,7 +4337,7 @@ def fetch_unsynced_erp_fs_invoice_list():
 			SELECT si.name, si.customer, si.custom_fs_account_number, si.docstatus, si.status
 			FROM `tabSales Invoice` si
 			WHERE si.docstatus = 1 AND si.status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
-			AND si.posting_date BETWEEN "2026-07-01" AND "2026-07-31"
+			AND si.posting_date >= "2026-04-01"
 			AND si.custom_is_donation = 0
 			AND si.custom_fs_account_number IS NOT NULL
 			AND (si.custom_zoho_invoice_id IS NULL OR si.custom_zoho_payment_id IS NULL)
