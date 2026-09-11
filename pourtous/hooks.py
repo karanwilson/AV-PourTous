@@ -137,7 +137,7 @@ doc_events = {
 	},
     "Integration Request": {
         "before_insert": "payments.payment_gateways.doctype.fs_settings.fs_settings.verify_existing_integration_request",
-        "before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.verify_existing_integration_request",
+        # "before_save": "payments.payment_gateways.doctype.fs_settings.fs_settings.verify_existing_integration_request",
     },
     "Payment Entry": {
         #"before_validate": "pourtous.api.pe_before_validate",
@@ -342,6 +342,7 @@ fixtures = [
 
                     "Sales Invoice-custom_zb_consol_inv_id", # PTDC
                     "Sales Invoice-custom_zoho_invoice_id", # for syncing with Zoho Books
+                    "Sales Invoice-custom_zoho_payment_id", # Zoho Books
                     "Sales Invoice-custom_zb_creditnote_id",
                     "Sales Invoice-custom_zb_consol_creditnote_id",
                     "Sales Invoice-custom_zoho_void_invoice_id",

@@ -11,22 +11,23 @@
   "organization_id",
   "client_id",
   "client_secret",
+  "api_domain",
+  "location",
+  "location_id",
+  "gst_number",
+  "pi_sync_in_progress",
+  "si_sync_in_progress",
+  "test",
+  "column_break_shr3d",
   "last_access_token",
   "token_scope",
-  "api_domain",
   "token_type",
   "last_token_date",
   "last_token_time",
   "token_received_at",
   "token_validity",
   "token_valid_till",
-  "pi_sync_in_progress",
-  "si_sync_in_progress",
-  "test",
-  "column_break_shr3d",
-  "location",
-  "location_id",
-  "gst_number",
+  "chart_of_accounts_and_bank_accounts_section",
   "income_account",
   "income_account_id",
   "expense_account",
@@ -35,20 +36,31 @@
   "purchase_discount_account_id",
   "sales_discount_account",
   "sales_discount_account_id",
+  "column_break_b2kd",
+  "fs_bank_acount",
+  "fs_bank_acount_id",
+  "icici_bank_account",
+  "icici_bank_account_id",
+  "sbi_bank_account",
+  "sbi_bank_account_id",
+  "cash_bank_account",
+  "cash_bank_account_id",
+  "customers_section",
   "walk_in_fs_customer",
   "walk_in_fs_contact_id",
   "walk_in_aurocard_customer",
   "walk_in_aurocard_contact_id",
   "walk_in_upi_card_customer",
   "walk_in_upi_card_contact_id",
+  "walk_in_debit_card_customer",
+  "walk_in_debit_card_contact_id",
+  "column_break_m1wi",
   "walk_in_upi_customer",
   "walk_in_upi_contact_id",
-  "walk_in_cash_customer",
-  "walk_in_cash_contact_id",
   "walk_in_card_customer",
   "walk_in_card_contact_id",
-  "walk_in_debit_card_customer",
-  "walk_in_debit_card_contact_id"
+  "walk_in_cash_customer",
+  "walk_in_cash_contact_id"
  ],
  "fields": [
   {
@@ -222,13 +234,15 @@
    "fetch_from": "walk_in_fs_customer.contact_id",
    "fieldname": "walk_in_fs_contact_id",
    "fieldtype": "Data",
-   "label": "Walk In FS Contact ID"
+   "label": "Walk In FS Contact ID",
+   "read_only": 1
   },
   {
    "fetch_from": "walk_in_aurocard_customer.contact_id",
    "fieldname": "walk_in_aurocard_contact_id",
    "fieldtype": "Data",
-   "label": "Walk In Aurocard Contact ID"
+   "label": "Walk In Aurocard Contact ID",
+   "read_only": 1
   },
   {
    "fetch_from": "walk_in_upi_customer.contact_id",
@@ -298,7 +312,8 @@
    "fetch_from": "walk_in_upi_card_customer.contact_id",
    "fieldname": "walk_in_upi_card_contact_id",
    "fieldtype": "Data",
-   "label": "Walk In UPI Card Contact ID"
+   "label": "Walk In UPI Card Contact ID",
+   "read_only": 1
   },
   {
    "default": "0",
@@ -310,13 +325,80 @@
    "default": "0",
    "fieldname": "si_sync_in_progress",
    "fieldtype": "Check",
-   "label": "SI Sync In Progress"
+   "label": "SI Sync In Progress",
+   "read_only": 1
+  },
+  {
+   "fieldname": "chart_of_accounts_and_bank_accounts_section",
+   "fieldtype": "Section Break",
+   "label": "Chart_Of_Accounts and Bank_Accounts"
+  },
+  {
+   "fieldname": "column_break_b2kd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fs_bank_acount",
+   "fieldtype": "Link",
+   "label": "FS Bank Acount",
+   "options": "Zoho Bank Accounts"
+  },
+  {
+   "fetch_from": "fs_bank_acount.account_id",
+   "fieldname": "fs_bank_acount_id",
+   "fieldtype": "Data",
+   "label": "FS Bank Acount ID"
+  },
+  {
+   "fieldname": "icici_bank_account",
+   "fieldtype": "Link",
+   "label": "ICICI Bank Account",
+   "options": "Zoho Bank Accounts"
+  },
+  {
+   "fetch_from": "icici_bank_account.account_id",
+   "fieldname": "icici_bank_account_id",
+   "fieldtype": "Data",
+   "label": "ICICI Bank Account ID"
+  },
+  {
+   "fieldname": "sbi_bank_account",
+   "fieldtype": "Link",
+   "label": "SBI Bank Account",
+   "options": "Zoho Bank Accounts"
+  },
+  {
+   "fetch_from": "sbi_bank_account.account_id",
+   "fieldname": "sbi_bank_account_id",
+   "fieldtype": "Data",
+   "label": "SBI Bank Account ID"
+  },
+  {
+   "fieldname": "cash_bank_account",
+   "fieldtype": "Link",
+   "label": "Cash Bank Account",
+   "options": "Zoho Bank Accounts"
+  },
+  {
+   "fetch_from": "cash_bank_account.account_id",
+   "fieldname": "cash_bank_account_id",
+   "fieldtype": "Data",
+   "label": "Cash Bank Account ID"
+  },
+  {
+   "fieldname": "customers_section",
+   "fieldtype": "Section Break",
+   "label": "Customers"
+  },
+  {
+   "fieldname": "column_break_m1wi",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-07-24 13:48:47.236012",
+ "modified": "2026-09-09 19:55:48.458730",
  "modified_by": "karan.wilson@auroville.org.in",
  "module": "pourtous",
  "name": "Zoho Books API",
@@ -363,6 +445,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

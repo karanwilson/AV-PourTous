@@ -177,10 +177,11 @@ def get_data(filters):
 					order by posting_date desc, posting_time desc, creation desc
 					limit 1
 				) AS store_3_qty
-				FROM tabItem, `tabItem Supplier`
-				LEFT JOIN `tabItem Price` ON `tabItem Price`.item_code = tabItem.item_code
-				WHERE tabItem.item_code = `tabItem Supplier`.parent
+				FROM tabItem JOIN `tabItem Supplier` ON tabItem.item_code = `tabItem Supplier`.parent
 				AND `tabItem Supplier`.supplier = '{5}'
+				LEFT JOIN `tabItem Price` ON `tabItem Price`.item_code = tabItem.item_code
+				AND `tabItem Price`.price_list = "Standard Selling"
+				
 				) table1
 				""".format("Stores%", "Stall%", "Store 1%", "Store 2%", "Store 3%", filters.supplier),
 				as_dict=True
@@ -229,9 +230,9 @@ def get_data(filters):
 					order by posting_date desc, posting_time desc, creation desc
 					limit 1
 				) AS store_3_qty
-				FROM tabItem, `tabItem Supplier`
+				FROM tabItem JOIN `tabItem Supplier` ON tabItem.item_code = `tabItem Supplier`.parent
 				LEFT JOIN `tabItem Price` ON `tabItem Price`.item_code = tabItem.item_code
-				WHERE tabItem.item_code = `tabItem Supplier`.parent
+				AND `tabItem Price`.price_list = "Standard Selling"
 				) table1
 				""".format("Stores%", "Stall%", "Store 1%", "Store 2%", "Store 3%"),
 				as_dict=True
