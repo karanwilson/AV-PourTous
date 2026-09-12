@@ -1817,11 +1817,10 @@ class ZohoBooksAPI(Document):
 			r = s.post(api_url, data=json.dumps(data))
 			#frappe.throw(str(r.json()))
 			#if r.json().get('message') == 'The payment from the customer has been recorded':
-			if r.json().get('code') == 0:
-				return r.json().get('payment').get('payment_id')
-			else :
+			if r.json().get('code') != 0:
+				# return r.json().get('payment').get('payment_id')
 				frappe.msgprint(r.json().get('message'))
-				#return
+			return r.json()
 				#r.raise_for_status()
 
 
@@ -4301,28 +4300,45 @@ def sync_inv_with_zoho_books(invoice, customer):
 				'customer_id': customer_id,
 				'payment_mode': 'AVMF',
 				'amount': invoice_doc.grand_total,
-				'invoices': [],
+				'invoices': [
+					{
+						'invoice_id': invoice_doc.custom_zoho_invoice_id,
+						'amount_applied': invoice_doc.grand_total
+					}
+				],
 				# 'reference_number': invoice_doc.custom_fs_transaction_id,
 				'reference_number': invoice_doc.name,
 				'account_id': api_controller.fs_bank_acount_id,
 				'date': date,
 			}
 
+			payment_res = api_controller.post_payment(payments_data) # returns r.json()
+			# frappe.throw(str(payment_res))
 
-			# if payments_data:
-			zb_invoice = {
-				'invoice_id': invoice_doc.custom_zoho_invoice_id,
-				'amount_applied': invoice_doc.grand_total
-			}
-			payments_data['invoices'].append(zb_invoice)
-
-			payment_id = api_controller.post_payment(payments_data) # returns payment_id
-			if payment_id:
-				invoice_doc.custom_zoho_payment_id = payment_id
+			if payment_res.get('payment'):
+				invoice_doc.custom_zoho_payment_id = payment_res.get('payment').get('payment_id')
 				response = "ADDED"
 
-				# The "match transaction" API call can be added here
+			elif "The amount entered is more than the balance due for the selected invoices" in payment_res.get('message'):
+				# fetch the invoice-total calculated by Zoho Books
+				get_inv_res = api_controller.get_an_invoice(invoice_doc.custom_zoho_invoice_id)
+				if get_inv_res:
+					payment_made = get_inv_res.get("total")
 
+				payments_data["amount"] = payment_made
+				payments_data["invoices"][0]["amount_applied"] = payment_made
+				# frappe.throw(str(payments_data))
+				payment_res = api_controller.post_payment(payments_data) # returns r.json()
+
+				if payment_res.get('payment'):
+					invoice_doc.custom_zoho_payment_id = payment_res.get('payment').get('payment_id')
+					response = "ADDED"
+
+			else:
+				res3 = api_controller.mark_invoice_as_sent(invoice_doc.custom_zoho_invoice_id)
+				if res3 == "Invoice status has been changed to Sent.":
+					response = "ADDED"
+				# The "match transaction" API call can be added here
 
 	invoice_doc.save()
 	frappe.db.commit()
@@ -4576,28 +4592,45 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				'customer_id': customer_id,
 				'payment_mode': 'AVMF',
 				'amount': invoice_doc.grand_total,
-				'invoices': [],
+				'invoices': [
+					{
+						'invoice_id': invoice_doc.custom_zoho_invoice_id,
+						'amount_applied': invoice_doc.grand_total
+					}
+				],
 				# 'reference_number': invoice_doc.custom_fs_transaction_id,
 				'reference_number': invoice_doc.name,
 				'account_id': api_controller.fs_bank_acount_id,
 				'date': date,
 			}
 
+			payment_res = api_controller.post_payment(payments_data) # returns r.json()
+			# frappe.throw(str(payment_res))
 
-			# if payments_data:
-			zb_invoice = {
-				'invoice_id': invoice_doc.custom_zoho_invoice_id,
-				'amount_applied': invoice_doc.grand_total
-			}
-			payments_data['invoices'].append(zb_invoice)
-
-			payment_id = api_controller.post_payment(payments_data) # returns payment_id
-			if payment_id:
-				invoice_doc.custom_zoho_payment_id = payment_id
+			if payment_res.get('payment'):
+				invoice_doc.custom_zoho_payment_id = payment_res.get('payment').get('payment_id')
 				response = "ADDED"
 
-				# The "match transaction" API call can be added here
+			elif "The amount entered is more than the balance due for the selected invoices" in payment_res.get('message'):
+				# fetch the invoice-total calculated by Zoho Books
+				get_inv_res = api_controller.get_an_invoice(invoice_doc.custom_zoho_invoice_id)
+				if get_inv_res:
+					payment_made = get_inv_res.get("total")
 
+				payments_data["amount"] = payment_made
+				payments_data["invoices"][0]["amount_applied"] = payment_made
+				# frappe.throw(str(payments_data))
+				payment_res = api_controller.post_payment(payments_data) # returns r.json()
+
+				if payment_res.get('payment'):
+					invoice_doc.custom_zoho_payment_id = payment_res.get('payment').get('payment_id')
+					response = "ADDED"
+
+			else:
+				res3 = api_controller.mark_invoice_as_sent(invoice_doc.custom_zoho_invoice_id)
+				if res3 == "Invoice status has been changed to Sent.":
+					response = "ADDED"
+				# The "match transaction" API call can be added here
 
 	invoice_doc.save()
 	frappe.db.commit()
