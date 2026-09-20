@@ -3179,7 +3179,7 @@ def add_erp_bill_debitnote_in_zoho(bill):
 				if res2[0].get("location_id") == api_controller.location_id:
 					zb_vendor_credit_id = res2[0].get("vendor_credit_id")
 				else:
-					msg = res.get("message") + " for location: " + api_controller.location_name
+					msg = res2.get("message") + " for location: " + api_controller.location_name
 					frappe.throw(msg)
 			else:
 				zb_vendor_credit_id = res2[0].get("vendor_credit_id")
@@ -3190,10 +3190,23 @@ def add_erp_bill_debitnote_in_zoho(bill):
 			else:
 				res = api_controller.post_vendor_credit(data)
 
-		if "vendor_credit_id" in res:
-			zb_vendor_credit_id = res.get('vendor_credit_id')
+			if res:
+				if "vendor_credit_id" in res:
+					zb_vendor_credit_id = res.get('vendor_credit_id')
 
-		# elif res.get('message') == 'The vendor credit# specified already exists.':
+				elif res.get('message') == 'The vendor credit# specified already exists.':
+					bill_doc.custom_bill_id = bill_doc.bill_no[:16]+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)) # custom_bill_id is Mandatory & unique
+					data["vendor_credit_number"] = bill_doc.custom_bill_id
+
+					if is_return:
+						res = api_controller.post_vendor_credit(data, return_against_bill_id)
+					else:
+						res = api_controller.post_vendor_credit(data)
+
+					if res:
+						if "vendor_credit_id" in res:
+							zb_vendor_credit_id = res.get('vendor_credit_id')
+
 		# 	res2 = api_controller.query_vendor_credit(data["vendor_credit_number"], data['reference_number'])
 		# 	if res2:
 		# 		#frappe.throw(res2[0].get("vendor_credit_id"))
