@@ -1150,7 +1150,7 @@ class ZohoBooksAPI(Document):
 			return r.json()
 
 
-	def query_bill(self, bill_number=None, reference_number=None):
+	def query_bill(self, bill_number=None, reference_number=None, vendor_id=None):
 		master = "bills"
 		scope='ZohoBooks.bills.READ'
 
@@ -1164,7 +1164,8 @@ class ZohoBooksAPI(Document):
 			s.params = {
 				'organization_id': self.organization_id,
 				'bill_number': bill_number,
-				'reference_number': reference_number
+				'reference_number': reference_number,
+				'vendor_id': vendor_id
 			}
 
 			s.headers = {
@@ -1295,7 +1296,7 @@ class ZohoBooksAPI(Document):
 				#r.raise_for_status()
 
 
-	def query_vendor_credit(self, vendor_credit_id, reference_number):
+	def query_vendor_credit(self, vendor_credit_id=None, reference_number=None, vendor_id=None):
 		master = "vendorcredit"
 		scope='ZohoBooks.debitnotes.READ'
 
@@ -1309,7 +1310,8 @@ class ZohoBooksAPI(Document):
 			s.params = {
 				'organization_id': self.organization_id,
 				'vendor_credit_id': vendor_credit_id,
-				'reference_number': reference_number
+				'reference_number': reference_number,
+				'vendor_id': vendor_id
 			}
 
 			s.headers = {
@@ -1324,6 +1326,32 @@ class ZohoBooksAPI(Document):
 			else:
 				frappe.msgprint(r.json().get('message'))
 			# r.raise_for_status()
+
+
+	def put_vendor_credit(self, vendor_credit_id, data):
+		master = 'vendorcredit'
+		scope='ZohoBooks.debitnotes.UPDATE'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/bills/' + vendor_credit_id + '?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.put(api_url, data=json.dumps(data))
+			#r.raise_for_status()
+			#if r.json().get('message') == "Bill information has been updated.":
+			return r.json()
 
 
 	def post_invoice(self, data):
@@ -3013,6 +3041,9 @@ def add_erp_bill_debitnote_in_zoho(bill):
 	# Check if Supplier is Inter/Intra state
 
 	contact_id = frappe.get_value("Supplier", supplier, "custom_zoho_contact_id")
+	if not contact_id:
+		frappe.msgprint("Following Vendor is not Synced with Zoho Books: " + frappe.get_value("Supplier", supplier, "supplier_name"))
+
 	is_reverse_charge_applied = False # default value initialised here (context: GST-unregistered Vendors)
 	is_inclusive_tax = None
 
@@ -3195,29 +3226,52 @@ def add_erp_bill_debitnote_in_zoho(bill):
 					zb_vendor_credit_id = res.get('vendor_credit_id')
 
 				elif res.get('message') == 'The vendor credit# specified already exists.':
-					bill_doc.custom_bill_id = bill_doc.bill_no[:16]+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)) # custom_bill_id is Mandatory & unique
-					data["vendor_credit_number"] = bill_doc.custom_bill_id
+					# res2 = api_controller.query_bill(data["bill_number"], data["reference_number"])
+					res2 = api_controller.query_vendor_credit(data["vendor_credit_number"], None, contact_id)
+					#frappe.throw(str(res2))
+					if res2:
+						if res2[0].get("vendor_credit_id"):
+							# creditnote_date = bill_doc.bill_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
-					if is_return:
-						res = api_controller.post_vendor_credit(data, return_against_bill_id)
-					else:
-						res = api_controller.post_vendor_credit(data)
+							# if bill_doc.grand_total == res2[0].get("total") and res2[0].get("date") == creditnote_date:
+							if bill_doc.grand_total == res2[0].get("total"):
+								# The Vendor Bill ID for this Vendor, exists in Zoho Books - sync the ERPNext Purchase Invoice with it
+								# Update the bill in Zoho Books, with the ERPNext Purchase Invoice ID
+								put_data = {
+									'vendor_id': contact_id,
+									'vendor_credit_number': bill_doc.bill_no,
+									'reference_number': bill_doc.name,
+									# 'date': date,
+								}
+								res3 = api_controller.put_vendor_credit(res2[0].get("vendor_credit_id"), put_data)
+								if res3:
+									if res3.get('code') == 0:
+										# update the ERPNext Purchase Invoice, after the Zoho Books Bill has been updated/synced
+										zb_bill_id = res2[0].get("vendor_credit_id")
+									else:
+										frappe.msgprint(res3.get('message'))
 
-					if res:
-						if "vendor_credit_id" in res:
-							zb_vendor_credit_id = res.get('vendor_credit_id')
+							else:
+								# The Vendor has issued a duplicate The vendor credit#, modify it in ERPNext, and push again to Zoho Books
+								if not bill_doc.custom_bill_id:
+									bill_doc.custom_bill_id = bill_doc.bill_no[:16]+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)) # custom_bill_id is Mandatory & unique
+								data["bill_number"] = bill_doc.custom_bill_id[:16] # New Mandatory unique Supplier Bill Id
 
-		# 	res2 = api_controller.query_vendor_credit(data["vendor_credit_number"], data['reference_number'])
-		# 	if res2:
-		# 		#frappe.throw(res2[0].get("vendor_credit_id"))
-		# 		if api_controller.location_id:
-		# 			if res2[0].get("location_id") == api_controller.location_id:
-		# 				zb_vendor_credit_id = res2[0].get("vendor_credit_id")
-		# 			else:
-		# 				msg = res.get("message") + " for location: " + api_controller.location_name
-		# 				frappe.throw(msg)
-		# 		else:
-		# 			zb_vendor_credit_id = res2[0].get("vendor_credit_id")
+								# re-post after amending the duplication debitnote_number, with unique bill_id
+								if is_return:
+									res4 = api_controller.post_vendor_credit(data, return_against_bill_id)
+								else:
+									res4 = api_controller.post_vendor_credit(data)
+
+								if res4:
+									if "vendor_credit_id" in res4:
+										zb_vendor_credit_id = res4.get('vendor_credit_id')
+
+								res4 = api_controller.post_bill(data) # re-post after amending the duplication bill_number, with unique bill_id
+								if res4:
+									if res4.get('bill_id'):
+										zb_bill_id = res4.get('bill_id')
+
 
 		if zb_vendor_credit_id is not None:
 			if bill_doc.custom_zb_vendor_credit_id:
@@ -3255,42 +3309,6 @@ def add_erp_bill_debitnote_in_zoho(bill):
 			error_log.insert()
 			frappe.msgprint(str(res2))
 
-		# else :
-		# 	data["vendor_credit_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
-
-		# 	if bill_doc.return_against:
-		# 		if not return_against_bill_id:
-		# 			return_against_bill_id = frappe.get_value("Purchase Invoice", bill_doc.return_against, "custom_zoho_bill_id")
-		# 			if not return_against_bill_id:
-		# 				frappe.throw("Please push the linked Purchase Invoice, before pushing this Purchase-Return Invoice")
-		# 		else:
-		# 			res3 = api_controller.post_vendor_credit(data, return_against_bill_id)
-
-		# 	else:
-		# 		res3 = api_controller.post_vendor_credit(data)
-
-		# 	if "vendor_credit_id" in res3:
-		# 		zb_vendor_credit_id = res3.get('vendor_credit_id')
-		# 		bill_doc.custom_zb_vendor_credit_id = zb_vendor_credit_id
-		# 		if not bill_doc.custom_bill_id:
-		# 			bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999)) # custom_bill_id is Mandatory & unique
-
-		# 		bill_doc.save()
-		# 		frappe.db.commit()
-		# 		# return { "ADDED" }
-		# 		return "ADDED"
-
-		# 	else:
-		# 		error_log = frappe.new_doc("Zoho Sync Err Logs")
-		# 		error_log.document_name = data["vendor_credit_number"]
-		# 		error_log.error = str(res3)
-		# 		# if res3.json().get('message'):
-		# 		# 	error_log.error = res3.json().get('message')
-		# 		# 	frappe.msgprint(res3.json().get('message'))
-		# 		# else:
-		# 		# 	error_log.error = str(res3)
-
-		# 		error_log.insert()
 
 	elif bill_doc.custom_zoho_bill_id == None:
 		if bill_doc.bill_no is not None:
@@ -3314,37 +3332,50 @@ def add_erp_bill_debitnote_in_zoho(bill):
 		res2 = api_controller.query_bill(None, data["reference_number"])
 		# frappe.throw(str(res2))
 		if res2:
-			#frappe.throw(res2[0].get("bill_id"))
-			if api_controller.location_id:
-				if res2[0].get("location_id") == api_controller.location_id:
-					zb_bill_id = res2[0].get("bill_id")
-				else:
-					msg = res.get("message") + " for location: " + api_controller.location_name
-					frappe.throw(msg)
-			else:
-				bill_exists = frappe.db.exists("Purchase Invoice", {"custom_zoho_bill_id": res2[0].get("bill_id")})
-				if bill_exists:
-					if bill_doc.bill_no == bill_doc.custom_bill_id:
-						bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999))
-						bill_doc.save()
-					data["bill_number"] = bill_doc.custom_bill_id[:16] # New Mandatory unique Supplier Bill Id
-					res = api_controller.post_bill(data)
-					if "bill_id" in res:
-						zb_bill_id = res.get('bill_id')
-
-				else:
-					zb_bill_id = res2[0].get("bill_id")
+			# ERPNext Invoice exists in Zoho Books: fetch and update the Zoho Bill ID in the ERPNext Purchase Invoice
+			if res2[0].get("bill_id"):
+				zb_bill_id = res2[0].get("bill_id")
 
 		else:
 			res = api_controller.post_bill(data)
-			if res.get('message') == 'A bill with this number has already been created for this vendor. Please check and try again.':
-				# res2 = api_controller.query_bill(data["bill_number"], data["reference_number"])
-				#frappe.throw(str(res2))
-				data["bill_number"] = bill_doc.custom_bill_id[:16] # New Mandatory unique Supplier Bill Id
-				res = api_controller.post_bill(data) # re-post after amending the duplication bill_number, with unique bill_id
+			if res:
+				if res.get('message') == 'A bill with this number has already been created for this vendor. Please check and try again.':
+					# res2 = api_controller.query_bill(data["bill_number"], data["reference_number"])
+					res2 = api_controller.query_bill(data["bill_number"], None, contact_id)
+					#frappe.throw(str(res2))
+					if res2:
+						if res2[0].get("bill_id"):
+							bill_date = bill_doc.bill_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
-			if "bill_id" in res:
-				zb_bill_id = res.get('bill_id')
+							if bill_doc.grand_total == res2[0].get("total") and res2[0].get("date") == bill_date:
+								# The Vendor Bill ID for this Vendor, exists in Zoho Books - sync the ERPNext Purchase Invoice with it
+								# Update the bill in Zoho Books, with the ERPNext Purchase Invoice ID
+								put_data = {
+									'vendor_id': contact_id,
+									'bill_number': bill_doc.bill_no,
+									'reference_number': bill_doc.name,
+									# 'date': date,
+								}
+								res3 = api_controller.put_bill(res2[0].get("bill_id"), put_data)
+								if res3:
+									if res3.get('code') == 0:
+										# update the ERPNext Purchase Invoice, after the Zoho Books Bill has been updated/synced
+										zb_bill_id = res2[0].get("bill_id")
+									else:
+										frappe.msgprint(res3.get('message'))
+
+							else:
+								# The Vendor has issued a duplicate Bill Number, modify it in ERPNext, and push again to Zoho Books
+								if not bill_doc.custom_bill_id:
+									bill_doc.custom_bill_id = bill_doc.bill_no+"/"+nowdate()[5:]+"/"+str(random.randint(100,999))
+								data["bill_number"] = bill_doc.custom_bill_id[:16] # New Mandatory unique Supplier Bill Id
+								res4 = api_controller.post_bill(data) # re-post after amending the duplication bill_number, with unique bill_id
+								if res4:
+									if res4.get('bill_id'):
+										zb_bill_id = res4.get('bill_id')
+
+				elif "bill_id" in res:
+					zb_bill_id = res.get('bill_id')
 
 		if zb_bill_id is not None:
 			if bill_doc.custom_zoho_bill_id:
@@ -3378,24 +3409,6 @@ def add_erp_bill_debitnote_in_zoho(bill):
 			error_log.insert()
 
 			frappe.msgprint(str(res2))
-
-			# data["bill_number"] = bill_doc.name[-16:] # Supplier/ERP Bill Number invoice[-16:]
-			# res3 = api_controller.post_bill(data)
-
-			# if "bill_id" in res3:
-			# 	zb_bill_id = res3.get('bill_id')
-			# 	bill_doc.custom_zoho_bill_id = zb_bill_id
-			# 	bill_doc.save()
-			# 	frappe.db.commit()
-			# 	return { "ADDED" }
-
-			# else:
-			# 	error_log = frappe.new_doc("Zoho Sync Err Logs")
-			# 	error_log.document_name = data["bill_number"]
-			# 	error_log.error = str(res3)
-			# 	error_log.insert()
-
-			# 	frappe.msgprint(str(res3))
 
 
 @frappe.whitelist()
