@@ -10,6 +10,7 @@ from threading import Timer
 
 import requests, json, re, csv
 import os
+from pathlib import Path
 #import urllib
 
 
@@ -1094,8 +1095,6 @@ class ZohoBooksAPI(Document):
 
 
 	def add_attachment_to_bill(self, bill_id, file_name, file_url):
-		from pathlib import Path
-
 		master = 'bills'
 		scope = "ZohoBooks.bills.CREATE"
 
@@ -1125,7 +1124,6 @@ class ZohoBooksAPI(Document):
 			r = s.post(api_url, files=files)
 			return r.json()
 
-
 	def delete_attachment_in_bill(self, bill_id):
 		master = "bills"
 		scope = "ZohoBooks.bills.DELETE"
@@ -1149,8 +1147,61 @@ class ZohoBooksAPI(Document):
 			r = s.delete(api_url)
 			return r.json()
 
+	def add_attachment_to_debitnote(self, vendor_credit_id, file_name, file_url):
+		master = 'vendorcredits'
+		scope = "ZohoBooks.debitnotes.CREATE"
 
-	def query_bill(self, bill_number=None, reference_number=None, vendor_id=None):
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/vendorcredits/' + vendor_credit_id + '/attachment?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		#file_url = "/home/ptps/frappe-bench/sites/pourtous-av.in/private/files/"
+		file_to_attach = str(Path.cwd()) + "/" + frappe.local.site + file_url # calculate the absolute path to file
+		content_type = 'application/' + file_name[-3:] # extract the file extension
+
+		files=[
+			('attachment', (file_name, open(file_to_attach,'rb'), content_type))
+		]
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+			}
+
+			r = s.post(api_url, files=files)
+			return r.json()
+
+	def delete_attachment_in_debitnote(self, vendor_credit_id):
+		master = "vendorcredits"
+		scope = "ZohoBooks.debitnotes.DELETE"
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/vendorcredits/' + vendor_credit_id + 'attachment?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+			}
+
+			r = s.delete(api_url)
+			return r.json()
+
+
+	def query_bill(self, bill_number=None, reference_number=None):
 		master = "bills"
 		scope='ZohoBooks.bills.READ'
 
@@ -1164,8 +1215,7 @@ class ZohoBooksAPI(Document):
 			s.params = {
 				'organization_id': self.organization_id,
 				'bill_number': bill_number,
-				'reference_number': reference_number,
-				'vendor_id': vendor_id
+				'reference_number': reference_number
 			}
 
 			s.headers = {
@@ -1296,7 +1346,7 @@ class ZohoBooksAPI(Document):
 				#r.raise_for_status()
 
 
-	def query_vendor_credit(self, vendor_credit_id=None, reference_number=None, vendor_id=None):
+	def query_vendor_credit(self, vendor_credit_id, reference_number):
 		master = "vendorcredit"
 		scope='ZohoBooks.debitnotes.READ'
 
@@ -1310,8 +1360,7 @@ class ZohoBooksAPI(Document):
 			s.params = {
 				'organization_id': self.organization_id,
 				'vendor_credit_id': vendor_credit_id,
-				'reference_number': reference_number,
-				'vendor_id': vendor_id
+				'reference_number': reference_number
 			}
 
 			s.headers = {
@@ -3476,11 +3525,27 @@ def fetch_file_attachments_in_bills():
 			from tabFile f, `tabPurchase Invoice` pi
 			where attached_to_doctype = "Purchase Invoice"
 			AND attached_to_name = pi.name
-			AND f.custom_zoho_bill_id IS NULL AND pi.custom_zoho_bill_id IS NOT NULL
+			AND pi.custom_zoho_bill_id IS NOT NULL
+			AND f.custom_zoho_bill_id IS NULL
 			""",
 			as_dict=True
 		)
 
+@frappe.whitelist()
+def fetch_file_attachments_in_debitnotes():
+	if frappe.defaults.get_user_default("company") == "Pour Tous Purchasing Service":
+		return frappe.db.sql(
+			"""
+			select f.name, pi.custom_zb_vendor_credit_id, pi.is_return, attached_to_name, file_name, file_url
+			from tabFile f, `tabPurchase Invoice` pi
+			where attached_to_doctype = "Purchase Invoice"
+			AND attached_to_name = pi.name
+			AND pi.is_return = 1
+			AND pi.custom_zb_vendor_credit_id IS NOT NULL
+			AND f.custom_zb_vendor_credit_id IS NULL
+			""",
+			as_dict=True
+		)
 
 @frappe.whitelist()
 def attach_file_to_bill(file_docname, bill_id, file_name, file_url):
@@ -3493,17 +3558,36 @@ def attach_file_to_bill(file_docname, bill_id, file_name, file_url):
 		frappe.msgprint(res.get("message"))
 		return
 
+@frappe.whitelist()
+def attach_file_to_debitnote(file_docname, vendor_credit_id, file_name, file_url):
+	api_controller = frappe.get_doc("Zoho Books API")
+	res = api_controller.add_attachment_to_debitnote(vendor_credit_id, file_name, file_url)
+	if res.get("code") == 0:
+		frappe.db.set_value("File", file_docname, "custom_zb_vendor_credit_id", vendor_credit_id)
+		return { "ADDED" }
+	else:
+		frappe.msgprint(res.get("message"))
+		return
+
 
 # called from hooks.py
-def delete_zb_bill_attachment(doc, method):
+def delete_zb_bill_debitnote_attachment(doc, method):
 	if doc.custom_zoho_bill_id:
 		delete_attached_file_in_bill(doc.custom_zoho_bill_id)
-
+	elif doc.custom_zb_vendor_credit_id:
+		delete_attached_file_in_debitnote(doc.custom_zb_vendor_credit_id)
 
 @frappe.whitelist()
 def delete_attached_file_in_bill(bill_id):
 	api_controller = frappe.get_doc("Zoho Books API")
 	res = api_controller.delete_attachment_in_bill(bill_id)
+	if res.get("code") == 0:
+		return { "DELETED" }
+
+@frappe.whitelist()
+def delete_attached_file_in_debitnote(vendor_credit_id):
+	api_controller = frappe.get_doc("Zoho Books API")
+	res = api_controller.delete_attachment_in_debitnote(vendor_credit_id)
 	if res.get("code") == 0:
 		return { "DELETED" }
 
