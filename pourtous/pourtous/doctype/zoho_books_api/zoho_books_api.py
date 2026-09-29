@@ -1201,7 +1201,7 @@ class ZohoBooksAPI(Document):
 			return r.json()
 
 
-	def query_bill(self, bill_number=None, reference_number=None):
+	def query_bill(self, bill_number=None, reference_number=None, vendor_id=None):
 		master = "bills"
 		scope='ZohoBooks.bills.READ'
 
@@ -1215,7 +1215,8 @@ class ZohoBooksAPI(Document):
 			s.params = {
 				'organization_id': self.organization_id,
 				'bill_number': bill_number,
-				'reference_number': reference_number
+				'reference_number': reference_number,
+				'vendor_id': vendor_id
 			}
 
 			s.headers = {
@@ -1346,7 +1347,7 @@ class ZohoBooksAPI(Document):
 				#r.raise_for_status()
 
 
-	def query_vendor_credit(self, vendor_credit_id, reference_number):
+	def query_vendor_credit(self, vendor_credit_id=None, reference_number=None, vendor_id=None):
 		master = "vendorcredit"
 		scope='ZohoBooks.debitnotes.READ'
 
@@ -1360,7 +1361,8 @@ class ZohoBooksAPI(Document):
 			s.params = {
 				'organization_id': self.organization_id,
 				'vendor_credit_id': vendor_credit_id,
-				'reference_number': reference_number
+				'reference_number': reference_number,
+				'vendor_id': vendor_id
 			}
 
 			s.headers = {
