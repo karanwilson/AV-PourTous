@@ -3,8 +3,10 @@ from frappe import _
 from frappe.utils import nowdate, get_first_day #, flt
 
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
-from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
+from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+from erpnext.selling.doctype.customer.customer import get_customer_outstanding
 
 from erpnext.stock.doctype.batch.batch import get_batch_qty
 
@@ -866,7 +868,17 @@ def update_fs_accounts(fs_account, name, disable, credit_limit_av_account):
 
 		if not customer_doc.custom_credit_limit_exception:
 			customer_doc.credit_limits.clear()
-			customer_doc.append("credit_limits", { "credit_limit": credit_limit_av_account })
+
+			ignore_outstanding_sales_order = frappe.db.get_value("Customer Credit Limit", {"parent": customer_doc.name}, "bypass_credit_limit_check")
+			outstanding_amt = get_customer_outstanding(
+				customer_doc.name, frappe.defaults.get_user_default("Company"), ignore_outstanding_sales_order=ignore_outstanding_sales_order
+			)
+			if outstanding_amt > credit_limit_av_account:
+				credit_limit = outstanding_amt
+			else:
+				credit_limit = credit_limit_av_account
+
+			customer_doc.append("credit_limits", { "credit_limit": credit_limit })
 			updated = "credit_limit"
 
 		if customer_doc.customer_type == 'Company':

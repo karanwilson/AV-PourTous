@@ -4163,6 +4163,7 @@ def sync_inv_with_zoho_books(invoice, customer):
 	# frappe.throw(invoice)
 
 	pos_mop_type = None
+	customer_id = None
 
 	if customer_doc.customer_type == "Company":
 		customer_id = customer_doc.custom_zoho_contact_id
@@ -4218,6 +4219,9 @@ def sync_inv_with_zoho_books(invoice, customer):
 			customer_id = api_controller.walk_in_upi_card_contact_id # PT "UPI Customers" in ZB
 			pos_mop_type = "Card"
 
+	if not customer_id:
+		msg = "Zoho Customer ID is not set for Customer: " + str(customer) + ", and Invoice: " + str(invoice)
+		frappe.throw(msg)
 	# frappe.throw(customer_id)
 
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
@@ -4412,6 +4416,16 @@ def sync_inv_with_zoho_books(invoice, customer):
 		# Recording a Zoho Payment, also marks the Invoice as 'Sent'
 		if invoice_doc.outstanding_amount == 0:
 			# add_payment = True
+			query_payment_entry = frappe.db.sql(
+				"""
+				select pe.name, pe.posting_date, per.reference_name
+				from `tabPayment Entry` pe, `tabPayment Entry Reference` per
+				where per.reference_name = '{0}' and per.parent = pe.name;
+				""".format(invoice_doc.name),
+				as_dict = True
+			)
+			payment_date_obj = query_payment_entry[0]["posting_date"]
+			payment_date = payment_date_obj.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
 			payments_data = {
 				'customer_id': customer_id,
@@ -4426,7 +4440,7 @@ def sync_inv_with_zoho_books(invoice, customer):
 				# 'reference_number': invoice_doc.custom_fs_transaction_id,
 				'reference_number': invoice_doc.name,
 				'account_id': api_controller.fs_bank_acount_id,
-				'date': date,
+				'date': payment_date,
 			}
 
 			payment_res = api_controller.post_payment(payments_data) # returns r.json()
@@ -4704,6 +4718,16 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 		# Recording a Zoho Payment, also marks the Invoice as 'Sent'
 		if invoice_doc.outstanding_amount == 0:
 			# add_payment = True
+			query_payment_entry = frappe.db.sql(
+				"""
+				select pe.name, pe.posting_date, per.reference_name
+				from `tabPayment Entry` pe, `tabPayment Entry Reference` per
+				where per.reference_name = '{0}' and per.parent = pe.name;
+				""".format(invoice_doc.name),
+				as_dict = True
+			)
+			payment_date_obj = query_payment_entry[0]["posting_date"]
+			payment_date = payment_date_obj.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
 			payments_data = {
 				'customer_id': customer_id,
@@ -4718,7 +4742,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 				# 'reference_number': invoice_doc.custom_fs_transaction_id,
 				'reference_number': invoice_doc.name,
 				'account_id': api_controller.fs_bank_acount_id,
-				'date': date,
+				'date': payment_date,
 			}
 
 			payment_res = api_controller.post_payment(payments_data) # returns r.json()
