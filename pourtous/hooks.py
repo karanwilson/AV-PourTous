@@ -214,23 +214,23 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"pourtous.tasks.all"
-# 	],
-# 	"daily": [
-# 		"pourtous.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"pourtous.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"pourtous.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"pourtous.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	# "all": [
+	# 	"pourtous.tasks.all"
+	# ],
+	"daily": [
+		"pourtous.api.purge_old_integration_requests"
+	],
+	# "hourly": [
+	# 	"pourtous.tasks.hourly"
+	# ],
+	# "weekly": [
+	# 	"pourtous.tasks.weekly"
+	# ],
+	# "monthly": [
+	# 	"pourtous.tasks.monthly"
+	# ],
+}
 
 # Testing
 # -------
@@ -360,6 +360,11 @@ fixtures = [
 
                     "Mode of Payment-custom_transaction_fee_percentage", # Card charges
                     "Mode of Payment-custom_customer_group", # For MOP-customer_group Linking
+
+                    "Integration Request-custom_idempotency_key",
+                    # "Integration Request-custom_request_hash",
+                    # "Integration Request-custom_idempotency_response_code",
+                    # "Integration Request-custom_idempotency_response_body",
 
                     "Customer Group-custom_mop", # For MOP-customer_group Linking
 

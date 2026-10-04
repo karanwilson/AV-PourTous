@@ -30,6 +30,16 @@ import json
 # 	else:
 # 		frappe.throw("else")
 
+@frappe.whitelist()
+def purge_old_integration_requests():
+    """Deletes entries older than 60 days to free up DB rows."""
+    frappe.db.sql(
+		"""
+        DELETE FROM `tabIntegration Request` 
+        AND creation < DATE_SUB(NOW(), INTERVAL 60 DAY)
+    	"""
+        # WHERE idempotency_key IS NOT NULL
+	)
 
 @frappe.whitelist()
 def fetch_pending_stock_recons():
