@@ -1903,6 +1903,69 @@ class ZohoBooksAPI(Document):
 				#r.raise_for_status()
 
 
+	def list_customer_payments(self, customer_id, reference_number, date=None):
+		master = 'payments'
+		scope='ZohoBooks.customerpayments.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/customerpayments?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id,
+				'customer_id': customer_id,
+				'reference_number': reference_number,
+				'date': date
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+			#frappe.throw(str(r.json()))
+			#if r.json().get('message') == 'The payment from the customer has been recorded':
+			if r.json().get('code') != 0:
+				# return r.json().get('payment').get('payment_id')
+				frappe.msgprint(r.json().get('message'))
+			return r.json()
+				#r.raise_for_status()
+
+
+	def list_invoice_payments(self, invoice_id):
+		master = 'invoices'
+		scope='ZohoBooks.invoices.READ'
+
+		token_to_use = self.query_stored_tokens(master, scope)
+
+		api_url = 'https://www.zohoapis.in/books/v3/invoices/' + invoice_id + 'payments?'
+
+		authorization = 'Zoho-oauthtoken ' + token_to_use
+
+		with requests.Session() as s:
+			s.params = {
+				'organization_id': self.organization_id
+			}
+
+			s.headers = {
+				'Authorization': authorization,
+				'content-type': 'application/json'
+				}
+
+			r = s.get(api_url)
+			#frappe.throw(str(r.json()))
+			#if r.json().get('message') == 'The payment from the customer has been recorded':
+			if r.json().get('code') != 0:
+				# return r.json().get('payment').get('payment_id')
+				frappe.msgprint(r.json().get('message'))
+			return r.json()
+				#r.raise_for_status()
+
+
 def update_contact_in_zoho(doc, method):
 	if doc.customer_type != "Company":
 		return
@@ -4127,7 +4190,10 @@ def fetch_unsynced_erp_invoice_list():
 			"""
 			SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
 			WHERE docstatus = 1 AND status != "Return" AND name != "IN-09-25-36821"
-			AND custom_zoho_invoice_id IS NULL
+			AND (
+				custom_zoho_invoice_id IS NULL
+				OR (custom_zoho_payment_id IS NULL AND posting_date >= "2026-10-01")
+			)
 			""",
 			as_dict=True
 		)
@@ -4157,6 +4223,10 @@ def bulk_processing(invoices):
 
 @frappe.whitelist()
 def sync_inv_with_zoho_books(invoice, customer):
+	if not invoice and customer:
+		frappe.msgprint("Invoice ID and Customer ID not received at Zoho Books API")
+		return
+
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	customer_doc = frappe.get_doc("Customer", customer)
@@ -4164,6 +4234,7 @@ def sync_inv_with_zoho_books(invoice, customer):
 
 	pos_mop_type = None
 	customer_id = None
+	zb_invoice_id = None
 
 	if customer_doc.customer_type == "Company":
 		customer_id = customer_doc.custom_zoho_contact_id
@@ -4221,7 +4292,8 @@ def sync_inv_with_zoho_books(invoice, customer):
 
 	if not customer_id:
 		msg = "Zoho Customer ID is not set for Customer: " + str(customer) + ", and Invoice: " + str(invoice)
-		frappe.throw(msg)
+		frappe.msgprint(msg)
+		return
 	# frappe.throw(customer_id)
 
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
@@ -4367,8 +4439,6 @@ def sync_inv_with_zoho_books(invoice, customer):
 
 		res = api_controller.post_invoice(invoice_data)
 
-		zb_invoice_id = None
-
 		if "invoice_id" in res:
 			zb_invoice_id = res.get("invoice_id")
 
@@ -4387,7 +4457,8 @@ def sync_inv_with_zoho_books(invoice, customer):
 					zb_invoice_id = res2[0].get("invoice_id")
 
 		else:
-			frappe.throw(str(res))
+			frappe.msgprint(str(res))
+			return
 
 		# #if "invoice_id" in res:
 		# if zb_invoice_id and zb_invoice_id is not None:
@@ -4416,16 +4487,25 @@ def sync_inv_with_zoho_books(invoice, customer):
 		# Recording a Zoho Payment, also marks the Invoice as 'Sent'
 		if invoice_doc.outstanding_amount == 0:
 			# add_payment = True
+			query_payment_entry = {}
 			query_payment_entry = frappe.db.sql(
 				"""
 				select pe.name, pe.posting_date, per.reference_name
-				from `tabPayment Entry` pe, `tabPayment Entry Reference` per
-				where per.reference_name = '{0}' and per.parent = pe.name;
-				""".format(invoice_doc.name),
-				as_dict = True
+				from `tabPayment Entry` pe
+				inner join `tabPayment Entry Reference` per
+				on per.parent = pe.name
+				where per.reference_name = %s
+				order by pe.creation desc
+				limit 1
+				""",
+				(invoice_doc.name,),
+				as_dict=True,
 			)
-			payment_date_obj = query_payment_entry[0]["posting_date"]
-			payment_date = payment_date_obj.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+			if query_payment_entry:
+				payment_date_obj = query_payment_entry[0]["posting_date"]
+				payment_date = payment_date_obj.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+			else:
+				payment_date = date
 
 			payments_data = {
 				'customer_id': customer_id,
@@ -4453,17 +4533,27 @@ def sync_inv_with_zoho_books(invoice, customer):
 			elif "The amount entered is more than the balance due for the selected invoices" in payment_res.get('message'):
 				# fetch the invoice-total calculated by Zoho Books
 				get_inv_res = api_controller.get_an_invoice(invoice_doc.custom_zoho_invoice_id)
+				# frappe.throw(str(get_inv_res))
+
 				if get_inv_res:
-					payment_made = get_inv_res.get("total")
+					if get_inv_res.get('status') == 'paid':
+						# frappe.throw(str(invoice_doc.custom_zoho_invoice_id))
+						get_inv_payment_res = api_controller.list_customer_payments(customer_id, invoice_doc.name)
+						if get_inv_payment_res:
+							# frappe.throw(str(get_inv_payment_res))
+							invoice_doc.custom_zoho_payment_id = get_inv_payment_res.get('customerpayments')[0].get('payment_id')
 
-				payments_data["amount"] = payment_made
-				payments_data["invoices"][0]["amount_applied"] = payment_made
-				# frappe.throw(str(payments_data))
-				payment_res = api_controller.post_payment(payments_data) # returns r.json()
+					else:
+						payment_made = get_inv_res.get("total")
 
-				if payment_res.get('payment'):
-					invoice_doc.custom_zoho_payment_id = payment_res.get('payment').get('payment_id')
-					response = "ADDED"
+						payments_data["amount"] = payment_made
+						payments_data["invoices"][0]["amount_applied"] = payment_made
+						# frappe.throw(str(payments_data))
+						payment_res = api_controller.post_payment(payments_data) # returns r.json()
+
+						if payment_res.get('payment'):
+							invoice_doc.custom_zoho_payment_id = payment_res.get('payment').get('payment_id')
+							response = "ADDED"
 
 			else:
 				res3 = api_controller.mark_invoice_as_sent(invoice_doc.custom_zoho_invoice_id)
@@ -4531,7 +4621,10 @@ def fetch_unsynced_erp_fs_invoice_list():
 			SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
 			WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 			AND custom_fs_account_number IS NOT NULL
-			AND custom_zoho_invoice_id IS NULL
+			AND (
+				custom_zoho_invoice_id IS NULL
+				OR (custom_zoho_payment_id IS NULL AND posting_date >= "2026-10-01")
+			)
 			""",
 			as_dict=True
 		)
@@ -4542,6 +4635,10 @@ def fetch_unsynced_erp_fs_invoice_list():
 
 @frappe.whitelist()
 def sync_fs_inv_with_zoho_books(invoice, customer):
+	if not invoice and customer:
+		frappe.msgprint("Invoice ID and Customer ID not received at Zoho Books API")
+		return
+
 	api_controller = frappe.get_doc("Zoho Books API")
 	invoice_doc = frappe.get_doc("Sales Invoice", invoice)
 	if frappe.get_value("Customer", customer, "customer_type") == "Company":
@@ -4552,6 +4649,7 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 	date = invoice_doc.posting_date.strftime(api_controller.DATE_FORMAT) # converting Date object to String
 
 	response = None
+	zb_invoice_id = None
 
 	if invoice_doc.custom_zoho_invoice_id == None:
 		line_items = []
@@ -4678,8 +4776,6 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 
 		res = api_controller.post_invoice(invoice_data)
 
-		zb_invoice_id = None
-
 		if "invoice_id" in res:
 			zb_invoice_id = res.get('invoice_id')
 
@@ -4698,7 +4794,8 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 					zb_invoice_id = res2[0].get("invoice_id")
 
 		else:
-			frappe.throw(str(res))
+			frappe.msgprint(str(res))
+			return
 
 		#if "invoice_id" in res:
 		if zb_invoice_id and zb_invoice_id is not None:
@@ -4718,16 +4815,25 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 		# Recording a Zoho Payment, also marks the Invoice as 'Sent'
 		if invoice_doc.outstanding_amount == 0:
 			# add_payment = True
+			query_payment_entry = {}
 			query_payment_entry = frappe.db.sql(
 				"""
 				select pe.name, pe.posting_date, per.reference_name
-				from `tabPayment Entry` pe, `tabPayment Entry Reference` per
-				where per.reference_name = '{0}' and per.parent = pe.name;
-				""".format(invoice_doc.name),
-				as_dict = True
+				from `tabPayment Entry` pe
+				inner join `tabPayment Entry Reference` per
+				on per.parent = pe.name
+				where per.reference_name = %s
+				order by pe.creation desc
+				limit 1
+				""",
+				(invoice_doc.name,),
+				as_dict=True,
 			)
-			payment_date_obj = query_payment_entry[0]["posting_date"]
-			payment_date = payment_date_obj.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+			if query_payment_entry:
+				payment_date_obj = query_payment_entry[0]["posting_date"]
+				payment_date = payment_date_obj.strftime(api_controller.DATE_FORMAT) # converting Date object to String
+			else:
+				payment_date = date
 
 			payments_data = {
 				'customer_id': customer_id,
@@ -4755,17 +4861,27 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 			elif "The amount entered is more than the balance due for the selected invoices" in payment_res.get('message'):
 				# fetch the invoice-total calculated by Zoho Books
 				get_inv_res = api_controller.get_an_invoice(invoice_doc.custom_zoho_invoice_id)
+				# frappe.throw(str(get_inv_res))
+
 				if get_inv_res:
-					payment_made = get_inv_res.get("total")
+					if get_inv_res.get('status') == 'paid':
+						# frappe.throw(str(invoice_doc.custom_zoho_invoice_id))
+						get_inv_payment_res = api_controller.list_customer_payments(customer_id, invoice_doc.name)
+						if get_inv_payment_res:
+							# frappe.throw(str(get_inv_payment_res))
+							invoice_doc.custom_zoho_payment_id = get_inv_payment_res.get('customerpayments')[0].get('payment_id')
 
-				payments_data["amount"] = payment_made
-				payments_data["invoices"][0]["amount_applied"] = payment_made
-				# frappe.throw(str(payments_data))
-				payment_res = api_controller.post_payment(payments_data) # returns r.json()
+					else:
+						payment_made = get_inv_res.get("total")
 
-				if payment_res.get('payment'):
-					invoice_doc.custom_zoho_payment_id = payment_res.get('payment').get('payment_id')
-					response = "ADDED"
+						payments_data["amount"] = payment_made
+						payments_data["invoices"][0]["amount_applied"] = payment_made
+						# frappe.throw(str(payments_data))
+						payment_res = api_controller.post_payment(payments_data) # returns r.json()
+
+						if payment_res.get('payment'):
+							invoice_doc.custom_zoho_payment_id = payment_res.get('payment').get('payment_id')
+							response = "ADDED"
 
 			else:
 				res3 = api_controller.mark_invoice_as_sent(invoice_doc.custom_zoho_invoice_id)
