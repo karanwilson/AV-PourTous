@@ -4190,10 +4190,7 @@ def fetch_unsynced_erp_invoice_list():
 			"""
 			SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
 			WHERE docstatus = 1 AND status != "Return" AND name != "IN-09-25-36821"
-			AND (
-				custom_zoho_invoice_id IS NULL
-				OR (custom_zoho_payment_id IS NULL AND posting_date >= "2026-10-01")
-			)
+			AND custom_zoho_invoice_id IS NULL
 			""",
 			as_dict=True
 		)
@@ -4539,9 +4536,11 @@ def sync_inv_with_zoho_books(invoice, customer):
 					if get_inv_res.get('status') == 'paid':
 						# frappe.throw(str(invoice_doc.custom_zoho_invoice_id))
 						get_inv_payment_res = api_controller.list_customer_payments(customer_id, invoice_doc.name)
-						if get_inv_payment_res:
+						if get_inv_payment_res and get_inv_payment_res.get('customerpayments'):
 							# frappe.throw(str(get_inv_payment_res))
 							invoice_doc.custom_zoho_payment_id = get_inv_payment_res.get('customerpayments')[0].get('payment_id')
+						else:
+							invoice_doc.custom_zoho_payment_id = "Manually recorded"
 
 					else:
 						payment_made = get_inv_res.get("total")
@@ -4577,7 +4576,7 @@ def fetch_unsynced_erp_fs_invoice_list():
 			AND si.posting_date >= "2026-04-01"
 			AND si.custom_is_donation = 0
 			AND si.custom_fs_account_number IS NOT NULL
-			AND (si.custom_zoho_invoice_id IS NULL OR si.custom_zoho_payment_id IS NULL)
+			AND si.custom_zoho_invoice_id IS NULL
 			""",
 			# AND si.posting_date >= "2026-04-01"
 			# AND si.posting_date BETWEEN "2026-07-01" AND "2026-07-31"
@@ -4621,10 +4620,7 @@ def fetch_unsynced_erp_fs_invoice_list():
 			SELECT name, customer, custom_fs_account_number, docstatus, status FROM `tabSales Invoice`
 			WHERE docstatus = 1 AND status IN ('Paid', 'Submitted', 'Unpaid', 'Overdue', 'Credit Note Issued')
 			AND custom_fs_account_number IS NOT NULL
-			AND (
-				custom_zoho_invoice_id IS NULL
-				OR (custom_zoho_payment_id IS NULL AND posting_date >= "2026-10-01")
-			)
+			AND custom_zoho_invoice_id IS NULL
 			""",
 			as_dict=True
 		)
@@ -4867,9 +4863,11 @@ def sync_fs_inv_with_zoho_books(invoice, customer):
 					if get_inv_res.get('status') == 'paid':
 						# frappe.throw(str(invoice_doc.custom_zoho_invoice_id))
 						get_inv_payment_res = api_controller.list_customer_payments(customer_id, invoice_doc.name)
-						if get_inv_payment_res:
+						if get_inv_payment_res and get_inv_payment_res.get('customerpayments'):
 							# frappe.throw(str(get_inv_payment_res))
 							invoice_doc.custom_zoho_payment_id = get_inv_payment_res.get('customerpayments')[0].get('payment_id')
+						else:
+							invoice_doc.custom_zoho_payment_id = "Manually recorded"
 
 					else:
 						payment_made = get_inv_res.get("total")
